@@ -1,1 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Barsik NES Emulator</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  body { margin: 0; padding: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+  #app { width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+  
+  /* Header for controls/info */
+  .header {
+    height: 40px;
+    background: #111;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 12px;
+    border-bottom: 1px solid #333;
+  }
+  
+  /* The emulator container must fill the rest */
+  #game-container {
+    flex: 1;
+    position: relative;
+    background: #000;
+  }
+  
+  /* Fullscreen button overlay if needed */
+  .fs-btn {
+    background: #333;
+    border: none;
+    color: #fff;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 10px;
+  }
+</style>
+<!-- Load EmulatorJS CSS -->
+<link rel="stylesheet" href="https://cdn.emulatorjs.org/stable/data/loader.css">
+</head>
+<body>
 
+<div id="app">
+  <div class="header">
+    <span>🎮 BARSIK NES EMULATOR</span>
+    <button class="fs-btn" onclick="toggleFullscreen()">⛶ FULLSCREEN</button>
+  </div>
+  <div id="game-container"></div>
+</div>
+
+<!-- Load EmulatorJS Core Scripts -->
+<script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+
+<script>
+// Telegram Init
+var tg = window.Telegram && window.Telegram.WebApp ? Telegram.WebApp : null;
+if(tg){
+  try{
+    tg.ready();
+    tg.expand();
+    if(tg.setHeaderColor) tg.setHeaderColor('#000000');
+    if(tg.setBackgroundColor) tg.setBackgroundColor('#000000');
+    if(tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+  }catch(e){}
+}
+
+function toggleFullscreen() {
+  const elem = document.getElementById('game-container');
+  if (!document.fullscreenElement) {
+    elem.requestFullscreen().catch(err => {
+      alert(`Error attempting to enable full-screen mode: ${err.message}`);
+    });
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+// Configuration for EmulatorJS
+window.EJS_player = "#game-container"; // ID of the div where emulator will mount
+window.EJS_core = "nes";               // Console type: 'nes', 'snes', 'gb', etc.
+window.EJS_color = "#ffffff";          // UI accent color
+window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/"; // Path to cores/assets
+window.EJS_startOnLoaded = true;       // Auto-start when loaded
+window.EJS_language = "ru";            // Interface language
+
+// THE GAME FILE PATH
+// Must be relative to this index.html or absolute URL
+window.EJS_gameUrl = "roms/battle_city.nes"; 
+
+// Optional: Save states location (browser storage by default)
+// window.EJS_saveLocation = "localStorage";
+
+// Initialize the loader
+EJS_loader();
+</script>
+
+</body>
+</html>
