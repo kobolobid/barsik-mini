@@ -1,1 +1,2081 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#111420">
+  <title>Домик Барсика</title>
 
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root {
+      --bg: #111420;
+      --panel: #1b2030;
+      --panel2: #20263a;
+      --line: #2a3145;
+      --text: #e9edf5;
+      --muted: #9aa3b2;
+      --accent: #5ac8fa;
+      --danger: #ff5a5a;
+      --warn: #ffdc50;
+      --good: #64e678;
+      --belly: #f6a623;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow: hidden;
+      touch-action: manipulation;
+      overscroll-behavior: none;
+    }
+
+    .fatal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      background: #111;
+      color: #fff;
+      padding: 16px;
+      white-space: pre-wrap;
+      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      overflow: auto;
+    }
+
+    .wrap {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      padding:
+        max(8px, env(safe-area-inset-top))
+        max(8px, env(safe-area-inset-right))
+        max(8px, env(safe-area-inset-bottom))
+        max(8px, env(safe-area-inset-left));
+      overscroll-behavior: none;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .title {
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      max-width: 58vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chips {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .chip {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 6px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.15;
+    }
+
+    .chip b {
+      display: block;
+      margin-top: 2px;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .rooms {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      flex: 0 0 auto;
+      scrollbar-width: none;
+    }
+
+    .rooms::-webkit-scrollbar {
+      display: none;
+    }
+
+    .room-btn {
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .room-btn.active {
+      background: #26304a;
+      color: var(--text);
+      border-color: #405074;
+    }
+
+    .stage {
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 210px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 40px rgba(0,0,0,.25);
+      background: linear-gradient(180deg, #1b2438, #121826);
+    }
+
+    #fx {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 5;
+    }
+
+    #speech {
+      position: absolute;
+      z-index: 6;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 82%;
+      padding: 7px 11px;
+      border-radius: 14px;
+      background: rgba(249,246,242,.93);
+      color: #222;
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      opacity: 0;
+      transition: opacity .18s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+
+    #speech.show {
+      opacity: 1;
+    }
+
+    .pet-wrap {
+      position: relative;
+      z-index: 3;
+      width: 170px;
+      height: 170px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #pet {
+      position: relative;
+      font-size: clamp(84px, 24vw, 132px);
+      line-height: 1;
+      filter: drop-shadow(0 12px 24px rgba(0,0,0,.35));
+      animation: idle 3s ease-in-out infinite;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .acc {
+      position: absolute;
+      z-index: 4;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,.25));
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #pet.eat {
+      animation: eat .62s ease;
+    }
+
+    #pet.happy {
+      animation: happy .72s ease;
+    }
+
+    #pet.sick {
+      animation: sick 1.15s ease-in-out infinite;
+      filter: grayscale(.42) drop-shadow(0 10px 20px rgba(255,90,90,.18));
+    }
+
+    #pet.heavy {
+      animation: heavy 1.7s ease-in-out infinite;
+      filter: saturate(.82) drop-shadow(0 12px 22px rgba(246,166,35,.16));
+    }
+
+    #pet.sleep {
+      animation: sleep 3s ease-in-out infinite;
+      opacity: .88;
+    }
+
+    #pet.dead {
+      animation: none;
+      filter: grayscale(1);
+      opacity: .75;
+    }
+
+    #mood {
+      position: absolute;
+      z-index: 6;
+      bottom: 9px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 0 10px;
+    }
+
+    .p {
+      position: absolute;
+      bottom: 24%;
+      font-size: 24px;
+      opacity: 0;
+      animation: floatUp 1.25s ease-out forwards;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,.25));
+      z-index: 7;
+    }
+
+    @keyframes idle {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.02); }
+    }
+
+    @keyframes eat {
+      0% { transform: scale(1) rotate(0); }
+      35% { transform: scale(1.16) rotate(-7deg); }
+      70% { transform: scale(.96) rotate(5deg); }
+      100% { transform: scale(1) rotate(0); }
+    }
+
+    @keyframes happy {
+      0% { transform: translateY(0) scale(1); }
+      28% { transform: translateY(-20px) scale(1.09); }
+      58% { transform: translateY(0) scale(.95); }
+      78% { transform: translateY(-8px) scale(1.03); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes sick {
+      0%, 100% { transform: translateX(0) rotate(0); }
+      25% { transform: translateX(-5px) rotate(-3deg); }
+      75% { transform: translateX(5px) rotate(3deg); }
+    }
+
+    @keyframes heavy {
+      0%, 100% { transform: translateY(0) scale(1, .96); }
+      50% { transform: translateY(2px) scale(1.04, .93); }
+    }
+
+    @keyframes sleep {
+      0%, 100% { transform: scale(1) translateY(0); }
+      50% { transform: scale(1.045) translateY(-3px); }
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 0; transform: translateY(16px) scale(.72); }
+      18% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-120px) scale(1.18); }
+    }
+
+    .bars {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 6px 7px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .stat span {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .stat b {
+      color: var(--text);
+    }
+
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: #0d1018;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.05);
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      transition: width .22s ease;
+    }
+
+    #bHunger { background: #f65e3b; }
+    #bHappy { background: #edc22e; }
+    #bEnergy { background: #5ac8fa; }
+    #bClean { background: #64e678; }
+    #bHealth { background: #ff5a5a; }
+    #bBelly { background: var(--belly); }
+    #bXp { background: #be64ff; }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid #303850;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #252c40, #1e2435);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.1;
+      min-height: 44px;
+      height: 44px;
+      padding: 0 8px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    button:active {
+      transform: scale(.97);
+      background: #313a55;
+      border-color: #4a5575;
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, #2b78c8, #1f5ea0);
+      border-color: #3b8ee0;
+    }
+
+    button.secondary {
+      background: linear-gradient(180deg, #3a3f55, #2b3045);
+    }
+
+    button.danger {
+      background: linear-gradient(180deg, #a33b3b, #7c2b2b);
+      border-color: #d05555;
+    }
+
+    button.good {
+      background: linear-gradient(180deg, #2e8b57, #226b43);
+      border-color: #48c774;
+    }
+
+    .footer {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.68);
+      backdrop-filter: blur(2px);
+      padding: 12px;
+      z-index: 50;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(94vw, 460px);
+      max-height: 86vh;
+      overflow: auto;
+      background: var(--panel2);
+      border: 1px solid #34405c;
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .modal-close {
+      min-width: 42px;
+      min-height: 36px;
+      height: 36px;
+      border-radius: 12px;
+      font-size: 16px;
+    }
+
+    .ward-group {
+      margin-bottom: 10px;
+    }
+
+    .ward-title {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 800;
+    }
+
+    .ward-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .ward-item {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      background: #1b2030;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px;
+    }
+
+    .ward-emoji {
+      font-size: 22px;
+      text-align: center;
+    }
+
+    .ward-name {
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .ward-desc {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .ward-btn {
+      min-width: 76px;
+      min-height: 34px;
+      height: 34px;
+      font-size: 11px;
+      border-radius: 10px;
+    }
+
+    .game-hud {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 800;
+    }
+
+    .game-hud b {
+      color: var(--text);
+    }
+
+    .game-area {
+      position: relative;
+      height: 230px;
+      background: #0d1018;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .mouse,
+    .dirt {
+      position: absolute;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font-size: 30px;
+      line-height: 1;
+      padding: 0;
+      min-height: auto;
+      height: auto;
+      cursor: pointer;
+      animation: popIn .12s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(.6); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .card {
+      position: relative;
+      height: 58px;
+      border-radius: 12px;
+      background: #252c40;
+      border: 1px solid var(--line);
+      color: transparent;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: transform .12s ease, background .12s ease;
+    }
+
+    .card.flipped {
+      background: #8f7a66;
+      color: #fff;
+    }
+
+    .card.matched {
+      background: #2e8b57;
+      color: #fff;
+      opacity: .55;
+      cursor: default;
+    }
+
+    .card:active {
+      transform: scale(.96);
+    }
+
+    .notice {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 8px;
+      line-height: 1.35;
+    }
+
+    @media (max-height: 760px) {
+      .stage { min-height: 175px; }
+      #pet { font-size: clamp(70px, 20vw, 106px); }
+      .pet-wrap { width: 145px; height: 145px; }
+      button { min-height: 40px; height: 40px; font-size: 11px; }
+      .stat { padding: 5px 6px; font-size: 9px; }
+      .footer { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (min-width: 760px) {
+      .wrap {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="fatal" class="fatal"></div>
+
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="title">🐾 Домик Барсика</div>
+        <div class="sub" id="uname">Игрок</div>
+      </div>
+      <div class="sub" id="status">▶ Бодрствует</div>
+    </div>
+
+    <div class="chips">
+      <div class="chip">⭐ Уровень<b id="level">1</b></div>
+      <div class="chip">🪙 Монеты<b id="coins">100</b></div>
+      <div class="chip">🎮 Игры<b id="games">0</b></div>
+    </div>
+
+    <div class="rooms" id="rooms"></div>
+
+    <div class="stage" id="stage">
+      <div id="fx"></div>
+      <div id="speech">Мяу!</div>
+      <div class="pet-wrap">
+        <div id="pet">🐱</div>
+      </div>
+      <div id="mood">😊 Хорошее настроение</div>
+    </div>
+
+    <div class="bars">
+      <div class="stat"><span>🍖 Сытость <b id="vHunger">75%</b></span><div class="bar"><i id="bHunger"></i></div></div>
+      <div class="stat"><span>😊 Счастье <b id="vHappy">70%</b></span><div class="bar"><i id="bHappy"></i></div></div>
+      <div class="stat"><span>⚡ Энергия <b id="vEnergy">85%</b></span><div class="bar"><i id="bEnergy"></i></div></div>
+      <div class="stat"><span>🧼 Чистота <b id="vClean">80%</b></span><div class="bar"><i id="bClean"></i></div></div>
+      <div class="stat"><span>❤️ Здоровье <b id="vHealth">100%</b></span><div class="bar"><i id="bHealth"></i></div></div>
+      <div class="stat"><span>🫃 Живот <b id="vBelly">10%</b></span><div class="bar"><i id="bBelly"></i></div></div>
+      <div class="stat" style="grid-column: 1 / -1;"><span>⭐ XP <b id="vXp">0/100</b></span><div class="bar"><i id="bXp"></i></div></div>
+    </div>
+
+    <div class="actions" id="actions"></div>
+
+    <div class="footer">
+      <button type="button" id="heal">💊 Лечить</button>
+      <button type="button" id="daily">🎁 Бонус</button>
+      <button type="button" class="primary" id="save">📤 В бота</button>
+      <button type="button" class="secondary" id="new">🔄 Новый</button>
+      <button type="button" class="danger" id="close">✖ Закрыть</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title" id="modalTitle">Меню</div>
+        <button type="button" class="modal-close danger" id="modalClose">✖</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    function showFatal(err) {
+      var el = document.getElementById('fatal');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'fatal';
+        el.className = 'fatal';
+        document.body.appendChild(el);
+      }
+      el.style.display = 'block';
+      el.textContent =
+        'Ошибка запуска домика:\n\n' +
+        (err && err.stack ? err.stack : String(err));
+    }
+
+    window.onerror = function (message, source, lineno, colno, error) {
+      showFatal(error || (message + ' @ ' + lineno + ':' + colno));
+    };
+
+    (function () {
+      try {
+        var tg = null;
+        if (window.Telegram && window.Telegram.WebApp) {
+          tg = window.Telegram.WebApp;
+        }
+
+        if (tg) {
+          try {
+            tg.ready();
+            tg.expand();
+
+            if (tg.setHeaderColor) tg.setHeaderColor('#111420');
+            if (tg.setBackgroundColor) tg.setBackgroundColor('#111420');
+            if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+          } catch (e) {}
+
+          setTimeout(function () {
+            try { tg.expand(); } catch (e) {}
+          }, 300);
+        }
+
+        function $(id) {
+          return document.getElementById(id);
+        }
+
+        function getUserId() {
+          try {
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+              return String(tg.initDataUnsafe.user.id);
+            }
+          } catch (e) {}
+          return 'local';
+        }
+
+        function getUserName() {
+          try {
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.first_name) {
+              return String(tg.initDataUnsafe.user.first_name);
+            }
+          } catch (e) {}
+          return 'Игрок';
+        }
+
+        var UID = getUserId();
+        var KEY = 'barsikpet_' + UID;
+
+        var ROOMS = {
+          kitchen: { name: 'Кухня', icon: '🍽', bg: 'linear-gradient(180deg,#2a2030,#181420)' },
+          living: { name: 'Гостиная', icon: '🛋', bg: 'linear-gradient(180deg,#1b2438,#121826)' },
+          bedroom: { name: 'Спальня', icon: '🛏', bg: 'linear-gradient(180deg,#1a1d33,#10131f)' },
+          bathroom: { name: 'Ванная', icon: '🚿', bg: 'linear-gradient(180deg,#16303a,#0f2028)' },
+          wardrobe: { name: 'Гардероб', icon: '👗', bg: 'linear-gradient(180deg,#2b2035,#17121d)' },
+          playroom: { name: 'Игровая', icon: '🎮', bg: 'linear-gradient(180deg,#162b24,#0f1d19)' },
+          yard: { name: 'Двор', icon: '🌳', bg: 'linear-gradient(180deg,#183024,#102018)' }
+        };
+
+        var SLOT_NAMES = {
+          head: 'Голова',
+          eyes: 'Глаза',
+          neck: 'Шея',
+          body: 'Туловище',
+          back: 'Спина',
+          paws: 'Лапы'
+        };
+
+        var SLOT_POS = {
+          head: { top: '-10%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '0.44em' },
+          eyes: { top: '30%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '0.26em' },
+          neck: { top: '60%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '0.26em' },
+          body: { top: '70%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '0.34em' },
+          back: { top: '45%', right: '-10%', fontSize: '0.32em' },
+          paws: { bottom: '-3%', left: '50%', transform: 'translateX(-50%)', fontSize: '0.24em' }
+        };
+
+        var ITEMS = [
+          { id: 'cap', slot: 'head', name: 'Кепка', emoji: '🧢', cost: 60, desc: '+2 счастья в минуту', bonus: { happy: 0.033 } },
+          { id: 'crown', slot: 'head', name: 'Корона', emoji: '👑', cost: 180, desc: '+5% монет', bonus: { coin: 1.05 } },
+          { id: 'glasses', slot: 'eyes', name: 'Очки', emoji: '👓', cost: 50, desc: '-10% грязи', bonus: { clean: 0.9 } },
+          { id: 'sunglasses', slot: 'eyes', name: 'Солнцезащитные', emoji: '🕶️', cost: 90, desc: '+1 счастье в минуту', bonus: { happy: 0.016 } },
+          { id: 'scarf', slot: 'neck', name: 'Шарф', emoji: '🧣', cost: 70, desc: '-10% усталости', bonus: { energy: 0.9 } },
+          { id: 'bell', slot: 'neck', name: 'Бубенец', emoji: '🔔', cost: 40, desc: '+1 монета за игру', bonus: { coinFlat: 1 } },
+          { id: 'vest', slot: 'body', name: 'Жилетка', emoji: '🦺', cost: 100, desc: '-15% грязи', bonus: { clean: 0.85 } },
+          { id: 'shirt', slot: 'body', name: 'Рубашка', emoji: '👕', cost: 55, desc: 'Лучше пищеварение', bonus: { belly: 1.15 } },
+          { id: 'cape', slot: 'back', name: 'Плащ', emoji: '🧥', cost: 150, desc: '+3 счастья в минуту', bonus: { happy: 0.05 } },
+          { id: 'wings', slot: 'back', name: 'Крылышки', emoji: '🪽', cost: 220, desc: '+20% монет', bonus: { coin: 1.2 } },
+          { id: 'boots', slot: 'paws', name: 'Ботинки', emoji: '🥾', cost: 65, desc: 'Меньше устаёт', bonus: { energy: 0.85 } },
+          { id: 'socks', slot: 'paws', name: 'Носки', emoji: '🧦', cost: 35, desc: '+10% чистоты', bonus: { clean: 0.9 } }
+        ];
+
+        function defaultState() {
+          return {
+            name: getUserName(),
+            room: 'living',
+            hunger: 75,
+            happiness: 70,
+            energy: 85,
+            cleanliness: 80,
+            health: 100,
+            belly: 10,
+            coins: 100,
+            xp: 0,
+            level: 1,
+            poop: 0,
+            sleeping: false,
+            dead: false,
+            bornAt: Date.now(),
+            lastTick: Date.now(),
+            lastDaily: 0,
+            totalFeeds: 0,
+            totalPlays: 0,
+            totalGames: 0,
+            inventory: [],
+            equipped: {
+              head: null,
+              eyes: null,
+              neck: null,
+              body: null,
+              back: null,
+              paws: null
+            }
+          };
+        }
+
+        function normalize(s) {
+          var d = defaultState();
+          var out = {};
+
+          for (var k in d) {
+            if (Object.prototype.hasOwnProperty.call(d, k)) {
+              out[k] = s && s[k] !== undefined && s[k] !== null ? s[k] : d[k];
+            }
+          }
+
+          if (!out.equipped) out.equipped = d.equipped;
+          for (var slot in d.equipped) {
+            if (out.equipped[slot] === undefined) out.equipped[slot] = null;
+          }
+
+          if (!Array.isArray(out.inventory)) out.inventory = [];
+          if (typeof out.belly !== 'number') out.belly = 10;
+          if (typeof out.room !== 'string' || !ROOMS[out.room]) out.room = 'living';
+
+          return out;
+        }
+
+        function loadState() {
+          try {
+            var raw = localStorage.getItem(KEY);
+            if (!raw) return defaultState();
+            return normalize(JSON.parse(raw));
+          } catch (e) {
+            return defaultState();
+          }
+        }
+
+        function saveLocal() {
+          try {
+            localStorage.setItem(KEY, JSON.stringify(state));
+          } catch (e) {}
+        }
+
+        var state = loadState();
+
+        function clamp(v, min, max) {
+          if (typeof min === 'undefined') min = 0;
+          if (typeof max === 'undefined') max = 100;
+          v = Number(v || 0);
+          if (v < min) return min;
+          if (v > max) return max;
+          return v;
+        }
+
+        function randInt(min, max) {
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function pick(arr) {
+          return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function shuffle(arr) {
+          var a = arr.slice();
+          for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = a[i];
+            a[i] = a[j];
+            a[j] = tmp;
+          }
+          return a;
+        }
+
+        function itemById(id) {
+          for (var i = 0; i < ITEMS.length; i++) {
+            if (ITEMS[i].id === id) return ITEMS[i];
+          }
+          return null;
+        }
+
+        function bonuses() {
+          var b = {
+            happy: 0,
+            coin: 1,
+            coinFlat: 0,
+            clean: 1,
+            energy: 1,
+            belly: 1
+          };
+
+          for (var slot in state.equipped) {
+            var id = state.equipped[slot];
+            if (!id) continue;
+            var item = itemById(id);
+            if (!item || !item.bonus) continue;
+
+            if (item.bonus.happy) b.happy += item.bonus.happy;
+            if (item.bonus.coin) b.coin *= item.bonus.coin;
+            if (item.bonus.coinFlat) b.coinFlat += item.bonus.coinFlat;
+            if (item.bonus.clean) b.clean *= item.bonus.clean;
+            if (item.bonus.energy) b.energy *= item.bonus.energy;
+            if (item.bonus.belly) b.belly *= item.bonus.belly;
+          }
+
+          return b;
+        }
+
+        function rewardCoin(base) {
+          var b = bonuses();
+          return Math.max(0, Math.round(Number(base || 0) * b.coin + b.coinFlat));
+        }
+
+        function updateLevel() {
+          state.level = 1 + Math.floor(state.xp / 100);
+        }
+
+        function addXp(n) {
+          state.xp += Math.max(0, Math.floor(n || 0));
+          updateLevel();
+        }
+
+        var speechTimer = null;
+
+        function say(text) {
+          var el = $('speech');
+          if (!el) return;
+          el.textContent = text;
+          el.classList.add('show');
+          clearTimeout(speechTimer);
+          speechTimer = setTimeout(function () {
+            el.classList.remove('show');
+          }, 2000);
+        }
+
+        function burst(emoji, count) {
+          var fx = $('fx');
+          if (!fx) return;
+          count = count || 6;
+
+          for (var i = 0; i < count; i++) {
+            var el = document.createElement('div');
+            el.className = 'p';
+            el.textContent = emoji;
+            el.style.left = (16 + Math.random() * 68) + '%';
+            el.style.animationDuration = (0.9 + Math.random() * 0.7) + 's';
+            el.style.animationDelay = (Math.random() * 0.18) + 's';
+            fx.appendChild(el);
+
+            (function (node) {
+              setTimeout(function () {
+                if (node && node.parentNode) node.parentNode.removeChild(node);
+              }, 1700);
+            })(el);
+          }
+        }
+
+        function setPetAnim(cls, emoji, text, ms, particle, particleCount) {
+          var pet = $('pet');
+          if (!pet) return;
+
+          if (emoji) pet.textContent = emoji;
+
+          pet.classList.remove('eat', 'happy', 'sick', 'sleep', 'dead', 'heavy');
+          void pet.offsetWidth;
+
+          if (cls) pet.classList.add(cls);
+          if (text) say(text);
+          if (particle) burst(particle, particleCount || 6);
+
+          setTimeout(render, ms || 760);
+        }
+
+        function petEmoji() {
+          if (state.dead) return '💀';
+          if (state.sleeping) return '😴';
+          if (state.belly > 78) return '🤢';
+          if (state.health < 30) return '🤒';
+          if (state.hunger < 25) return '🙀';
+          if (state.cleanliness < 25 || state.poop >= 3) return '😾';
+          if (state.happiness > 88) return '😻';
+          if (state.happiness > 72) return '😸';
+          if (state.happiness > 54) return '😺';
+          if (state.happiness > 34) return '🐱';
+          return '😿';
+        }
+
+        function moodText() {
+          if (state.dead) return '💀 Питомец ушёл...';
+          if (state.sleeping) return '💤 Спит и восстанавливает энергию';
+          if (state.belly > 82) return '🤢 Очень тяжёлый живот. Перекорм!';
+          if (state.belly > 65) return '🫃 Животик полный. Не корми и не играй активно.';
+          if (state.health < 30) return '🤒 Болен. Нужна аптечка.';
+          if (state.hunger < 25) return '🙀 Очень голоден.';
+          if (state.cleanliness < 25 || state.poop >= 3) return '😾 Грязно. Убери лоток или помой.';
+          if (state.happiness > 88) return '😻 Счастлив и сияет.';
+          if (state.happiness > 72) return '😸 Мурлычет от удовольствия.';
+          if (state.happiness > 54) return '😊 Хорошее настроение.';
+          if (state.happiness > 34) return '😐 Немного скучает.';
+          return '😿 Грустит.';
+        }
+
+        function statusText() {
+          if (state.dead) return '💀 Game over';
+          if (state.sleeping) return '😴 Спит';
+          if (state.belly > 75) return '🫃 Перекорм';
+          if (state.health < 35) return '🤒 Болен';
+          if (state.poop >= 3) return '💩 Грязно';
+          if (state.hunger < 25) return '🍖 Голоден';
+          return '▶ ' + ROOMS[state.room].name;
+        }
+
+        function setBar(barId, value) {
+          var el = $(barId);
+          if (el) el.style.width = clamp(value) + '%';
+        }
+
+        function renderAccessories() {
+          var pet = $('pet');
+          if (!pet) return;
+
+          var old = pet.querySelectorAll('.acc');
+          for (var i = 0; i < old.length; i++) {
+            if (old[i].parentNode) old[i].parentNode.removeChild(old[i]);
+          }
+
+          for (var slot in state.equipped) {
+            var id = state.equipped[slot];
+            if (!id) continue;
+            var item = itemById(id);
+            if (!item) continue;
+
+            var el = document.createElement('div');
+            el.className = 'acc acc-' + slot;
+            el.textContent = item.emoji;
+
+            var pos = SLOT_POS[slot] || {};
+            if (pos.top) el.style.top = pos.top;
+            if (pos.bottom) el.style.bottom = pos.bottom;
+            if (pos.left) el.style.left = pos.left;
+            if (pos.right) el.style.right = pos.right;
+            if (pos.transform) el.style.transform = pos.transform;
+            if (pos.fontSize) el.style.fontSize = pos.fontSize;
+
+            pet.appendChild(el);
+          }
+        }
+
+        function renderRooms() {
+          var el = $('rooms');
+          if (!el) return;
+
+          var html = '';
+          for (var key in ROOMS) {
+            var r = ROOMS[key];
+            var active = state.room === key ? ' active' : '';
+            html += '<button type="button" class="room-btn' + active + '" data-room="' + key + '">' + r.icon + ' ' + r.name + '</button>';
+          }
+          el.innerHTML = html;
+        }
+
+        function roomActions() {
+          var acts = [];
+
+          if (state.room === 'kitchen') {
+            acts = [
+              { id: 'feed_healthy', text: '🍎 Полезно' },
+              { id: 'feed_snack', text: '🍪 Перекус' },
+              { id: 'feed_treat', text: '🍰 Лакомство' },
+              { id: 'feed_water', text: '💧 Вода' }
+            ];
+          } else if (state.room === 'living') {
+            acts = [
+              { id: 'pet_touch', text: '🤗 Погладить' },
+              { id: 'play_ball', text: '🎾 Мячик' },
+              { id: 'rest', text: '😌 Отдых' },
+              { id: 'to_living', text: '🛋 Здесь' }
+            ];
+          } else if (state.room === 'bedroom') {
+            acts = [
+              { id: 'sleep', text: state.sleeping ? '☀️ Разбудить' : '😴 Спать' },
+              { id: 'dream', text: '💭 Снится еда' }
+            ];
+          } else if (state.room === 'bathroom') {
+            acts = [
+              { id: 'litter', text: '🧹 Лоток' },
+              { id: 'shower', text: '🛁 Помыть' }
+            ];
+          } else if (state.room === 'wardrobe') {
+            acts = [
+              { id: 'open_wardrobe', text: '👗 Открыть гардероб' },
+              { id: 'mirror', text: '🪞 Посмотреть' }
+            ];
+          } else if (state.room === 'playroom') {
+            acts = [
+              { id: 'game_mouse', text: '🐭 Мышка' },
+              { id: 'game_memory', text: '🧠 Память' },
+              { id: 'game_clean', text: '🧺 Уборка' }
+            ];
+          } else if (state.room === 'yard') {
+            acts = [
+              { id: 'walk', text: '🚶 Прогулка' },
+              { id: 'butterfly', text: '🦋 Бабочки' },
+              { id: 'sun', text: '☀️ Погреться' }
+            ];
+          }
+
+          return acts;
+        }
+
+        function renderActions() {
+          var el = $('actions');
+          if (!el) return;
+
+          var acts = roomActions();
+          var html = '';
+
+          for (var i = 0; i < acts.length; i++) {
+            var a = acts[i];
+            html += '<button type="button" data-act="' + a.id + '">' + a.text + '</button>';
+          }
+
+          el.innerHTML = html;
+        }
+
+        function render() {
+          $('uname').textContent = state.name || 'Игрок';
+          $('status').textContent = statusText();
+          $('level').textContent = state.level;
+          $('coins').textContent = Math.floor(state.coins);
+          $('games').textContent = state.totalGames;
+
+          $('vHunger').textContent = Math.round(state.hunger) + '%';
+          $('vHappy').textContent = Math.round(state.happiness) + '%';
+          $('vEnergy').textContent = Math.round(state.energy) + '%';
+          $('vClean').textContent = Math.round(state.cleanliness) + '%';
+          $('vHealth').textContent = Math.round(state.health) + '%';
+          $('vBelly').textContent = Math.round(state.belly) + '%';
+
+          var xpIn = state.xp % 100;
+          $('vXp').textContent = xpIn + '/100';
+
+          setBar('bHunger', state.hunger);
+          setBar('bHappy', state.happiness);
+          setBar('bEnergy', state.energy);
+          setBar('bClean', state.cleanliness);
+          setBar('bHealth', state.health);
+          setBar('bBelly', state.belly);
+          setBar('bXp', xpIn);
+
+          var stage = $('stage');
+          if (stage && ROOMS[state.room]) {
+            stage.style.background = ROOMS[state.room].bg;
+          }
+
+          var pet = $('pet');
+          if (pet) {
+            pet.textContent = petEmoji();
+            pet.classList.remove('eat', 'happy', 'sick', 'sleep', 'dead', 'heavy');
+
+            if (state.dead) pet.classList.add('dead');
+            else if (state.sleeping) pet.classList.add('sleep');
+            else if (state.belly > 65) pet.classList.add('heavy');
+            else if (state.health < 35) pet.classList.add('sick');
+          }
+
+          renderAccessories();
+          renderRooms();
+          renderActions();
+          $('mood').textContent = moodText();
+        }
+
+        function tick() {
+          if (state.dead) {
+            state.lastTick = Date.now();
+            render();
+            return;
+          }
+
+          var now = Date.now();
+          var dt = (now - (state.lastTick || now)) / 1000;
+
+          if (dt < 0) dt = 0;
+          if (dt > 3600) dt = 3600;
+
+          state.lastTick = now;
+
+          var b = bonuses();
+
+          if (state.sleeping) {
+            state.energy = clamp(state.energy + dt * 0.08);
+            state.hunger = clamp(state.hunger - dt * 0.004);
+            state.happiness = clamp(state.happiness - dt * 0.001 + b.happy * dt * 0.3);
+            state.belly = clamp(state.belly - dt * 0.006 * b.belly);
+
+            if (state.energy >= 100) {
+              state.sleeping = false;
+              say('Выспался! ☀️');
+              burst('☀️', 5);
+            }
+          } else {
+            state.hunger = clamp(state.hunger - dt * 0.012);
+            state.happiness = clamp(state.happiness - dt * 0.008 + b.happy * dt);
+            state.energy = clamp(state.energy - dt * 0.006 * b.energy);
+            state.cleanliness = clamp(state.cleanliness - dt * 0.005 * b.clean);
+            state.belly = clamp(state.belly - dt * 0.010 * b.belly);
+
+            if (Math.random() < dt * 0.002 && state.hunger < 75) {
+              state.poop = Math.min(6, state.poop + 1);
+            }
+          }
+
+          if (state.poop >= 3) {
+            state.health = clamp(state.health - dt * 0.020);
+            state.cleanliness = clamp(state.cleanliness - dt * 0.006);
+          }
+
+          if (state.hunger <= 0) {
+            state.health = clamp(state.health - dt * 0.040);
+          }
+
+          if (state.belly > 80) {
+            state.health = clamp(state.health - dt * 0.018);
+            state.happiness = clamp(state.happiness - dt * 0.025);
+          } else if (state.belly > 65) {
+            state.happiness = clamp(state.happiness - dt * 0.010);
+          }
+
+          if (state.happiness <= 10) {
+            state.health = clamp(state.health - dt * 0.012);
+          }
+
+          if (state.hunger > 45 && state.cleanliness > 45 && state.happiness > 45 && state.belly < 70) {
+            state.health = clamp(state.health + dt * 0.006);
+          }
+
+          if (state.health <= 0) {
+            state.health = 0;
+            state.dead = true;
+            state.sleeping = false;
+            say('Питомец умер... 💀');
+            burst('🪦', 4);
+          }
+
+          saveLocal();
+          render();
+        }
+
+        function canAct() {
+          if (state.dead) {
+            say('Уже поздно. Нажми 🔄 Новый.');
+            return false;
+          }
+
+          if (state.sleeping) {
+            say('Он спит. Разбуди его.');
+            return false;
+          }
+
+          return true;
+        }
+
+        function canActivePlay() {
+          if (!canAct()) return false;
+
+          if (state.belly > 70) {
+            say('Слишком полный животик. Сначала перевари еду.');
+            burst('🫃', 3);
+            return false;
+          }
+
+          return true;
+        }
+
+        function wakeIfNeeded(reason) {
+          if (state.sleeping) {
+            state.sleeping = false;
+            say(reason || 'Разбудил!');
+            burst('☀️', 3);
+          }
+        }
+
+        function feed(kind) {
+          if (state.dead) {
+            say('Питомец умер...');
+            return;
+          }
+
+          wakeIfNeeded('Разбудил кормёжкой!');
+
+          var hungerBefore = state.hunger;
+          var bellyAdd = 0;
+          var happyAdd = 0;
+          var energyAdd = 0;
+          var cleanSub = 0;
+          var poopAdd = 0;
+          var healthSub = 0;
+          var xpAdd = 3;
+          var particle = '🍖';
+          var phrase = 'Ням!';
+
+          if (kind === 'healthy') {
+            state.hunger = clamp(state.hunger + 16);
+            bellyAdd = hungerBefore > 82 ? 10 : 3;
+            happyAdd = 2;
+            poopAdd = hungerBefore > 92 ? 1 : 0;
+            xpAdd = 5;
+            particle = '🍎';
+            phrase = 'Полезно!';
+          } else if (kind === 'snack') {
+            state.hunger = clamp(state.hunger + 10);
+            bellyAdd = hungerBefore > 75 ? 12 : 6;
+            happyAdd = 5;
+            poopAdd = 1;
+            xpAdd = 3;
+            particle = '🍪';
+            phrase = 'Вкусно!';
+          } else if (kind === 'treat') {
+            state.hunger = clamp(state.hunger + 6);
+            bellyAdd = hungerBefore > 70 ? 18 : 10;
+            happyAdd = 10;
+            poopAdd = 1;
+            healthSub = bellyAdd > 12 ? 1 : 0;
+            xpAdd = 2;
+            particle = '🍰';
+            phrase = 'Лакомство!';
+          } else if (kind === 'water') {
+            state.hunger = clamp(state.hunger + 2);
+            state.belly = clamp(state.belly - 15);
+            happyAdd = 1;
+            xpAdd = 1;
+            particle = '💧';
+            phrase = 'Попил!';
+          }
+
+          state.belly = clamp(state.belly + bellyAdd);
+          state.happiness = clamp(state.happiness + happyAdd);
+          state.energy = clamp(state.energy + energyAdd);
+          state.cleanliness = clamp(state.cleanliness - cleanSub);
+          state.health = clamp(state.health - healthSub);
+          state.poop = Math.min(6, state.poop + poopAdd);
+          state.totalFeeds += 1;
+          addXp(xpAdd);
+
+          if (state.hunger > 97 && kind !== 'water') {
+            say('Перекорм! Животик болит...');
+            burst('🤢', 4);
+          } else {
+            say(phrase);
+            burst(particle, 6);
+          }
+
+          setPetAnim('eat', '😋', '', 650);
+          saveLocal();
+          render();
+        }
+
+        function petTouch() {
+          if (!canAct()) return;
+
+          state.happiness = clamp(state.happiness + 8);
+          state.energy = clamp(state.energy - 1);
+          addXp(4);
+          setPetAnim('happy', '😸', 'Мурр~', 700, '❤️', 6);
+          saveLocal();
+        }
+
+        function playBall() {
+          if (!canActivePlay()) return;
+
+          if (state.energy < 12) {
+            say('Слишком устал для мячика 😿');
+            return;
+          }
+
+          state.happiness = clamp(state.happiness + 14);
+          state.energy = clamp(state.energy - 10);
+          state.cleanliness = clamp(state.cleanliness - 4);
+          state.coins += rewardCoin(2);
+          state.totalPlays += 1;
+          addXp(8);
+
+          setPetAnim('happy', '😸', 'Мяч! 🎾', 720, '🎾', 7);
+          saveLocal();
+        }
+
+        function rest() {
+          if (!canAct()) return;
+
+          state.energy = clamp(state.energy + 10);
+          state.happiness = clamp(state.happiness + 2);
+          state.belly = clamp(state.belly - 3);
+          addXp(2);
+
+          setPetAnim('happy', '😌', 'Отдыхаю...', 700, '😌', 4);
+          saveLocal();
+        }
+
+        function dream() {
+          if (!canAct()) return;
+
+          state.happiness = clamp(state.happiness + 4);
+          state.belly = clamp(state.belly + 2);
+          addXp(1);
+
+          say('Снится рыбка... 🐟');
+          burst('💭', 4);
+          saveLocal();
+          render();
+        }
+
+        function toggleSleep() {
+          if (state.dead) {
+            say('Уже поздно...');
+            return;
+          }
+
+          state.sleeping = !state.sleeping;
+
+          if (state.sleeping) {
+            setPetAnim('sleep', '😴', 'Сладких снов... 💤', 900, '💤', 4);
+          } else {
+            setPetAnim('happy', '😺', 'Проснулся! ☀️', 560, '☀️', 4);
+          }
+
+          saveLocal();
+          render();
+        }
+
+        function cleanLitter() {
+          if (!canAct()) return;
+
+          if (state.poop === 0 && state.cleanliness > 92) {
+            say('Уже чисто! 🧼');
+            return;
+          }
+
+          state.poop = 0;
+          state.cleanliness = clamp(state.cleanliness + 22);
+          addXp(4);
+
+          setPetAnim('happy', '😺', 'Чисто! 🧹', 650, '🧹', 6);
+          saveLocal();
+        }
+
+        function shower() {
+          if (!canAct()) return;
+
+          state.cleanliness = clamp(state.cleanliness + 35);
+          state.poop = Math.max(0, state.poop - 1);
+          state.happiness = clamp(state.happiness + 3);
+          state.energy = clamp(state.energy - 5);
+          addXp(5);
+
+          setPetAnim('happy', '😺', 'Буль-буль! 🛁', 700, '🫧', 8);
+          saveLocal();
+        }
+
+        function walk() {
+          if (!canActivePlay()) return;
+
+          if (state.energy < 8) {
+            say('Устал гулять 😿');
+            return;
+          }
+
+          state.happiness = clamp(state.happiness + 10);
+          state.energy = clamp(state.energy - 8);
+          state.cleanliness = clamp(state.cleanliness - 2);
+          state.belly = clamp(state.belly - 6);
+          state.coins += rewardCoin(1);
+          addXp(6);
+
+          setPetAnim('happy', '😸', 'Свежий воздух!', 720, '🌿', 6);
+          saveLocal();
+        }
+
+        function butterfly() {
+          if (!canActivePlay()) return;
+
+          if (state.energy < 5) {
+            say('Мало энергии...');
+            return;
+          }
+
+          state.happiness = clamp(state.happiness + 8);
+          state.energy = clamp(state.energy - 5);
+          state.coins += rewardCoin(1);
+          addXp(5);
+
+          setPetAnim('happy', '😻', 'Бабочка! 🦋', 700, '🦋', 7);
+          saveLocal();
+        }
+
+        function sunbathe() {
+          if (!canAct()) return;
+
+          state.happiness = clamp(state.happiness + 7);
+          state.energy = clamp(state.energy + 4);
+          state.cleanliness = clamp(state.cleanliness - 1);
+          addXp(3);
+
+          setPetAnim('happy', '😺', 'Тепло... ☀️', 700, '☀️', 5);
+          saveLocal();
+        }
+
+        function mirror() {
+          if (!canAct()) return;
+
+          var count = 0;
+          for (var slot in state.equipped) {
+            if (state.equipped[slot]) count++;
+          }
+
+          if (count) {
+            say('Красавец в ' + count + ' вещах! 👗');
+            burst('✨', 6);
+          } else {
+            say('Обычный котик 🐱');
+            burst('🪞', 3);
+          }
+
+          state.happiness = clamp(state.happiness + 2);
+          saveLocal();
+          render();
+        }
+
+        function heal() {
+          if (state.dead) {
+            say('Аптечка уже не поможет... 💀');
+            return;
+          }
+
+          if (state.health >= 100) {
+            say('Здоровье уже полное ❤️');
+            return;
+          }
+
+          if (state.coins < 20) {
+            say('Нужно 20 🪙. Сыграй миниигру.');
+            return;
+          }
+
+          state.coins -= 20;
+          state.health = clamp(state.health + 30);
+          state.belly = clamp(state.belly - 8);
+          addXp(6);
+
+          setPetAnim('happy', '😺', 'Лечусь! 💊', 680, '💊', 6);
+          saveLocal();
+        }
+
+        function daily() {
+          if (state.dead) {
+            say('Питомец умер...');
+            return;
+          }
+
+          var now = Date.now();
+          var cooldown = 20 * 60 * 60 * 1000;
+
+          if (state.lastDaily && now - state.lastDaily < cooldown) {
+            var left = Math.ceil((cooldown - (now - state.lastDaily)) / (60 * 60 * 1000));
+            say('Бонус будет через ' + left + ' ч.');
+            return;
+          }
+
+          state.coins += 50;
+          state.lastDaily = now;
+          addXp(3);
+
+          setPetAnim('happy', '😻', 'Бонус дня +50 🪙', 720, '🎁', 8);
+          saveLocal();
+        }
+
+        function newPet() {
+          state = defaultState();
+          state.name = getUserName();
+          saveLocal();
+          render();
+          say('Новый питомец появился! 🐣');
+          burst('🐣', 6);
+        }
+
+        function sendToBot() {
+          updateLevel();
+
+          var payload = {
+            game: 'tama',
+            action: 'save',
+            name: state.name || 'Игрок',
+            level: state.level,
+            coins: Math.floor(state.coins),
+            happiness: Math.round(state.happiness),
+            health: Math.round(state.health),
+            hunger: Math.round(state.hunger),
+            energy: Math.round(state.energy),
+            cleanliness: Math.round(state.cleanliness),
+            belly: Math.round(state.belly),
+            poop: state.poop,
+            dead: !!state.dead,
+            sleeping: !!state.sleeping,
+            room: state.room,
+            inventory: state.inventory,
+            equipped: state.equipped,
+            state: state
+          };
+
+          if (tg && tg.sendData) {
+            tg.sendData(JSON.stringify(payload));
+            say('Отправил сохранение в бота 📤');
+            burst('📤', 4);
+          } else {
+            alert('Сохранение в бота доступно только внутри Telegram Mini App.');
+          }
+        }
+
+        function closeApp() {
+          if (tg && tg.close) {
+            try { tg.close(); } catch (e) {}
+          }
+        }
+
+        // ===================== МОДАЛКИ =====================
+        var gameTimer = null;
+        var gameSpawn = null;
+        var gameClick = null;
+
+        function clearGame() {
+          if (gameTimer) clearInterval(gameTimer);
+          if (gameSpawn) clearInterval(gameSpawn);
+          if (gameClick) clearInterval(gameClick);
+          gameTimer = null;
+          gameSpawn = null;
+          gameClick = null;
+        }
+
+        function openModal(title, html) {
+          clearGame();
+          $('modalTitle').textContent = title;
+          $('modalBody').innerHTML = html;
+          $('modal').classList.add('show');
+        }
+
+        function closeModal() {
+          clearGame();
+          $('modal').classList.remove('show');
+          $('modalBody').innerHTML = '';
+          render();
+        }
+
+        // ===================== ГАРДЕРОБ =====================
+        function openWardrobe() {
+          var html = '';
+          var slots = ['head', 'eyes', 'neck', 'body', 'back', 'paws'];
+
+          for (var si = 0; si < slots.length; si++) {
+            var slot = slots[si];
+            html += '<div class="ward-group">';
+            html += '<div class="ward-title">' + SLOT_NAMES[slot] + '</div>';
+            html += '<div class="ward-list">';
+
+            for (var ii = 0; ii < ITEMS.length; ii++) {
+              var item = ITEMS[ii];
+              if (item.slot !== slot) continue;
+
+              var owned = state.inventory.indexOf(item.id) >= 0;
+              var eq = state.equipped[slot] === item.id;
+
+              html += '<div class="ward-item">';
+              html += '<div class="ward-emoji">' + item.emoji + '</div>';
+              html += '<div>';
+              html += '<div class="ward-name">' + item.name + (eq ? ' · надето' : '') + '</div>';
+              html += '<div class="ward-desc">' + item.desc + '</div>';
+              html += '</div>';
+
+              if (!owned) {
+                html += '<button type="button" class="ward-btn good" data-mact="buy" data-id="' + item.id + '">Купить ' + item.cost + '🪙</button>';
+              } else if (eq) {
+                html += '<button type="button" class="ward-btn danger" data-mact="unequip" data-id="' + item.id + '">Снять</button>';
+              } else {
+                html += '<button type="button" class="ward-btn primary" data-mact="equip" data-id="' + item.id + '">Надеть</button>';
+              }
+
+              html += '</div>';
+            }
+
+            html += '</div></div>';
+          }
+
+          html += '<div class="notice">Одежда даёт пассивные бонусы и отображается на Барсике.</div>';
+          openModal('👗 Гардероб', html);
+        }
+
+        function handleWardrobeAction(act, id) {
+          var item = itemById(id);
+          if (!item) return;
+
+          if (act === 'buy') {
+            if (state.inventory.indexOf(item.id) >= 0) return;
+            if (state.coins < item.cost) {
+              say('Не хватает монет: ' + item.cost + '🪙');
+              return;
+            }
+            state.coins -= item.cost;
+            state.inventory.push(item.id);
+            state.equipped[item.slot] = item.id;
+            say('Куплено и надето: ' + item.name);
+            burst('🛍', 5);
+          } else if (act === 'equip') {
+            state.equipped[item.slot] = item.id;
+            say('Надето: ' + item.name);
+            burst('✨', 4);
+          } else if (act === 'unequip') {
+            state.equipped[item.slot] = null;
+            say('Снято: ' + item.name);
+          }
+
+          saveLocal();
+          openWardrobe();
+          render();
+        }
+
+        // ===================== МИНИИГРЫ =====================
+        function startMouseGame() {
+          if (!canActivePlay()) return;
+
+          openModal(
+            '🐭 Лови мышку',
+            '<div class="game-hud"><span>Очки: <b id="mScore">0</b></span><span>Время: <b id="mTime">20</b></span></div>' +
+            '<div id="mArea" class="game-area"></div>' +
+            '<div class="notice">Тапай по мышке. Награда: монеты, счастье, XP.</div>'
+          );
+
+          var score = 0;
+          var time = 20;
+
+          function spawnMouse() {
+            var area = $('mArea');
+            if (!area) return;
+
+            var m = document.createElement('button');
+            m.type = 'button';
+            m.className = 'mouse';
+            m.textContent = '🐭';
+            m.style.left = randInt(4, 82) + '%';
+            m.style.top = randInt(6, 78) + '%';
+
+            m.addEventListener('pointerdown', function (e) {
+              e.preventDefault();
+              score++;
+              $('mScore').textContent = score;
+              if (m.parentNode) m.parentNode.removeChild(m);
+            });
+
+            area.appendChild(m);
+
+            setTimeout(function () {
+              if (m.parentNode) m.parentNode.removeChild(m);
+            }, 900);
+          }
+
+          gameTimer = setInterval(function () {
+            time--;
+            var el = $('mTime');
+            if (el) el.textContent = time;
+            if (time <= 0) {
+              clearGame();
+              finishMouse(score);
+            }
+          }, 1000);
+
+          gameSpawn = setInterval(spawnMouse, 720);
+          spawnMouse();
+        }
+
+        function finishMouse(score) {
+          var reward = rewardCoin(Math.max(1, Math.round(score * 0.8)));
+          state.coins += reward;
+          state.happiness = clamp(state.happiness + Math.min(20, score * 0.7));
+          state.energy = clamp(state.energy - 5);
+          state.totalGames += 1;
+          addXp(score * 2);
+          saveLocal();
+          closeModal();
+          say('Мышек поймано: ' + score + '. +' + reward + '🪙');
+          burst('🪙', 8);
+        }
+
+        function startMemoryGame() {
+          if (!canActivePlay()) return;
+
+          var pairs = ['🍖', '🎾', '💤', '🧼', '💊', '🪙'];
+          var deck = shuffle(pairs.concat(pairs));
+
+          var html = '<div class="game-hud"><span>Ходы: <b id="memMoves">0</b></span><span>Пары: <b id="memPairs">0</b>/6</span></div><div class="memory-grid" id="memGrid">';
+
+          for (var i = 0; i < deck.length; i++) {
+            html += '<button type="button" class="card" data-idx="' + i + '" data-val="' + deck[i] + '">' + deck[i] + '</button>';
+          }
+
+          html += '</div><div class="notice">Найди все пары. Меньше ходов — больше награда.</div>';
+          openModal('🧠 Память', html);
+
+          var first = null;
+          var lock = false;
+          var moves = 0;
+          var matched = 0;
+
+          var grid = $('memGrid');
+          if (!grid) return;
+
+          grid.addEventListener('pointerdown', function (e) {
+            var btn = e.target.closest('.card');
+            if (!btn || lock) return;
+            e.preventDefault();
+
+            if (btn.classList.contains('flipped') || btn.classList.contains('matched')) return;
+
+            btn.classList.add('flipped');
+
+            if (!first) {
+              first = btn;
+              return;
+            }
+
+            moves++;
+            $('memMoves').textContent = moves;
+
+            if (first.dataset.val === btn.dataset.val) {
+              first.classList.add('matched');
+              btn.classList.add('matched');
+              first = null;
+              matched++;
+              $('memPairs').textContent = matched;
+
+              if (matched === 6) {
+                setTimeout(function () {
+                  finishMemory(moves);
+                }, 350);
+              }
+            } else {
+              lock = true;
+              var a = first;
+              var b = btn;
+              first = null;
+
+              setTimeout(function () {
+                a.classList.remove('flipped');
+                b.classList.remove('flipped');
+                lock = false;
+              }, 650);
+            }
+          });
+        }
+
+        function finishMemory(moves) {
+          var base = Math.max(5, 35 - moves);
+          var reward = rewardCoin(base);
+          state.coins += reward;
+          state.happiness = clamp(state.happiness + 10);
+          state.energy = clamp(state.energy - 4);
+          state.totalGames += 1;
+          addXp(12);
+          saveLocal();
+          closeModal();
+          say('Память! Ходов: ' + moves + '. +' + reward + '🪙');
+          burst('🧠', 6);
+        }
+
+        function startCleanGame() {
+          if (!canAct()) return;
+
+          openModal(
+            '🧺 Уборка',
+            '<div class="game-hud"><span>Убрано: <b id="cScore">0</b></span><span>Время: <b id="cTime">15</b></span></div>' +
+            '<div id="cArea" class="game-area"></div>' +
+            '<div class="notice">Тапай по грязи и кучкам. Награда: монеты и чистота.</div>'
+          );
+
+          var score = 0;
+          var time = 15;
+          var emojis = ['💩', '🗑', '🦟', '🧻'];
+
+          function spawnDirt() {
+            var area = $('cArea');
+            if (!area) return;
+
+            var d = document.createElement('button');
+            d.type = 'button';
+            d.className = 'dirt';
+            d.textContent = pick(emojis);
+            d.style.left = randInt(4, 82) + '%';
+            d.style.top = randInt(6, 78) + '%';
+
+            d.addEventListener('pointerdown', function (e) {
+              e.preventDefault();
+              score++;
+              $('cScore').textContent = score;
+              if (d.parentNode) d.parentNode.removeChild(d);
+            });
+
+            area.appendChild(d);
+
+            setTimeout(function () {
+              if (d.parentNode) d.parentNode.removeChild(d);
+            }, 1200);
+          }
+
+          gameTimer = setInterval(function () {
+            time--;
+            var el = $('cTime');
+            if (el) el.textContent = time;
+            if (time <= 0) {
+              clearGame();
+              finishClean(score);
+            }
+          }, 1000);
+
+          gameSpawn = setInterval(spawnDirt, 520);
+          spawnDirt();
+        }
+
+        function finishClean(score) {
+          var reward = rewardCoin(Math.max(1, Math.round(score * 0.6)));
+          state.coins += reward;
+          state.cleanliness = clamp(state.cleanliness + Math.min(30, score * 2));
+          state.poop = Math.max(0, state.poop - Math.floor(score / 3));
+          state.energy = clamp(state.energy - 3);
+          state.totalGames += 1;
+          addXp(score * 2);
+          saveLocal();
+          closeModal();
+          say('Убрано: ' + score + '. +' + reward + '🪙');
+          burst('🧼', 7);
+        }
+
+        // ===================== ДЕЙСТВИЯ =====================
+        function doAction(id) {
+          if (id === 'feed_healthy') return feed('healthy');
+          if (id === 'feed_snack') return feed('snack');
+          if (id === 'feed_treat') return feed('treat');
+          if (id === 'feed_water') return feed('water');
+
+          if (id === 'pet_touch') return petTouch();
+          if (id === 'play_ball') return playBall();
+          if (id === 'rest') return rest();
+          if (id === 'dream') return dream();
+
+          if (id === 'sleep') return toggleSleep();
+
+          if (id === 'litter') return cleanLitter();
+          if (id === 'shower') return shower();
+
+          if (id === 'open_wardrobe') return openWardrobe();
+          if (id === 'mirror') return mirror();
+
+          if (id === 'game_mouse') return startMouseGame();
+          if (id === 'game_memory') return startMemoryGame();
+          if (id === 'game_clean') return startCleanGame();
+
+          if (id === 'walk') return walk();
+          if (id === 'butterfly') return butterfly();
+          if (id === 'sun') return sunbathe();
+        }
+
+        // ===================== СОБЫТИЯ =====================
+        function bindPress(el, fn) {
+          if (!el) return;
+
+          var lockUntil = 0;
+
+          function fire(e) {
+            var now = Date.now();
+            if (now < lockUntil) return;
+            lockUntil = now + 110;
+
+            if (e && e.preventDefault) e.preventDefault();
+
+            try {
+              fn();
+            } catch (err) {
+              showFatal(err);
+            }
+          }
+
+          el.addEventListener('pointerdown', fire);
+          el.addEventListener('touchstart', fire, { passive: false });
+          el.addEventListener('click', fire);
+        }
+
+        $('rooms').addEventListener('pointerdown', function (e) {
+          var btn = e.target.closest('.room-btn');
+          if (!btn) return;
+          e.preventDefault();
+          state.room = btn.dataset.room;
+          saveLocal();
+          render();
+        });
+
+        $('actions').addEventListener('pointerdown', function (e) {
+          var btn = e.target.closest('button[data-act]');
+          if (!btn) return;
+          e.preventDefault();
+          doAction(btn.dataset.act);
+        });
+
+        $('modalBody').addEventListener('pointerdown', function (e) {
+          var btn = e.target.closest('button[data-mact]');
+          if (!btn) return;
+          e.preventDefault();
+          handleWardrobeAction(btn.dataset.mact, btn.dataset.id);
+        });
+
+        bindPress($('modalClose'), closeModal);
+        bindPress($('heal'), heal);
+        bindPress($('daily'), daily);
+        bindPress($('save'), sendToBot);
+        bindPress($('new'), newPet);
+        bindPress($('close'), closeApp);
+
+        window.addEventListener('resize', function () {
+          if (tg && tg.expand) {
+            try { tg.expand(); } catch (e) {}
+          }
+        });
+
+        $('modal').addEventListener('pointerdown', function (e) {
+          if (e.target && e.target.id === 'modal') closeModal();
+        });
+
+        updateLevel();
+        render();
+        setInterval(tick, 1000);
+
+        setTimeout(function () {
+          say('Покорми меня, но не перекорми! 🐾');
+        }, 700);
+      } catch (err) {
+        showFatal(err);
+      }
+    })();
+  </script>
+</body>
+</html>
