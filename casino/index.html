@@ -1,1 +1,2049 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0b1020">
+  <title>Barsik Casino</title>
 
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg2: #111a33;
+      --panel: #151d35;
+      --panel2: #1b2545;
+      --line: #2b3a66;
+      --text: #eef3ff;
+      --muted: #9aa8ca;
+      --gold: #ffd166;
+      --green: #22c55e;
+      --red: #ef4444;
+      --blue: #38bdf8;
+      --purple: #a855f7;
+      --orange: #fb923c;
+      --dark: #070b16;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(168,85,247,.18), transparent 28%),
+        radial-gradient(circle at 80% 20%, rgba(56,189,248,.16), transparent 30%),
+        linear-gradient(180deg, #090d1b, #0b1020 40%, #090e1b);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow: hidden;
+      touch-action: manipulation;
+      overscroll-behavior: none;
+    }
+
+    .fatal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: #111;
+      color: #fff;
+      padding: 16px;
+      white-space: pre-wrap;
+      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      overflow: auto;
+    }
+
+    .app {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding:
+        max(8px, env(safe-area-inset-top))
+        max(8px, env(safe-area-inset-right))
+        max(8px, env(safe-area-inset-bottom))
+        max(8px, env(safe-area-inset-left));
+      overscroll-behavior: none;
+    }
+
+    header {
+      flex: 0 0 auto;
+      background: linear-gradient(135deg, rgba(21,29,53,.95), rgba(11,16,32,.92));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      box-shadow: 0 12px 35px rgba(0,0,0,.25);
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 950;
+      letter-spacing: .2px;
+      background: linear-gradient(90deg, #ffd166, #38bdf8, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .balance {
+      justify-self: end;
+      text-align: right;
+      font-weight: 950;
+      font-size: 18px;
+      color: var(--gold);
+      text-shadow: 0 0 18px rgba(255,209,102,.25);
+    }
+
+    .head-actions {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .tabs {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      background: rgba(21,29,53,.75);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #24335f, #16203d);
+      color: #fff;
+      border-color: #48609b;
+      box-shadow: 0 0 18px rgba(56,189,248,.12);
+    }
+
+    main {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      border-radius: 18px;
+    }
+
+    .tab {
+      display: none;
+      min-height: 100%;
+    }
+
+    .tab.active {
+      display: block;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(21,29,53,.94), rgba(12,18,35,.94));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 12px 35px rgba(0,0,0,.22);
+    }
+
+    .title {
+      font-size: 16px;
+      font-weight: 950;
+      margin-bottom: 8px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid #31416d;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #202b4d, #151d35);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.1;
+      min-height: 44px;
+      padding: 8px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    button:active {
+      transform: scale(.97);
+      filter: brightness(1.08);
+    }
+
+    button:disabled {
+      opacity: .45;
+      pointer-events: none;
+    }
+
+    button.gold {
+      background: linear-gradient(180deg, #b98b20, #7a5b15);
+      border-color: #ffd166;
+      color: #fff8dc;
+    }
+
+    button.green {
+      background: linear-gradient(180deg, #1f8f4d, #146637);
+      border-color: #4ade80;
+    }
+
+    button.red {
+      background: linear-gradient(180deg, #a83232, #7a2020);
+      border-color: #f87171;
+    }
+
+    button.blue {
+      background: linear-gradient(180deg, #1d6fa8, #14537b);
+      border-color: #60c8ff;
+    }
+
+    button.small {
+      min-height: 36px;
+      font-size: 12px;
+      border-radius: 11px;
+      padding: 6px;
+    }
+
+    .chip {
+      min-height: 40px;
+      border-radius: 999px;
+      font-weight: 950;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: inset 0 0 12px rgba(0,0,0,.25);
+    }
+
+    .chip.c10 { background: linear-gradient(180deg,#475569,#334155); }
+    .chip.c50 { background: linear-gradient(180deg,#0ea5e9,#0369a1); }
+    .chip.c100 { background: linear-gradient(180deg,#22c55e,#15803d); }
+    .chip.c500 { background: linear-gradient(180deg,#a855f7,#6b21a8); }
+    .chip.c1000 { background: linear-gradient(180deg,#f59e0b,#b45309); }
+
+    .selected {
+      outline: 2px solid var(--gold);
+      box-shadow: 0 0 18px rgba(255,209,102,.25);
+    }
+
+    .msg {
+      min-height: 20px;
+      margin-top: 8px;
+      font-size: 13px;
+      font-weight: 850;
+      color: var(--gold);
+      text-align: center;
+    }
+
+    .stat-box {
+      background: rgba(8,12,24,.55);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .stat-box .k {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .stat-box .v {
+      font-size: 18px;
+      font-weight: 950;
+      margin-top: 4px;
+      color: var(--text);
+    }
+
+    .history {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      min-height: 28px;
+      margin-bottom: 8px;
+    }
+
+    .hist {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 950;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .hist.red { background: #7f1d1d; color: #ffe4e4; }
+    .hist.black { background: #111827; color: #e5e7eb; }
+    .hist.green { background: #14532d; color: #dcfce7; }
+
+    .roulette-board {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 5px;
+      margin: 8px 0;
+    }
+
+    .rn {
+      min-height: 38px;
+      border-radius: 10px;
+      font-weight: 950;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .rn.red { background: linear-gradient(180deg,#991b1b,#7f1d1d); }
+    .rn.black { background: linear-gradient(180deg,#1f2937,#111827); }
+    .rn.green { background: linear-gradient(180deg,#166534,#14532d); grid-column: span 6; }
+
+    .outside {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .cards {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      min-height: 88px;
+      align-items: center;
+      padding: 8px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .pcard {
+      width: 58px;
+      height: 82px;
+      border-radius: 12px;
+      background: linear-gradient(145deg,#fff,#d9dee8);
+      color: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 950;
+      box-shadow: 0 8px 20px rgba(0,0,0,.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pcard.red { color: #c62828; }
+    .pcard.back {
+      background: linear-gradient(135deg,#1e3a8a,#0f172a);
+      color: #93c5fd;
+    }
+    .pcard .pr { font-size: 20px; }
+    .pcard .ps { font-size: 24px; margin-top: 2px; }
+    .pcard.hold { outline: 3px solid var(--gold); }
+
+    .reels {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      justify-items: center;
+      margin: 10px 0;
+    }
+
+    .reel {
+      width: 86px;
+      height: 86px;
+      border-radius: 18px;
+      background: radial-gradient(circle at 50% 30%, #202b4d, #0b1020);
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 44px;
+      box-shadow: inset 0 0 24px rgba(0,0,0,.45);
+    }
+
+    .dice-area {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    .die {
+      height: 92px;
+      border-radius: 18px;
+      background: linear-gradient(145deg,#fff,#cbd5e1);
+      color: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 54px;
+      font-weight: 950;
+      box-shadow: 0 10px 25px rgba(0,0,0,.25);
+    }
+
+    .paytable {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .paytable b {
+      color: var(--text);
+    }
+
+    .durak-top {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .durak-table {
+      min-height: 120px;
+      background: rgba(0,0,0,.2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .pair {
+      position: relative;
+      width: 64px;
+      height: 92px;
+    }
+
+    .pair .pcard {
+      position: absolute;
+      width: 54px;
+      height: 76px;
+    }
+
+    .pair .def {
+      left: 16px;
+      top: 16px;
+    }
+
+    .hand {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      min-height: 96px;
+      padding: 8px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .hand .pcard {
+      cursor: pointer;
+    }
+
+    .trump-mark::after {
+      content: "★";
+      position: absolute;
+      right: 4px;
+      top: 3px;
+      font-size: 12px;
+      color: var(--gold);
+    }
+
+    .lobby-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .lobby-card {
+      background: linear-gradient(135deg, rgba(30,41,75,.95), rgba(15,22,42,.95));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .lobby-card .emoji {
+      font-size: 34px;
+    }
+
+    .lobby-card .name {
+      font-weight: 950;
+      margin-top: 6px;
+    }
+
+    .lobby-card .desc {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.25;
+    }
+
+    .notice {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 360px) {
+      .logo { font-size: 16px; }
+      .balance { font-size: 16px; }
+      .head-actions { grid-template-columns: repeat(2, 1fr); }
+      .pcard { width: 52px; height: 74px; }
+      .reel { width: 74px; height: 74px; font-size: 38px; }
+      .die { font-size: 44px; }
+    }
+
+    @media (min-width: 760px) {
+      .app {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="fatal" class="fatal"></div>
+
+  <div class="app">
+    <header>
+      <div>
+        <div class="logo">🎰 BARSIK CASINO</div>
+        <div class="sub" id="userLine">Игрок · виртуальные монеты</div>
+      </div>
+      <div class="balance">🪙 <span id="balance">1000</span></div>
+
+      <div class="head-actions">
+        <button type="button" class="gold small" id="btnBonus">🎁 Бонус</button>
+        <button type="button" class="red small" id="btnHelp">🆘 Помощь</button>
+        <button type="button" class="blue small" id="btnSave">📤 В бота</button>
+        <button type="button" class="small" id="btnClose">✖ Закрыть</button>
+      </div>
+    </header>
+
+    <nav class="tabs" id="tabs">
+      <button type="button" class="tab-btn active" data-tab="lobby">🏠 Лобби</button>
+      <button type="button" class="tab-btn" data-tab="roulette">🎡 Рулетка</button>
+      <button type="button" class="tab-btn" data-tab="blackjack">🃏 21</button>
+      <button type="button" class="tab-btn" data-tab="slots">🎰 Слоты</button>
+      <button type="button" class="tab-btn" data-tab="dice">🎲 Кости</button>
+      <button type="button" class="tab-btn" data-tab="poker">♠️ Покер</button>
+      <button type="button" class="tab-btn" data-tab="durak">🂡 Дурак</button>
+    </nav>
+
+    <main>
+      <section class="tab active" id="tab-lobby">
+        <div class="panel">
+          <div class="title">🐾 Добро пожаловать в казино Барсика</div>
+          <div class="muted">
+            Всё на виртуальные монеты. Есть ежедневный бонус и экстренная помощь, если баланс почти обнулился.
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="grid4">
+            <div class="stat-box"><div class="k">Игр</div><div class="v" id="stHands">0</div></div>
+            <div class="stat-box"><div class="k">Побед</div><div class="v" id="stWins">0</div></div>
+            <div class="stat-box"><div class="k">Оборот</div><div class="v" id="stWager">0</div></div>
+            <div class="stat-box"><div class="k">Лучший</div><div class="v" id="stBest">0</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="title">Игры</div>
+          <div class="lobby-cards">
+            <div class="lobby-card" data-go="roulette">
+              <div class="emoji">🎡</div>
+              <div class="name">Рулетка</div>
+              <div class="desc">Числа, цвет, чёт/нечет, дюжины, столбцы</div>
+            </div>
+            <div class="lobby-card" data-go="blackjack">
+              <div class="emoji">🃏</div>
+              <div class="name">Блэкджек 21</div>
+              <div class="desc">Hit / Stand / Double, блэкджек 3:2</div>
+            </div>
+            <div class="lobby-card" data-go="slots">
+              <div class="emoji">🎰</div>
+              <div class="name">Слоты</div>
+              <div class="desc">Три барабана, джекпоты и пары</div>
+            </div>
+            <div class="lobby-card" data-go="dice">
+              <div class="emoji">🎲</div>
+              <div class="name">Кости</div>
+              <div class="desc">Дуэль с казино: больше — победа</div>
+            </div>
+            <div class="lobby-card" data-go="poker">
+              <div class="emoji">♠️</div>
+              <div class="name">Покер</div>
+              <div class="desc">Видеопокер Jacks or Better</div>
+            </div>
+            <div class="lobby-card" data-go="durak">
+              <div class="emoji">🂡</div>
+              <div class="name">Дурак</div>
+              <div class="desc">Упрощённая карточная дуэль с ботом</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="title">🎁 Бонусы</div>
+          <div class="muted">
+            • Ежедневный бонус: <b>+500 🪙</b> раз в 24 часа.<br>
+            • Экстренная помощь: <b>+1000 🪙</b> раз в 24 часа, если баланс меньше 100.
+          </div>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-roulette">
+        <div class="panel">
+          <div class="title">🎡 Рулетка</div>
+          <div class="history" id="rlHistory"></div>
+          <div class="muted" id="rlSelected">Выбери тип ставки</div>
+          <div class="roulette-board" id="rlNumbers"></div>
+
+          <div class="outside">
+            <button type="button" class="red" data-rbet="color:red">🟥 Красное</button>
+            <button type="button" data-rbet="color:black">⬛ Чёрное</button>
+            <button type="button" data-rbet="parity:even">Чёт</button>
+            <button type="button" data-rbet="parity:odd">Нечет</button>
+            <button type="button" data-rbet="range:low">1-18</button>
+            <button type="button" data-rbet="range:high">19-36</button>
+            <button type="button" data-rbet="dozen:1">1 дюжина</button>
+            <button type="button" data-rbet="dozen:2">2 дюжина</button>
+            <button type="button" data-rbet="dozen:3">3 дюжина</button>
+            <button type="button" data-rbet="column:1">1 столбец</button>
+            <button type="button" data-rbet="column:2">2 столбец</button>
+            <button type="button" data-rbet="column:3">3 столбец</button>
+          </div>
+
+          <div class="grid4" style="margin-top:8px;">
+            <button type="button" class="chip c10" data-rchip="10">10</button>
+            <button type="button" class="chip c50" data-rchip="50">50</button>
+            <button type="button" class="chip c100" data-rchip="100">100</button>
+            <button type="button" class="chip c500" data-rchip="500">500</button>
+          </div>
+
+          <div class="grid2" style="margin-top:8px;">
+            <button type="button" class="chip c1000" data-rchip="1000">1000</button>
+            <button type="button" id="rlMax">MAX</button>
+          </div>
+
+          <div class="grid2" style="margin-top:8px;">
+            <button type="button" id="rlUndo">↩ Убрать</button>
+            <button type="button" class="red" id="rlClear">🗑 Очистить</button>
+          </div>
+
+          <div class="muted" style="margin-top:8px;">Ставок: <b id="rlTotal">0</b> 🪙</div>
+          <button type="button" class="gold" id="rlSpin" style="width:100%;margin-top:8px;">🎡 КРУТИТЬ</button>
+          <div class="msg" id="rlMsg"></div>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-blackjack">
+        <div class="panel">
+          <div class="title">🃏 Блэкджек 21</div>
+          <div class="muted">Барсик-дилер берёт до 17. Блэкджек платит 3:2.</div>
+
+          <div class="grid4" style="margin-top:8px;">
+            <button type="button" class="chip c10" data-bjchip="10">10</button>
+            <button type="button" class="chip c50" data-bjchip="50">50</button>
+            <button type="button" class="chip c100" data-bjchip="100">100</button>
+            <button type="button" class="chip c500" data-bjchip="500">500</button>
+          </div>
+
+          <div class="muted" style="margin-top:8px;">Ставка: <b id="bjBet">0</b> 🪙</div>
+          <button type="button" class="gold" id="bjDeal" style="width:100%;margin-top:8px;">🎴 СДАТЬ</button>
+
+          <div class="title" style="margin-top:10px;">Ты</div>
+          <div class="cards" id="bjPlayer"></div>
+
+          <div class="title" style="margin-top:10px;">Барсик</div>
+          <div class="cards" id="bjDealer"></div>
+
+          <div class="grid3" style="margin-top:8px;">
+            <button type="button" id="bjHit">➕ Ещё</button>
+            <button type="button" id="bjStand">✋ Хватит</button>
+            <button type="button" id="bjDouble">⏫ Удвоить</button>
+          </div>
+
+          <div class="msg" id="bjMsg"></div>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-slots">
+        <div class="panel">
+          <div class="title">🎰 Слоты</div>
+          <div class="reels">
+            <div class="reel" id="sr1">🐾</div>
+            <div class="reel" id="sr2">❄️</div>
+            <div class="reel" id="sr3">🍒</div>
+          </div>
+
+          <div class="grid4">
+            <button type="button" class="chip c10" data-schip="10">10</button>
+            <button type="button" class="chip c50" data-schip="50">50</button>
+            <button type="button" class="chip c100" data-schip="100">100</button>
+            <button type="button" class="chip c500" data-schip="500">500</button>
+          </div>
+
+          <div class="muted" style="margin-top:8px;">Ставка: <b id="sBet">0</b> 🪙</div>
+          <button type="button" class="gold" id="sSpin" style="width:100%;margin-top:8px;">🎰 КРУТИТЬ</button>
+
+          <div class="paytable">
+            <div>🐾🐾🐾 <b>x3</b></div>
+            <div>❄️❄️❄️ <b>x5</b></div>
+            <div>🍒🍒🍒 <b>x10</b></div>
+            <div>🔔🔔🔔 <b>x20</b></div>
+            <div>💎💎💎 <b>x50</b></div>
+            <div>7️⃣7️⃣7️⃣ <b>x150</b></div>
+            <div>🐆🐆🐆 <b>x400</b></div>
+            <div>Пары <b>x2-x20</b></div>
+          </div>
+
+          <div class="msg" id="sMsg"></div>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-dice">
+        <div class="panel">
+          <div class="title">🎲 Кости</div>
+          <div class="muted">Бросаешь против Барсика. Больше — победа, ничья возвращает ставку.</div>
+
+          <div class="dice-area">
+            <div class="die" id="dYou">?</div>
+            <div class="die" id="dCat">?</div>
+          </div>
+
+          <div class="grid4">
+            <button type="button" class="chip c10" data-dchip="10">10</button>
+            <button type="button" class="chip c50" data-dchip="50">50</button>
+            <button type="button" class="chip c100" data-dchip="100">100</button>
+            <button type="button" class="chip c500" data-dchip="500">500</button>
+          </div>
+
+          <div class="muted" style="margin-top:8px;">Ставка: <b id="dBet">0</b> 🪙</div>
+          <button type="button" class="gold" id="dRoll" style="width:100%;margin-top:8px;">🎲 БРОСИТЬ</button>
+          <div class="msg" id="dMsg"></div>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-poker">
+        <div class="panel">
+          <div class="title">♠️ Видеопокер</div>
+          <div class="muted">Jacks or Better. Выбери карты для удержания и сделай обмен.</div>
+
+          <div class="grid4" style="margin-top:8px;">
+            <button type="button" class="chip c10" data-pchip="10">10</button>
+            <button type="button" class="chip c50" data-pchip="50">50</button>
+            <button type="button" class="chip c100" data-pchip="100">100</button>
+            <button type="button" class="chip c500" data-pchip="500">500</button>
+          </div>
+
+          <div class="muted" style="margin-top:8px;">Ставка: <b id="pBet">0</b> 🪙</div>
+
+          <button type="button" class="gold" id="pDeal" style="width:100%;margin-top:8px;">🎴 СДАТЬ 5</button>
+          <button type="button" class="green" id="pDraw" style="width:100%;margin-top:8px;display:none;">🔄 ОБМЕН</button>
+
+          <div class="cards" id="pHand" style="margin-top:10px;"></div>
+
+          <div class="paytable">
+            <div>Роял-флеш <b>x250</b></div>
+            <div>Стрит-флеш <b>x50</b></div>
+            <div>Каре <b>x25</b></div>
+            <div>Фулл-хаус <b>x9</b></div>
+            <div>Флеш <b>x6</b></div>
+            <div>Стрит <b>x4</b></div>
+            <div>Трипс <b>x3</b></div>
+            <div>Две пары <b>x2</b></div>
+            <div>Пара J+ <b>x2</b></div>
+          </div>
+
+          <div class="msg" id="pMsg"></div>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-durak">
+        <div class="panel">
+          <div class="title">🂡 Дурак · упрощённый</div>
+          <div class="muted">Колода 36 карт. Бьёшь старшей картой той же масти или козырем. Если не можешь — берёшь.</div>
+
+          <div class="durak-top">
+            <div class="stat-box"><div class="k">Козырь</div><div class="v" id="duTrump">?</div></div>
+            <div class="stat-box"><div class="k">Колода</div><div class="v" id="duDeck">0</div></div>
+            <div class="stat-box"><div class="k">Роль</div><div class="v" id="duRole">-</div></div>
+          </div>
+
+          <div class="muted">У бота карт: <b id="duBotCount">0</b></div>
+
+          <div class="durak-table" id="duTable"></div>
+
+          <div class="title" style="margin-top:10px;">Твоя рука</div>
+          <div class="hand" id="duHand"></div>
+
+          <div class="grid2" style="margin-top:8px;">
+            <button type="button" class="green" id="duAttack">Атаковать</button>
+            <button type="button" class="blue" id="duBeat">Бить</button>
+            <button type="button" class="red" id="duTake">Взять</button>
+            <button type="button" id="duPass">Пас</button>
+          </div>
+
+          <button type="button" class="gold" id="duNew" style="width:100%;margin-top:8px;">🔄 Новая партия</button>
+          <div class="msg" id="duMsg"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function showFatal(err) {
+      var el = document.getElementById('fatal');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'fatal';
+        el.className = 'fatal';
+        document.body.appendChild(el);
+      }
+      el.style.display = 'block';
+      el.textContent = 'Ошибка казино:\n\n' + (err && err.stack ? err.stack : String(err));
+    }
+
+    window.onerror = function (message, source, lineno, colno, error) {
+      showFatal(error || (message + ' @ ' + lineno + ':' + colno));
+    };
+
+    (function () {
+      try {
+        var tg = null;
+        if (window.Telegram && window.Telegram.WebApp) {
+          tg = window.Telegram.WebApp;
+        }
+
+        if (tg) {
+          try {
+            tg.ready();
+            tg.expand();
+            if (tg.setHeaderColor) tg.setHeaderColor('#0b1020');
+            if (tg.setBackgroundColor) tg.setBackgroundColor('#0b1020');
+            if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+          } catch (e) {}
+
+          setTimeout(function () {
+            try { tg.expand(); } catch (e) {}
+          }, 300);
+        }
+
+        function $(id) {
+          return document.getElementById(id);
+        }
+
+        function getUserId() {
+          try {
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+              return String(tg.initDataUnsafe.user.id);
+            }
+          } catch (e) {}
+          return 'local';
+        }
+
+        function getUserName() {
+          try {
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.first_name) {
+              return String(tg.initDataUnsafe.user.first_name);
+            }
+          } catch (e) {}
+          return 'Игрок';
+        }
+
+        var UID = getUserId();
+        var KEY = 'barsikcasino_' + UID;
+        var DAY = 24 * 60 * 60 * 1000;
+
+        function defaultState() {
+          return {
+            name: getUserName(),
+            balance: 1000,
+            hands: 0,
+            wins: 0,
+            wagered: 0,
+            best: 0,
+            lastBonus: 0,
+            lastHelp: 0,
+            updated: Date.now()
+          };
+        }
+
+        function loadState() {
+          try {
+            var raw = localStorage.getItem(KEY);
+            if (!raw) return defaultState();
+            var s = JSON.parse(raw);
+            var d = defaultState();
+            for (var k in d) {
+              if (s[k] === undefined || s[k] === null) s[k] = d[k];
+            }
+            return s;
+          } catch (e) {
+            return defaultState();
+          }
+        }
+
+        var S = loadState();
+
+        function save() {
+          S.updated = Date.now();
+          try {
+            localStorage.setItem(KEY, JSON.stringify(S));
+          } catch (e) {}
+          updateHeader();
+        }
+
+        function fmtNum(n) {
+          return String(Math.floor(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        }
+
+        function fmtLeft(ms) {
+          var sec = Math.max(0, Math.ceil(ms / 1000));
+          var h = Math.floor(sec / 3600);
+          var m = Math.floor((sec % 3600) / 60);
+          var s = sec % 60;
+          if (h > 0) return h + 'ч ' + m + 'м';
+          if (m > 0) return m + 'м ' + s + 'с';
+          return s + 'с';
+        }
+
+        function updateHeader() {
+          $('balance').textContent = fmtNum(S.balance);
+          $('userLine').textContent = (S.name || 'Игрок') + ' · виртуальные монеты';
+          $('stHands').textContent = fmtNum(S.hands);
+          $('stWins').textContent = fmtNum(S.wins);
+          $('stWager').textContent = fmtNum(S.wagered);
+          $('stBest').textContent = fmtNum(S.best);
+
+          var now = Date.now();
+          var bonusLeft = Math.max(0, DAY - (now - (S.lastBonus || 0)));
+          var helpLeft = Math.max(0, DAY - (now - (S.lastHelp || 0)));
+
+          $('btnBonus').textContent = bonusLeft > 0 ? '🎁 ' + fmtLeft(bonusLeft) : '🎁 +500';
+          $('btnHelp').textContent = helpLeft > 0 ? '🆘 ' + fmtLeft(helpLeft) : (S.balance < 100 ? '🆘 +1000' : '🆘 <100');
+        }
+
+        function claimBonus() {
+          var now = Date.now();
+          var left = Math.max(0, DAY - (now - (S.lastBonus || 0)));
+          if (left > 0) {
+            alert('Бонус будет через ' + fmtLeft(left));
+            return;
+          }
+          S.balance += 500;
+          S.lastBonus = now;
+          save();
+          alert('🎁 Ежедневный бонус: +500 🪙');
+        }
+
+        function claimHelp() {
+          var now = Date.now();
+          var left = Math.max(0, DAY - (now - (S.lastHelp || 0)));
+          if (left > 0) {
+            alert('Экстренная помощь будет через ' + fmtLeft(left));
+            return;
+          }
+          if (S.balance >= 100) {
+            alert('🆘 Помощь доступна, когда баланс меньше 100 🪙.');
+            return;
+          }
+          S.balance += 1000;
+          S.lastHelp = now;
+          save();
+          alert('🆘 Барсик выручил: +1000 🪙');
+        }
+
+        function placeBet(amount) {
+          amount = Math.floor(Number(amount) || 0);
+          if (amount <= 0) return false;
+          if (S.balance < amount) return false;
+          S.balance -= amount;
+          S.wagered += amount;
+          S.hands += 1;
+          save();
+          return true;
+        }
+
+        function credit(amount, isWin) {
+          amount = Math.max(0, Math.floor(Number(amount) || 0));
+          S.balance += amount;
+          if (amount > S.best) S.best = amount;
+          if (isWin) S.wins += 1;
+          save();
+        }
+
+        function setTab(name) {
+          var tabs = document.querySelectorAll('.tab');
+          for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+          var btns = document.querySelectorAll('.tab-btn');
+          for (var j = 0; j < btns.length; j++) btns[j].classList.remove('active');
+
+          $('tab-' + name).classList.add('active');
+          var activeBtn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
+          if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        $('tabs').addEventListener('click', function (e) {
+          var b = e.target.closest('.tab-btn');
+          if (!b) return;
+          setTab(b.dataset.tab);
+        });
+
+        document.querySelectorAll('[data-go]').forEach(function (el) {
+          el.addEventListener('click', function () {
+            setTab(el.dataset.go);
+          });
+        });
+
+        $('btnBonus').addEventListener('click', claimBonus);
+        $('btnHelp').addEventListener('click', claimHelp);
+
+        $('btnSave').addEventListener('click', function () {
+          var payload = {
+            game: 'casino',
+            action: 'save',
+            name: S.name,
+            balance: S.balance,
+            hands: S.hands,
+            wins: S.wins,
+            wagered: S.wagered,
+            best: S.best,
+            lastBonus: S.lastBonus,
+            lastHelp: S.lastHelp,
+            state: S
+          };
+
+          if (tg && tg.sendData) {
+            tg.sendData(JSON.stringify(payload));
+            alert('📤 Прогресс отправлен в бота.');
+          } else {
+            alert('Сохранение в бота доступно только внутри Telegram Mini App.');
+          }
+        });
+
+        $('btnClose').addEventListener('click', function () {
+          if (tg && tg.close) {
+            try { tg.close(); } catch (e) {}
+          }
+        });
+
+        // ===================== РУЛЕТКА =====================
+        var RED = {1:1,3:1,5:1,7:1,9:1,12:1,14:1,16:1,18:1,19:1,21:1,23:1,25:1,27:1,30:1,32:1,34:1,36:1};
+        var rSel = null;
+        var rBets = [];
+        var rHistory = [];
+
+        function betLabel(b) {
+          if (b.type === 'number') return 'Число ' + b.value;
+          if (b.type === 'color') return b.value === 'red' ? 'Красное' : 'Чёрное';
+          if (b.type === 'parity') return b.value === 'even' ? 'Чёт' : 'Нечет';
+          if (b.type === 'range') return b.value === 'low' ? '1-18' : '19-36';
+          if (b.type === 'dozen') return b.value + ' дюжина';
+          if (b.type === 'column') return b.value + ' столбец';
+          return String(b.value);
+        }
+
+        function rTotal() {
+          var t = 0;
+          for (var i = 0; i < rBets.length; i++) t += rBets[i].amount;
+          return t;
+        }
+
+        function renderRoulette() {
+          $('rlSelected').textContent = rSel ? ('Выбрано: ' + betLabel(rSel)) : 'Выбери тип ставки';
+          $('rlTotal').textContent = fmtNum(rTotal());
+
+          var hist = '';
+          for (var i = 0; i < Math.min(12, rHistory.length); i++) {
+            var n = rHistory[i];
+            var cls = n === 0 ? 'green' : (RED[n] ? 'red' : 'black');
+            hist += '<div class="hist ' + cls + '">' + n + '</div>';
+          }
+          $('rlHistory').innerHTML = hist;
+        }
+
+        function buildRouletteBoard() {
+          var html = '<button type="button" class="rn green" data-rbet="number:0">0</button>';
+          for (var n = 1; n <= 36; n++) {
+            html += '<button type="button" class="rn ' + (RED[n] ? 'red' : 'black') + '" data-rbet="number:' + n + '">' + n + '</button>';
+          }
+          $('rlNumbers').innerHTML = html;
+        }
+
+        function addRouletteBet(amount) {
+          amount = Math.floor(Number(amount) || 0);
+          if (!rSel) {
+            $('rlMsg').textContent = 'Сначала выбери тип ставки.';
+            return;
+          }
+          if (amount <= 0 || rTotal() + amount > S.balance) {
+            $('rlMsg').textContent = 'Не хватает монет.';
+            return;
+          }
+
+          var merged = false;
+          for (var i = 0; i < rBets.length; i++) {
+            if (rBets[i].type === rSel.type && String(rBets[i].value) === String(rSel.value)) {
+              rBets[i].amount += amount;
+              merged = true;
+              break;
+            }
+          }
+          if (!merged) {
+            rBets.push({ type: rSel.type, value: rSel.value, amount: amount });
+          }
+
+          $('rlMsg').textContent = '+' + amount + ' 🪙 на ' + betLabel(rSel);
+          renderRoulette();
+        }
+
+        function rouletteWin(bets, n) {
+          var win = 0;
+          for (var i = 0; i < bets.length; i++) {
+            var b = bets[i];
+            var a = b.amount;
+            if (b.type === 'number' && Number(b.value) === n) win += a * 36;
+            else if (b.type === 'color' && n !== 0) {
+              if ((RED[n] && b.value === 'red') || (!RED[n] && b.value === 'black')) win += a * 2;
+            } else if (b.type === 'parity' && n !== 0) {
+              if ((n % 2 === 0 && b.value === 'even') || (n % 2 === 1 && b.value === 'odd')) win += a * 2;
+            } else if (b.type === 'range') {
+              if ((b.value === 'low' && n >= 1 && n <= 18) || (b.value === 'high' && n >= 19 && n <= 36)) win += a * 2;
+            } else if (b.type === 'dozen') {
+              if ((Number(b.value) === 1 && n >= 1 && n <= 12) ||
+                  (Number(b.value) === 2 && n >= 13 && n <= 24) ||
+                  (Number(b.value) === 3 && n >= 25 && n <= 36)) win += a * 3;
+            } else if (b.type === 'column') {
+              if (n !== 0 && (((n - 1) % 3) + 1) === Number(b.value)) win += a * 3;
+            }
+          }
+          return win;
+        }
+
+        function spinRoulette() {
+          var total = rTotal();
+          if (total <= 0) {
+            $('rlMsg').textContent = 'Нет ставок.';
+            return;
+          }
+          if (!placeBet(total)) {
+            $('rlMsg').textContent = 'Не хватает монет.';
+            return;
+          }
+
+          var n = Math.floor(Math.random() * 37);
+          var win = rouletteWin(rBets, n);
+          credit(win, win > total);
+          rHistory.unshift(n);
+          if (rHistory.length > 30) rHistory.pop();
+
+          var color = n === 0 ? 'зелёное' : (RED[n] ? 'красное' : 'чёрное');
+          $('rlMsg').textContent = 'Выпало ' + n + ' (' + color + '). Выигрыш: ' + fmtNum(win) + ' 🪙';
+
+          rBets = [];
+          rSel = null;
+          renderRoulette();
+        }
+
+        document.addEventListener('click', function (e) {
+          var rb = e.target.closest('[data-rbet]');
+          if (rb) {
+            var parts = rb.dataset.rbet.split(':');
+            rSel = { type: parts[0], value: parts[1] };
+            if (rSel.type === 'number' || rSel.type === 'dozen' || rSel.type === 'column') rSel.value = Number(rSel.value);
+            $('rlMsg').textContent = '';
+            renderRoulette();
+            return;
+          }
+
+          var rc = e.target.closest('[data-rchip]');
+          if (rc) {
+            addRouletteBet(rc.dataset.rchip);
+            return;
+          }
+        });
+
+        $('rlMax').addEventListener('click', function () {
+          var max = S.balance - rTotal();
+          if (max > 0) addRouletteBet(max);
+        });
+
+        $('rlUndo').addEventListener('click', function () {
+          if (rBets.length) {
+            rBets.pop();
+            $('rlMsg').textContent = 'Последняя ставка убрана.';
+            renderRoulette();
+          }
+        });
+
+        $('rlClear').addEventListener('click', function () {
+          rBets = [];
+          $('rlMsg').textContent = 'Ставки очищены.';
+          renderRoulette();
+        });
+
+        $('rlSpin').addEventListener('click', spinRoulette);
+
+        buildRouletteBoard();
+        renderRoulette();
+
+        // ===================== БЛЭКДЖЕК =====================
+        var SUITS = ['♠', '♥', '♦', '♣'];
+        var bj = { bet: 0, player: [], dealer: [], phase: 'bet', locked: false };
+
+        function rankName(r) {
+          if (r === 14) return 'A';
+          if (r === 13) return 'K';
+          if (r === 12) return 'Q';
+          if (r === 11) return 'J';
+          return String(r);
+        }
+
+        function randomCard() {
+          return { r: Math.floor(Math.random() * 13) + 2, s: SUITS[Math.floor(Math.random() * 4)] };
+        }
+
+        function cardHTML(c, hidden) {
+          if (hidden) return '<div class="pcard back"><div class="pr">?</div><div class="ps">🐾</div></div>';
+          var red = (c.s === '♥' || c.s === '♦') ? ' red' : '';
+          return '<div class="pcard' + red + '"><div class="pr">' + rankName(c.r) + '</div><div class="ps">' + c.s + '</div></div>';
+        }
+
+        function handValue(hand) {
+          var total = 0;
+          var aces = 0;
+          for (var i = 0; i < hand.length; i++) {
+            var r = hand[i].r;
+            if (r === 14) { total += 11; aces++; }
+            else if (r >= 10) total += 10;
+            else total += r;
+          }
+          while (total > 21 && aces > 0) { total -= 10; aces--; }
+          return total;
+        }
+
+        function isBlackjack(hand) {
+          return hand.length === 2 && handValue(hand) === 21;
+        }
+
+        function renderBJ() {
+          $('bjBet').textContent = fmtNum(bj.bet);
+          $('bjPlayer').innerHTML = bj.player.length ? bj.player.map(function (c) { return cardHTML(c); }).join('') + ' = ' + handValue(bj.player) : '—';
+          if (bj.phase === 'player' && bj.dealer.length) {
+            $('bjDealer').innerHTML = cardHTML(bj.dealer[0]) + ' 🂠 = ' + handValue([bj.dealer[0]]);
+          } else {
+            $('bjDealer').innerHTML = bj.dealer.length ? bj.dealer.map(function (c) { return cardHTML(c); }).join('') + ' = ' + handValue(bj.dealer) : '—';
+          }
+
+          $('bjHit').disabled = bj.phase !== 'player';
+          $('bjStand').disabled = bj.phase !== 'player';
+          $('bjDouble').disabled = !(bj.phase === 'player' && bj.player.length === 2 && S.balance >= bj.bet);
+          $('bjDeal').disabled = bj.phase !== 'bet';
+        }
+
+        function bjEnd(msg, winAmount) {
+          credit(winAmount, winAmount > bj.bet);
+          bj.phase = 'done';
+          $('bjMsg').textContent = msg;
+          renderBJ();
+        }
+
+        function bjDealerPlay() {
+          while (handValue(bj.dealer) < 17) bj.dealer.push(randomCard());
+          var pv = handValue(bj.player);
+          var dv = handValue(bj.dealer);
+          if (pv > 21) bjEnd('Перебор! Ты проиграл.', 0);
+          else if (dv > 21) bjEnd('Барсик перебрал! Победа.', bj.bet * 2);
+          else if (pv > dv) bjEnd('Ты ближе к 21. Победа.', bj.bet * 2);
+          else if (pv < dv) bjEnd('Барсик ближе. Проигрыш.', 0);
+          else bjEnd('Ничья. Ставка возвращена.', bj.bet);
+        }
+
+        function bjDeal() {
+          if (bj.bet <= 0) {
+            $('bjMsg').textContent = 'Выбери ставку.';
+            return;
+          }
+          if (!placeBet(bj.bet)) {
+            $('bjMsg').textContent = 'Не хватает монет.';
+            return;
+          }
+
+          bj.player = [randomCard(), randomCard()];
+          bj.dealer = [randomCard(), randomCard()];
+          bj.phase = 'player';
+          $('bjMsg').textContent = '';
+
+          var pb = isBlackjack(bj.player);
+          var db = isBlackjack(bj.dealer);
+
+          if (pb || db) {
+            if (pb && db) bjEnd('Ничья: блэкджек у обоих.', bj.bet);
+            else if (pb) bjEnd('🂡 БЛЭКДЖЕК! Выплата 3:2.', Math.floor(bj.bet * 2.5));
+            else bjEnd('У Барсика блэкджек.', 0);
+          }
+
+          renderBJ();
+        }
+
+        document.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-bjchip]');
+          if (b) {
+            bj.bet = Number(b.dataset.bjchip);
+            bj.phase = 'bet';
+            $('bjMsg').textContent = 'Ставка ' + bj.bet + ' 🪙 выбрана.';
+            renderBJ();
+          }
+        });
+
+        $('bjDeal').addEventListener('click', bjDeal);
+
+        $('bjHit').addEventListener('click', function () {
+          if (bj.phase !== 'player') return;
+          bj.player.push(randomCard());
+          if (handValue(bj.player) > 21) bjEnd('Перебор! Ты проиграл.', 0);
+          else $('bjMsg').textContent = 'Карта взята.';
+          renderBJ();
+        });
+
+        $('bjStand').addEventListener('click', function () {
+          if (bj.phase !== 'player') return;
+          bjDealerPlay();
+        });
+
+        $('bjDouble').addEventListener('click', function () {
+          if (bj.phase !== 'player' || bj.player.length !== 2) return;
+          if (!placeBet(bj.bet)) {
+            $('bjMsg').textContent = 'Не хватает монет на удвоение.';
+            return;
+          }
+          bj.bet *= 2;
+          bj.player.push(randomCard());
+          if (handValue(bj.player) > 21) bjEnd('Удвоение и перебор. Проигрыш.', 0);
+          else bjDealerPlay();
+        });
+
+        renderBJ();
+
+        // ===================== СЛОТЫ =====================
+        var SLOT = [
+          { e: '🐾', w: 30, p3: 3, p2: 0 },
+          { e: '❄️', w: 25, p3: 5, p2: 0 },
+          { e: '🍒', w: 18, p3: 10, p2: 2 },
+          { e: '🔔', w: 12, p3: 20, p2: 3 },
+          { e: '💎', w: 7, p3: 50, p2: 8 },
+          { e: '7️⃣', w: 4, p3: 150, p2: 20 },
+          { e: '🐆', w: 2, p3: 400, p2: 50 }
+        ];
+
+        var sl = { bet: 0, spinning: false };
+
+        function weightedSlot() {
+          var total = 0;
+          for (var i = 0; i < SLOT.length; i++) total += SLOT[i].w;
+          var x = Math.random() * total;
+          for (var j = 0; j < SLOT.length; j++) {
+            x -= SLOT[j].w;
+            if (x <= 0) return SLOT[j];
+          }
+          return SLOT[0];
+        }
+
+        function renderSlots() {
+          $('sBet').textContent = fmtNum(sl.bet);
+          $('sSpin').disabled = sl.spinning;
+        }
+
+        function spinSlots() {
+          if (sl.bet <= 0) {
+            $('sMsg').textContent = 'Выбери ставку.';
+            return;
+          }
+          if (!placeBet(sl.bet)) {
+            $('sMsg').textContent = 'Не хватает монет.';
+            return;
+          }
+
+          sl.spinning = true;
+          renderSlots();
+
+          var final = [weightedSlot(), weightedSlot(), weightedSlot()];
+          var ticks = 0;
+
+          var anim = setInterval(function () {
+            ticks++;
+            $('sr1').textContent = weightedSlot().e;
+            $('sr2').textContent = weightedSlot().e;
+            $('sr3').textContent = weightedSlot().e;
+
+            if (ticks > 12) {
+              clearInterval(anim);
+              $('sr1').textContent = final[0].e;
+              $('sr2').textContent = final[1].e;
+              $('sr3').textContent = final[2].e;
+
+              var win = 0;
+              var msg = '😿 Мимо.';
+
+              if (final[0].e === final[1].e && final[1].e === final[2].e) {
+                win = sl.bet * final[0].p3;
+                msg = '🎉 ТРИ ' + final[0].e + '! Выигрыш ' + fmtNum(win) + ' 🪙';
+              } else {
+                var pair = null;
+                if (final[0].e === final[1].e) pair = final[0];
+                else if (final[1].e === final[2].e) pair = final[1];
+                else if (final[0].e === final[2].e) pair = final[0];
+
+                if (pair && pair.p2 > 0) {
+                  win = sl.bet * pair.p2;
+                  msg = '✨ Пара ' + pair.e + '! Выигрыш ' + fmtNum(win) + ' 🪙';
+                }
+              }
+
+              credit(win, win > sl.bet);
+              $('sMsg').textContent = msg;
+              sl.spinning = false;
+              renderSlots();
+            }
+          }, 80);
+        }
+
+        document.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-schip]');
+          if (b) {
+            sl.bet = Number(b.dataset.schip);
+            $('sMsg').textContent = 'Ставка ' + sl.bet + ' 🪙 выбрана.';
+            renderSlots();
+          }
+        });
+
+        $('sSpin').addEventListener('click', spinSlots);
+        renderSlots();
+
+        // ===================== КОСТИ =====================
+        var di = { bet: 0, rolling: false };
+        var DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+        function renderDice() {
+          $('dBet').textContent = fmtNum(di.bet);
+          $('dRoll').disabled = di.rolling;
+        }
+
+        function rollDice() {
+          if (di.bet <= 0) {
+            $('dMsg').textContent = 'Выбери ставку.';
+            return;
+          }
+          if (!placeBet(di.bet)) {
+            $('dMsg').textContent = 'Не хватает монет.';
+            return;
+          }
+
+          di.rolling = true;
+          renderDice();
+
+          var you = Math.floor(Math.random() * 6) + 1;
+          var cat = Math.floor(Math.random() * 6) + 1;
+          var ticks = 0;
+
+          var anim = setInterval(function () {
+            ticks++;
+            $('dYou').textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+            $('dCat').textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+
+            if (ticks > 10) {
+              clearInterval(anim);
+              $('dYou').textContent = DICE_FACES[you - 1];
+              $('dCat').textContent = DICE_FACES[cat - 1];
+
+              var win = 0;
+              var msg = '';
+              if (you > cat) {
+                win = di.bet * 2;
+                msg = '🎉 Ты ' + you + ' : ' + cat + ' — победа!';
+              } else if (you < cat) {
+                msg = '😼 Ты ' + you + ' : ' + cat + ' — Барсик забрал ставку.';
+              } else {
+                win = di.bet;
+                msg = '🤝 ' + you + ' : ' + cat + ' — ничья, ставка возвращена.';
+              }
+
+              credit(win, win > di.bet);
+              $('dMsg').textContent = msg;
+              di.rolling = false;
+              renderDice();
+            }
+          }, 80);
+        }
+
+        document.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-dchip]');
+          if (b) {
+            di.bet = Number(b.dataset.dchip);
+            $('dMsg').textContent = 'Ставка ' + di.bet + ' 🪙 выбрана.';
+            renderDice();
+          }
+        });
+
+        $('dRoll').addEventListener('click', rollDice);
+        renderDice();
+
+        // ===================== ПОКЕР =====================
+        var pk = { bet: 0, deck: [], cards: [], holds: [], phase: 'bet' };
+
+        function newDeck52() {
+          var d = [];
+          for (var s = 0; s < SUITS.length; s++) {
+            for (var r = 2; r <= 14; r++) d.push({ r: r, s: SUITS[s] });
+          }
+          for (var i = d.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = d[i]; d[i] = d[j]; d[j] = tmp;
+          }
+          return d;
+        }
+
+        function renderPoker() {
+          $('pBet').textContent = fmtNum(pk.bet);
+          $('pDeal').style.display = pk.phase === 'bet' ? 'block' : 'none';
+          $('pDraw').style.display = pk.phase === 'hold' ? 'block' : 'none';
+
+          var html = '';
+          for (var i = 0; i < pk.cards.length; i++) {
+            var c = pk.cards[i];
+            var red = (c.s === '♥' || c.s === '♦') ? ' red' : '';
+            var hold = pk.holds[i] ? ' hold' : '';
+            html += '<div class="pcard' + red + hold + '" data-pidx="' + i + '"><div class="pr">' + rankName(c.r) + '</div><div class="ps">' + c.s + '</div></div>';
+          }
+          $('pHand').innerHTML = html || '—';
+        }
+
+        function evaluatePoker(cards) {
+          var ranks = cards.map(function (c) { return c.r; }).sort(function (a, b) { return b - a; });
+          var suits = cards.map(function (c) { return c.s; });
+          var counts = {};
+          for (var i = 0; i < ranks.length; i++) counts[ranks[i]] = (counts[ranks[i]] || 0) + 1;
+
+          var vals = Object.keys(counts).map(Number).sort(function (a, b) { return counts[b] - counts[a] || b - a; });
+          var flush = suits[0] === suits[1] && suits[1] === suits[2] && suits[2] === suits[3] && suits[3] === suits[4];
+
+          var straight = false;
+          var royal = false;
+          var unique = ranks.slice().sort(function (a, b) { return a - b; });
+          var seq = true;
+          for (var j = 1; j < unique.length; j++) {
+            if (unique[j] !== unique[j - 1] + 1) { seq = false; break; }
+          }
+          if (seq) {
+            straight = true;
+            if (unique[0] === 10 && unique[4] === 14) royal = true;
+          }
+          // Ace-low straight: A,2,3,4,5
+          if (!straight && unique.join(',') === '2,3,4,5,14') straight = true;
+
+          if (royal && flush) return 250;
+          if (straight && flush) return 50;
+          if (vals.length && counts[vals[0]] === 4) return 25;
+          if (vals.length >= 2 && counts[vals[0]] === 3 && counts[vals[1]] === 2) return 9;
+          if (flush) return 6;
+          if (straight) return 4;
+          if (vals.length && counts[vals[0]] === 3) return 3;
+          if (vals.length >= 2 && counts[vals[0]] === 2 && counts[vals[1]] === 2) return 2;
+          if (vals.length && counts[vals[0]] === 2 && vals[0] >= 11) return 2;
+          return 0;
+        }
+
+        function pokerDeal() {
+          if (pk.bet <= 0) {
+            $('pMsg').textContent = 'Выбери ставку.';
+            return;
+          }
+          if (!placeBet(pk.bet)) {
+            $('pMsg').textContent = 'Не хватает монет.';
+            return;
+          }
+
+          pk.deck = newDeck52();
+          pk.cards = [];
+          pk.holds = [];
+          for (var i = 0; i < 5; i++) {
+            pk.cards.push(pk.deck.pop());
+            pk.holds.push(false);
+          }
+          pk.phase = 'hold';
+          $('pMsg').textContent = 'Нажми на карты, чтобы оставить их, затем обмен.';
+          renderPoker();
+        }
+
+        function pokerDraw() {
+          if (pk.phase !== 'hold') return;
+          for (var i = 0; i < pk.cards.length; i++) {
+            if (!pk.holds[i]) pk.cards[i] = pk.deck.pop();
+          }
+
+          var mult = evaluatePoker(pk.cards);
+          var win = pk.bet * mult;
+          credit(win, win > pk.bet);
+
+          var msg = mult ? ('Выплата x' + mult + ': ' + fmtNum(win) + ' 🪙') : 'Увы, комбинации нет.';
+          $('pMsg').textContent = msg;
+          pk.phase = 'bet';
+          renderPoker();
+        }
+
+        document.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-pchip]');
+          if (b) {
+            pk.bet = Number(b.dataset.pchip);
+            pk.phase = 'bet';
+            $('pMsg').textContent = 'Ставка ' + pk.bet + ' 🪙 выбрана.';
+            renderPoker();
+            return;
+          }
+
+          var c = e.target.closest('[data-pidx]');
+          if (c && pk.phase === 'hold') {
+            var idx = Number(c.dataset.pidx);
+            pk.holds[idx] = !pk.holds[idx];
+            renderPoker();
+          }
+        });
+
+        $('pDeal').addEventListener('click', pokerDeal);
+        $('pDraw').addEventListener('click', pokerDraw);
+        renderPoker();
+
+        // ===================== ДУРАК =====================
+        var DRANKS = [6,7,8,9,10,11,12,13,14];
+        var DSUITS = ['♠','♥','♦','♣'];
+
+        var du = null;
+        var duTimer = null;
+
+        function drName(v) {
+          if (v === 11) return 'J';
+          if (v === 12) return 'Q';
+          if (v === 13) return 'K';
+          if (v === 14) return 'A';
+          return String(v);
+        }
+
+        function duCardHTML(c, extra) {
+          var red = (c.s === '♥' || c.s === '♦') ? ' red' : '';
+          var trump = (du && c.s === du.trump) ? ' trump-mark' : '';
+          return '<div class="pcard' + red + trump + (extra || '') + '"><div class="pr">' + drName(c.r) + '</div><div class="ps">' + c.s + '</div></div>';
+        }
+
+        function duNewDeck() {
+          var d = [];
+          for (var i = 0; i < DSUITS.length; i++) {
+            for (var j = 0; j < DRANKS.length; j++) d.push({ r: DRANKS[j], s: DSUITS[i] });
+          }
+          for (var k = d.length - 1; k > 0; k--) {
+            var m = Math.floor(Math.random() * (k + 1));
+            var tmp = d[k]; d[k] = d[m]; d[m] = tmp;
+          }
+          return d;
+        }
+
+        function duSortHand(hand) {
+          hand.sort(function (a, b) {
+            var at = a.s === du.trump ? 1 : 0;
+            var bt = b.s === du.trump ? 1 : 0;
+            if (at !== bt) return at - bt;
+            if (a.s !== b.s) return a.s.localeCompare(b.s);
+            return a.r - b.r;
+          });
+        }
+
+        function duInit() {
+          if (duTimer) clearTimeout(duTimer);
+          duTimer = null;
+
+          var deck = duNewDeck();
+          var trump = deck[0].s;
+          var player = [];
+          var bot = [];
+
+          for (var i = 0; i < 6; i++) { player.push(deck.pop()); bot.push(deck.pop()); }
+
+          du = {
+            deck: deck,
+            trump: trump,
+            player: player,
+            bot: bot,
+            attacker: 'player',
+            table: [],
+            turn: 'attack',
+            selected: -1,
+            over: false,
+            msg: 'Твоя партия. Атакуй любой картой.'
+          };
+
+          duSortHand(du.player);
+          duSortHand(du.bot);
+          duRender();
+          duSchedule();
+        }
+
+        function duDefender() {
+          return du.attacker === 'player' ? 'bot' : 'player';
+        }
+
+        function duHand(who) {
+          return who === 'player' ? du.player : du.bot;
+        }
+
+        function duHasUndefended() {
+          for (var i = 0; i < du.table.length; i++) if (!du.table[i].defense) return true;
+          return false;
+        }
+
+        function duAllDefended() {
+          return du.table.length > 0 && !duHasUndefended();
+        }
+
+        function duTableRanks() {
+          var set = {};
+          for (var i = 0; i < du.table.length; i++) {
+            set[du.table[i].attack.r] = 1;
+            if (du.table[i].defense) set[du.table[i].defense.r] = 1;
+          }
+          return set;
+        }
+
+        function duCanAttack(card) {
+          if (du.over || du.turn !== 'attack') return false;
+          if (du.table.length === 0) return true;
+          var ranks = duTableRanks();
+          if (!ranks[card.r]) return false;
+          var defenderCount = duHand(duDefender()).length;
+          return du.table.length < Math.min(6, defenderCount);
+        }
+
+        function duBeats(card, attack) {
+          if (card.s === attack.s && card.r > attack.r) return true;
+          if (card.s === du.trump && attack.s !== du.trump) return true;
+          if (card.s === du.trump && attack.s === du.trump && card.r > attack.r) return true;
+          return false;
+        }
+
+        function duFirstUndefendedIndex() {
+          for (var i = 0; i < du.table.length; i++) if (!du.table[i].defense) return i;
+          return -1;
+        }
+
+        function duRefill() {
+          while (du.player.length < 6 && du.deck.length) du.player.push(du.deck.pop());
+          while (du.bot.length < 6 && du.deck.length) du.bot.push(du.deck.pop());
+          duSortHand(du.player);
+          duSortHand(du.bot);
+        }
+
+        function duCheckOver() {
+          if (du.player.length === 0 && du.bot.length === 0) {
+            du.over = true;
+            du.msg = '🎉 Ничья: оба вышли без карт. Считаю победой Барсика для тебя!';
+            return true;
+          }
+          if (du.player.length === 0) {
+            du.over = true;
+            du.msg = '🎉 Ты выбил все карты. Победа!';
+            return true;
+          }
+          if (du.bot.length === 0) {
+            du.over = true;
+            du.msg = '😿 Бот вышел первым. Поражение.';
+            return true;
+          }
+          return false;
+        }
+
+        function duEndBout(result) {
+          if (du.over) return;
+
+          if (result === 'take') {
+            var defender = duDefender();
+            for (var i = 0; i < du.table.length; i++) {
+              duHand(defender).push(du.table[i].attack);
+              if (du.table[i].defense) duHand(defender).push(du.table[i].defense);
+            }
+            du.msg = (defender === 'player' ? 'Ты взял карты.' : 'Бот взял карты.') + ' Роли меняются.';
+          } else {
+            du.msg = 'Отбито. Карты уходят в отбой. Роли меняются.';
+          }
+
+          du.table = [];
+          du.attacker = du.attacker === 'player' ? 'bot' : 'player';
+          du.turn = 'attack';
+          du.selected = -1;
+          duRefill();
+          duCheckOver();
+          duRender();
+          duSchedule();
+        }
+
+        function duPlayerAttack() {
+          if (du.over || du.attacker !== 'player' || du.turn !== 'attack' || du.selected < 0) return;
+          var card = du.player[du.selected];
+          if (!duCanAttack(card)) {
+            du.msg = 'Нельзя подкинуть эту карту.';
+            duRender();
+            return;
+          }
+          du.player.splice(du.selected, 1);
+          du.table.push({ attack: card, defense: null });
+          du.selected = -1;
+          du.turn = 'defend';
+          du.msg = 'Ты атаковал: ' + drName(card.r) + card.s;
+          duRender();
+          duSchedule();
+        }
+
+        function duPlayerBeat() {
+          if (du.over || duDefender() !== 'player' || du.turn !== 'defend' || du.selected < 0) return;
+          var idx = duFirstUndefendedIndex();
+          if (idx < 0) return;
+          var card = du.player[du.selected];
+          var attack = du.table[idx].attack;
+          if (!duBeats(card, attack)) {
+            du.msg = 'Эта карта не бьёт ' + drName(attack.r) + attack.s;
+            duRender();
+            return;
+          }
+          du.player.splice(du.selected, 1);
+          du.table[idx].defense = card;
+          du.selected = -1;
+          du.msg = 'Отбил: ' + drName(card.r) + card.s;
+          if (duHasUndefended()) du.turn = 'defend';
+          else du.turn = 'attack';
+          duRender();
+          duSchedule();
+        }
+
+        function duPlayerTake() {
+          if (du.over || duDefender() !== 'player' || du.turn !== 'defend' || !duHasUndefended()) return;
+          duEndBout('take');
+        }
+
+        function duPlayerPass() {
+          if (du.over || du.attacker !== 'player' || du.turn !== 'attack' || !duAllDefended()) return;
+          duEndBout('defend');
+        }
+
+        function duBotAttack() {
+          if (du.over || du.attacker !== 'bot' || du.turn !== 'attack') return;
+
+          var candidates = [];
+          for (var i = 0; i < du.bot.length; i++) {
+            if (duCanAttack(du.bot[i])) candidates.push(i);
+          }
+
+          if (!candidates.length) {
+            if (duAllDefended()) duEndBout('defend');
+            else du.msg = 'Бот не может подкинуть.';
+            duRender();
+            return;
+          }
+
+          candidates.sort(function (a, b) {
+            var ca = du.bot[a], cb = du.bot[b];
+            var ta = ca.s === du.trump ? 1 : 0;
+            var tb = cb.s === du.trump ? 1 : 0;
+            if (ta !== tb) return ta - tb;
+            return ca.r - cb.r;
+          });
+
+          var pickIdx = candidates[0];
+          var card = du.bot.splice(pickIdx, 1)[0];
+          du.table.push({ attack: card, defense: null });
+          du.turn = 'defend';
+          du.msg = 'Бот атакует: ' + drName(card.r) + card.s;
+          duRender();
+          duSchedule();
+        }
+
+        function duBotDefend() {
+          if (du.over || duDefender() !== 'bot' || du.turn !== 'defend' || !duHasUndefended()) return;
+
+          var idx = duFirstUndefendedIndex();
+          var attack = du.table[idx].attack;
+          var best = -1;
+
+          for (var i = 0; i < du.bot.length; i++) {
+            if (duBeats(du.bot[i], attack)) {
+              if (best < 0) best = i;
+              else {
+                var cur = du.bot[best];
+                var cand = du.bot[i];
+                var curTrump = cur.s === du.trump ? 1 : 0;
+                var candTrump = cand.s === du.trump ? 1 : 0;
+                if (candTrump < curTrump || (candTrump === curTrump && cand.r < cur.r)) best = i;
+              }
+            }
+          }
+
+          if (best >= 0 && (du.table.length <= 2 || du.bot.length > 3 || attack.s !== du.trump)) {
+            var card = du.bot.splice(best, 1)[0];
+            du.table[idx].defense = card;
+            du.msg = 'Бот отбил: ' + drName(card.r) + card.s;
+            if (duHasUndefended()) du.turn = 'defend';
+            else du.turn = 'attack';
+            duRender();
+            duSchedule();
+          } else {
+            duEndBout('take');
+          }
+        }
+
+        function duSchedule() {
+          if (duTimer) clearTimeout(duTimer);
+          if (du.over) return;
+
+          duTimer = setTimeout(function () {
+            if (!du || du.over) return;
+
+            if (du.turn === 'attack' && du.attacker === 'bot') {
+              duBotAttack();
+            } else if (du.turn === 'defend' && duDefender() === 'bot') {
+              duBotDefend();
+            } else if (du.turn === 'attack' && du.attacker === 'player' && duAllDefended()) {
+              du.msg = 'Можешь подкинуть или нажать Пас.';
+              duRender();
+            } else if (du.turn === 'defend' && duDefender() === 'player') {
+              du.msg = 'Бей или бери карты.';
+              duRender();
+            }
+          }, 650);
+        }
+
+        function duRender() {
+          if (!du) return;
+
+          $('duTrump').textContent = du.trump;
+          $('duDeck').textContent = du.deck.length;
+          $('duRole').textContent = du.attacker === 'player' ? 'Ты атакуешь' : 'Ты защищаешься';
+          $('duBotCount').textContent = du.bot.length;
+          $('duMsg').textContent = du.msg || '';
+
+          var tableHtml = '';
+          for (var i = 0; i < du.table.length; i++) {
+            var p = du.table[i];
+            tableHtml += '<div class="pair">' + duCardHTML(p.attack) + (p.defense ? duCardHTML(p.defense, ' def') : '') + '</div>';
+          }
+          $('duTable').innerHTML = tableHtml || '<div class="muted">Стол пуст</div>';
+
+          var handHtml = '';
+          for (var j = 0; j < du.player.length; j++) {
+            var sel = du.selected === j ? ' selected' : '';
+            handHtml += '<div data-duidx="' + j + '">' + duCardHTML(du.player[j], sel) + '</div>';
+          }
+          $('duHand').innerHTML = handHtml || '<div class="muted">Нет карт</div>';
+
+          $('duAttack').disabled = !(du.attacker === 'player' && du.turn === 'attack' && du.selected >= 0 && duCanAttack(du.player[du.selected]));
+          $('duBeat').disabled = !(duDefender() === 'player' && du.turn === 'defend' && du.selected >= 0 && duHasUndefended());
+          $('duTake').disabled = !(duDefender() === 'player' && du.turn === 'defend' && duHasUndefended());
+          $('duPass').disabled = !(du.attacker === 'player' && du.turn === 'attack' && duAllDefended());
+        }
+
+        document.addEventListener('click', function (e) {
+          var c = e.target.closest('[data-duidx]');
+          if (c && du && !du.over) {
+            du.selected = Number(c.dataset.duidx);
+            duRender();
+          }
+        });
+
+        $('duAttack').addEventListener('click', duPlayerAttack);
+        $('duBeat').addEventListener('click', duPlayerBeat);
+        $('duTake').addEventListener('click', duPlayerTake);
+        $('duPass').addEventListener('click', duPlayerPass);
+        $('duNew').addEventListener('click', duInit);
+
+        duInit();
+
+        // ===================== ТАЙМЕРЫ =====================
+        setInterval(updateHeader, 1000);
+        updateHeader();
+      } catch (err) {
+        showFatal(err);
+      }
+    })();
+  </script>
+</body>
+</html>
