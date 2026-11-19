@@ -1,1 +1,885 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#faf8ef">
+  <title>Barsik 2048</title>
 
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root {
+      --bg: #faf8ef;
+      --board: #bbada0;
+      --empty: #cdc1b6;
+      --text-dark: #776e65;
+      --text-light: #f9f6f2;
+      --panel: #eee4da;
+      --accent: #8f7a66;
+      --danger: #f65e3b;
+      --win: #edc22e;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text-dark);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow: hidden;
+      touch-action: manipulation;
+      overscroll-behavior: none;
+    }
+
+    .fatal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      background: #111;
+      color: #fff;
+      padding: 16px;
+      white-space: pre-wrap;
+      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      overflow: auto;
+    }
+
+    .wrap {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      padding:
+        max(10px, env(safe-area-inset-top))
+        max(10px, env(safe-area-inset-right))
+        max(10px, env(safe-area-inset-bottom))
+        max(10px, env(safe-area-inset-left));
+      overscroll-behavior: none;
+    }
+
+    .top {
+      width: min(94vw, 460px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: var(--text-dark);
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #8f7a66;
+      margin-top: 2px;
+    }
+
+    .scores {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      width: min(94vw, 460px);
+    }
+
+    .score-box {
+      background: var(--board);
+      color: var(--text-light);
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: center;
+      min-height: 58px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+
+    .score-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      opacity: .9;
+    }
+
+    .score-value {
+      font-size: 22px;
+      font-weight: 900;
+      margin-top: 2px;
+    }
+
+    .board-wrap {
+      width: min(94vw, 460px);
+      display: flex;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+
+    .board {
+      width: min(94vw, 420px);
+      aspect-ratio: 1 / 1;
+      background: var(--board);
+      border-radius: 12px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 10px;
+      touch-action: none;
+      box-shadow: 0 10px 30px rgba(0,0,0,.10);
+    }
+
+    .cell {
+      position: relative;
+      background: var(--empty);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .tile {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      border-radius: 8px;
+      opacity: 0;
+      transform: scale(.88);
+      transition: opacity .08s ease, transform .08s ease;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .tile.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .tile.pop {
+      animation: pop .16s ease;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(.82); }
+      60% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    .tile-2 { background: #eee4da; color: #776e65; }
+    .tile-4 { background: #ede0c8; color: #776e65; }
+    .tile-8 { background: #f2b179; color: #f9f6f2; }
+    .tile-16 { background: #f59563; color: #f9f6f2; }
+    .tile-32 { background: #f67c5f; color: #f9f6f2; }
+    .tile-64 { background: #f65e3b; color: #f9f6f2; }
+    .tile-128 { background: #edcf72; color: #f9f6f2; }
+    .tile-256 { background: #edcc61; color: #f9f6f2; }
+    .tile-512 { background: #edc850; color: #f9f6f2; }
+    .tile-1024 { background: #edc53f; color: #f9f6f2; }
+    .tile-2048 { background: #edc22e; color: #f9f6f2; }
+    .tile-super { background: #3c3a32; color: #f9f6f2; }
+
+    .controls {
+      width: min(94vw, 460px);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      background: var(--board);
+      color: var(--text-light);
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1;
+      min-height: 48px;
+      height: 48px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+
+    button:active {
+      transform: scale(.97);
+      filter: brightness(1.06);
+    }
+
+    button.secondary {
+      background: #8f7a66;
+    }
+
+    button.danger {
+      background: #d6604d;
+    }
+
+    .hint {
+      width: min(94vw, 460px);
+      font-size: 12px;
+      line-height: 1.35;
+      color: #8f7a66;
+      text-align: center;
+      flex: 0 0 auto;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(238, 228, 218, .72);
+      backdrop-filter: blur(2px);
+      padding: 18px;
+      z-index: 50;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .card {
+      width: min(92vw, 360px);
+      background: #f9f6f2;
+      border-radius: 18px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0,0,0,.18);
+      color: var(--text-dark);
+    }
+
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      font-weight: 900;
+    }
+
+    .card p {
+      margin: 6px 0;
+      color: #8f7a66;
+      font-size: 14px;
+      word-break: break-word;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .row button {
+      flex: 1;
+      min-height: 46px;
+      height: 46px;
+      font-size: 14px;
+    }
+
+    @media (max-height: 720px) {
+      .title { font-size: 20px; }
+      .score-value { font-size: 18px; }
+      .board { padding: 8px; gap: 8px; }
+      button { min-height: 44px; height: 44px; font-size: 16px; }
+      .hint { display: none; }
+    }
+
+    @media (min-width: 760px) {
+      .wrap {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="fatal" class="fatal"></div>
+
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="title">🎮 2048</div>
+        <div class="subtitle">Barsik Mini App</div>
+      </div>
+    </div>
+
+    <div class="scores">
+      <div class="score-box">
+        <div class="score-label">Счёт</div>
+        <div class="score-value" id="score">0</div>
+      </div>
+      <div class="score-box">
+        <div class="score-label">Рекорд</div>
+        <div class="score-value" id="best">0</div>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div id="board" class="board"></div>
+    </div>
+
+    <div class="controls">
+      <button type="button" id="left">◀</button>
+      <button type="button" id="up">▲</button>
+      <button type="button" id="right">▶</button>
+      <button type="button" id="down">▼</button>
+
+      <button type="button" class="secondary" id="undo">↩</button>
+      <button type="button" class="secondary" id="new">🔄</button>
+      <button type="button" class="secondary" id="send">📤</button>
+      <button type="button" class="danger" id="close">✖</button>
+    </div>
+
+    <div class="hint">
+      Свайпай по полю или жми кнопки.<br>
+      Клавиши: ← ↑ → ↓, U — отмена, R — новая игра.
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <h2 id="overlayTitle">Game Over</h2>
+      <p id="overlayText"></p>
+      <div class="row">
+        <button type="button" id="again">Ещё раз</button>
+        <button type="button" id="continueBtn" style="display:none;">Продолжить</button>
+        <button type="button" id="sendResult">Отправить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showFatal(err) {
+      var el = document.getElementById('fatal');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'fatal';
+        el.className = 'fatal';
+        document.body.appendChild(el);
+      }
+      el.style.display = 'block';
+      el.textContent =
+        'Ошибка запуска 2048:\n\n' +
+        (err && err.stack ? err.stack : String(err));
+    }
+
+    window.onerror = function (message, source, lineno, colno, error) {
+      showFatal(error || (message + ' @ ' + lineno + ':' + colno));
+    };
+
+    (function () {
+      try {
+        var tg = null;
+        if (window.Telegram && window.Telegram.WebApp) {
+          tg = window.Telegram.WebApp;
+        }
+
+        if (tg) {
+          try {
+            tg.ready();
+            tg.expand();
+
+            if (tg.setHeaderColor) tg.setHeaderColor('#faf8ef');
+            if (tg.setBackgroundColor) tg.setBackgroundColor('#faf8ef');
+            if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+          } catch (e) {}
+
+          setTimeout(function () {
+            try { tg.expand(); } catch (e) {}
+          }, 300);
+        }
+
+        var SIZE = 4;
+        var boardEl = document.getElementById('board');
+        var scoreEl = document.getElementById('score');
+        var bestEl = document.getElementById('best');
+        var overlay = document.getElementById('overlay');
+        var overlayTitle = document.getElementById('overlayTitle');
+        var overlayText = document.getElementById('overlayText');
+        var continueBtn = document.getElementById('continueBtn');
+
+        var board = [];
+        var score = 0;
+        var best = 0;
+        var moves = 0;
+        var won = false;
+        var over = false;
+        var history = null;
+        var cells = [];
+        var lastValues = [];
+
+        function getUserId() {
+          try {
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+              return String(tg.initDataUnsafe.user.id);
+            }
+          } catch (e) {}
+          return 'local';
+        }
+
+        function bestKey() {
+          return 'barsik2048_best_' + getUserId();
+        }
+
+        function loadBest() {
+          try {
+            return parseInt(localStorage.getItem(bestKey()) || '0', 10) || 0;
+          } catch (e) {
+            return 0;
+          }
+        }
+
+        function saveBest() {
+          try {
+            if (score > best) {
+              best = score;
+              localStorage.setItem(bestKey(), String(best));
+            }
+          } catch (e) {}
+        }
+
+        function emptyBoard() {
+          var b = [];
+          for (var r = 0; r < SIZE; r++) {
+            var row = [];
+            for (var c = 0; c < SIZE; c++) row.push(0);
+            b.push(row);
+          }
+          return b;
+        }
+
+        function cloneBoard(b) {
+          var out = [];
+          for (var r = 0; r < b.length; r++) out.push(b[r].slice());
+          return out;
+        }
+
+        function createBoardDOM() {
+          boardEl.innerHTML = '';
+          cells = [];
+          lastValues = [];
+
+          for (var i = 0; i < SIZE * SIZE; i++) {
+            var cell = document.createElement('div');
+            cell.className = 'cell';
+
+            var tile = document.createElement('div');
+            tile.className = 'tile';
+            cell.appendChild(tile);
+
+            boardEl.appendChild(cell);
+            cells.push(tile);
+            lastValues.push(0);
+          }
+        }
+
+        function tileClass(value) {
+          if (value === 0) return 'tile';
+          if (value <= 2048) return 'tile tile-' + value + ' show';
+          return 'tile tile-super show';
+        }
+
+        function fontSizeFor(value) {
+          var len = String(value).length;
+          if (len <= 2) return 'clamp(28px, 9vw, 46px)';
+          if (len === 3) return 'clamp(24px, 7.6vw, 38px)';
+          if (len === 4) return 'clamp(20px, 6.2vw, 31px)';
+          return 'clamp(16px, 5.2vw, 25px)';
+        }
+
+        function render() {
+          for (var r = 0; r < SIZE; r++) {
+            for (var c = 0; c < SIZE; c++) {
+              var idx = r * SIZE + c;
+              var value = board[r][c];
+              var tile = cells[idx];
+              var changed = lastValues[idx] !== value;
+
+              tile.className = tileClass(value);
+              tile.textContent = value ? String(value) : '';
+              tile.style.fontSize = value ? fontSizeFor(value) : '';
+
+              if (value && changed) {
+                tile.classList.remove('pop');
+                void tile.offsetWidth;
+                tile.classList.add('pop');
+              }
+
+              lastValues[idx] = value;
+            }
+          }
+
+          scoreEl.textContent = String(score);
+          bestEl.textContent = String(best);
+        }
+
+        function emptyCells() {
+          var list = [];
+          for (var r = 0; r < SIZE; r++) {
+            for (var c = 0; c < SIZE; c++) {
+              if (board[r][c] === 0) list.push([r, c]);
+            }
+          }
+          return list;
+        }
+
+        function spawn() {
+          var empties = emptyCells();
+          if (!empties.length) return false;
+
+          var pos = empties[Math.floor(Math.random() * empties.length)];
+          board[pos[0]][pos[1]] = Math.random() < 0.9 ? 2 : 4;
+          return true;
+        }
+
+        function slideRow(row) {
+          var values = [];
+          var gained = 0;
+          var i;
+
+          for (i = 0; i < row.length; i++) {
+            if (row[i]) values.push(row[i]);
+          }
+
+          var merged = [];
+          i = 0;
+          while (i < values.length) {
+            if (i + 1 < values.length && values[i] === values[i + 1]) {
+              var v = values[i] * 2;
+              merged.push(v);
+              gained += v;
+              i += 2;
+            } else {
+              merged.push(values[i]);
+              i += 1;
+            }
+          }
+
+          while (merged.length < SIZE) merged.push(0);
+
+          var moved = false;
+          for (i = 0; i < SIZE; i++) {
+            if (merged[i] !== row[i]) moved = true;
+          }
+
+          return { row: merged, gained: gained, moved: moved };
+        }
+
+        function getCol(c) {
+          var col = [];
+          for (var r = 0; r < SIZE; r++) col.push(board[r][c]);
+          return col;
+        }
+
+        function setCol(c, col) {
+          for (var r = 0; r < SIZE; r++) board[r][c] = col[r];
+        }
+
+        function reverse(arr) {
+          return arr.slice().reverse();
+        }
+
+        function move(dir) {
+          if (over) return false;
+
+          var snapshot = {
+            board: cloneBoard(board),
+            score: score,
+            moves: moves
+          };
+
+          var moved = false;
+          var gained = 0;
+          var r, c, res;
+
+          if (dir === 'left') {
+            for (r = 0; r < SIZE; r++) {
+              res = slideRow(board[r]);
+              if (res.moved) moved = true;
+              gained += res.gained;
+              board[r] = res.row;
+            }
+          } else if (dir === 'right') {
+            for (r = 0; r < SIZE; r++) {
+              res = slideRow(reverse(board[r]));
+              if (res.moved) moved = true;
+              gained += res.gained;
+              board[r] = reverse(res.row);
+            }
+          } else if (dir === 'up') {
+            for (c = 0; c < SIZE; c++) {
+              res = slideRow(getCol(c));
+              if (res.moved) moved = true;
+              gained += res.gained;
+              setCol(c, res.row);
+            }
+          } else if (dir === 'down') {
+            for (c = 0; c < SIZE; c++) {
+              res = slideRow(reverse(getCol(c)));
+              if (res.moved) moved = true;
+              gained += res.gained;
+              setCol(c, reverse(res.row));
+            }
+          }
+
+          if (!moved) return false;
+
+          history = snapshot;
+          score += gained;
+          moves += 1;
+          saveBest();
+
+          spawn();
+          render();
+
+          checkWin();
+          checkGameOver();
+
+          return true;
+        }
+
+        function canMove() {
+          for (var r = 0; r < SIZE; r++) {
+            for (var c = 0; c < SIZE; c++) {
+              var v = board[r][c];
+
+              if (v === 0) return true;
+
+              if (c + 1 < SIZE && v === board[r][c + 1]) return true;
+              if (r + 1 < SIZE && v === board[r + 1][c]) return true;
+            }
+          }
+          return false;
+        }
+
+        function hasValue(value) {
+          for (var r = 0; r < SIZE; r++) {
+            for (var c = 0; c < SIZE; c++) {
+              if (board[r][c] === value) return true;
+            }
+          }
+          return false;
+        }
+
+        function checkWin() {
+          if (!won && hasValue(2048)) {
+            won = true;
+            showOverlay(
+              '2048! 🏆',
+              'Счёт: ' + score + ' • Ходы: ' + moves,
+              true
+            );
+          }
+        }
+
+        function checkGameOver() {
+          if (!canMove()) {
+            over = true;
+            showOverlay(
+              'Game Over 💀',
+              'Счёт: ' + score + ' • Рекорд: ' + best + ' • Ходы: ' + moves,
+              false
+            );
+          }
+        }
+
+        function undo() {
+          if (!history) return false;
+
+          board = cloneBoard(history.board);
+          score = history.score;
+          moves = history.moves;
+          history = null;
+          over = false;
+          hideOverlay();
+          render();
+          return true;
+        }
+
+        function newGame() {
+          board = emptyBoard();
+          score = 0;
+          moves = 0;
+          won = false;
+          over = false;
+          history = null;
+          best = loadBest();
+
+          spawn();
+          spawn();
+
+          hideOverlay();
+          render();
+        }
+
+        function showOverlay(title, text, showContinue) {
+          overlayTitle.textContent = title;
+          overlayText.textContent = text;
+          continueBtn.style.display = showContinue ? '' : 'none';
+          overlay.classList.add('show');
+        }
+
+        function hideOverlay() {
+          overlay.classList.remove('show');
+        }
+
+        function sendResult() {
+          var payload = {
+            game: '2048',
+            score: score,
+            best: best,
+            moves: moves,
+            won: won,
+            over: over,
+            ts: Date.now()
+          };
+
+          if (tg && tg.sendData) {
+            tg.sendData(JSON.stringify(payload));
+          } else {
+            alert('Результат: ' + JSON.stringify(payload));
+          }
+        }
+
+        function closeApp() {
+          if (tg && tg.close) {
+            try { tg.close(); } catch (e) {}
+          }
+        }
+
+        function bindPress(id, fn) {
+          var el = document.getElementById(id);
+          if (!el) return;
+
+          var lockUntil = 0;
+
+          function fire(e) {
+            var now = Date.now();
+            if (now < lockUntil) return;
+            lockUntil = now + 110;
+
+            if (e && e.preventDefault) e.preventDefault();
+
+            try {
+              fn();
+            } catch (err) {
+              showFatal(err);
+            }
+          }
+
+          el.addEventListener('pointerdown', fire);
+          el.addEventListener('touchstart', fire, { passive: false });
+          el.addEventListener('click', fire);
+        }
+
+        bindPress('left', function () { move('left'); });
+        bindPress('right', function () { move('right'); });
+        bindPress('up', function () { move('up'); });
+        bindPress('down', function () { move('down'); });
+        bindPress('undo', function () { undo(); });
+        bindPress('new', function () { newGame(); });
+        bindPress('send', function () { sendResult(); });
+        bindPress('close', function () { closeApp(); });
+        bindPress('again', function () { newGame(); });
+        bindPress('continueBtn', function () { hideOverlay(); });
+        bindPress('sendResult', function () { sendResult(); });
+
+        document.addEventListener('keydown', function (e) {
+          var k = e.key;
+          var lower = k ? k.toLowerCase() : '';
+
+          if (
+            k === 'ArrowLeft' ||
+            k === 'ArrowRight' ||
+            k === 'ArrowUp' ||
+            k === 'ArrowDown' ||
+            lower === 'u' ||
+            lower === 'r'
+          ) {
+            e.preventDefault();
+          }
+
+          if (k === 'ArrowLeft') move('left');
+          if (k === 'ArrowRight') move('right');
+          if (k === 'ArrowUp') move('up');
+          if (k === 'ArrowDown') move('down');
+          if (lower === 'u') undo();
+          if (lower === 'r') newGame();
+        });
+
+        var touchStartX = 0;
+        var touchStartY = 0;
+        var touchStartTime = 0;
+
+        boardEl.addEventListener('touchstart', function (e) {
+          if (!e.touches || e.touches.length !== 1) return;
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+          touchStartTime = Date.now();
+          e.preventDefault();
+        }, { passive: false });
+
+        boardEl.addEventListener('touchmove', function (e) {
+          e.preventDefault();
+        }, { passive: false });
+
+        boardEl.addEventListener('touchend', function (e) {
+          if (!e.changedTouches || !e.changedTouches.length) return;
+
+          var dx = e.changedTouches[0].clientX - touchStartX;
+          var dy = e.changedTouches[0].clientY - touchStartY;
+          var dt = Date.now() - touchStartTime;
+
+          if (dt > 800) return;
+
+          var absX = Math.abs(dx);
+          var absY = Math.abs(dy);
+
+          if (Math.max(absX, absY) < 28) return;
+
+          if (absX > absY) {
+            move(dx > 0 ? 'right' : 'left');
+          } else {
+            move(dy > 0 ? 'down' : 'up');
+          }
+
+          e.preventDefault();
+        }, { passive: false });
+
+        window.addEventListener('resize', function () {
+          if (tg && tg.expand) {
+            try { tg.expand(); } catch (e) {}
+          }
+        });
+
+        createBoardDOM();
+        best = loadBest();
+        newGame();
+      } catch (err) {
+        showFatal(err);
+      }
+    })();
+  </script>
+</body>
+</html>
