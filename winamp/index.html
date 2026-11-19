@@ -1,1 +1,766 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>Barsik Amp</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --bg: #000;
+  --panel: #1a1a1a;
+  --border: #333;
+  --text: #0f0; /* Green terminal style */
+  --accent: #ffcc00;
+  --highlight: #00ffff;
+  --slider-bg: #444;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: 'Courier New', Courier, monospace; overflow: hidden; touch-action: manipulation; overscroll-behavior: none; }
+.fatal { display: none; position: fixed; inset: 0; z-index: 999; background: #111; color: #fff; padding: 16px; white-space: pre-wrap; font: 13px/1.45 ui-monospace,Menlo,Consolas,monospace; overflow: auto; }
 
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  gap: 8px;
+}
+
+/* Header / Title Bar */
+.header {
+  background: linear-gradient(to bottom, #2a2a2a, #1a1a1a);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #ccc;
+  user-select: none;
+}
+.title-text { color: var(--highlight); text-shadow: 0 0 5px rgba(0,255,255,.5); }
+
+/* Main Display Area */
+.display {
+  background: #000;
+  border: 2px solid #333;
+  border-radius: 4px;
+  padding: 8px;
+  min-height: 140px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Visualizer Canvas */
+.viz-container {
+  grid-column: 1 / -1;
+  height: 60px;
+  background: #050505;
+  border: 1px solid #222;
+  border-radius: 2px;
+  position: relative;
+}
+canvas#viz { width: 100%; height: 100%; display: block; }
+
+/* Info Panel (Track Name, Time, Bitrate) */
+.info-panel {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--accent);
+  padding: 4px 0;
+  border-top: 1px dashed #333;
+}
+.track-name {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  animation: marquee 10s linear infinite;
+  padding-right: 20px;
+}
+@keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+.time-info { font-weight: bold; color: #fff; }
+
+/* Controls */
+.controls {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  padding: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.btn {
+  background: linear-gradient(to bottom, #444, #222);
+  border: 1px solid #555;
+  border-radius: 2px;
+  color: #ddd;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 8px 0;
+  cursor: pointer;
+  user-select: none;
+  transition: all .1s;
+  text-align: center;
+}
+.btn:active, .btn.active {
+  background: linear-gradient(to bottom, #222, #444);
+  color: var(--highlight);
+  border-color: var(--highlight);
+  box-shadow: inset 0 0 5px rgba(0,255,255,.3);
+}
+.btn-play { color: #0f0; }
+.btn-pause { color: #ff0; }
+.btn-stop { color: #f00; }
+
+/* Volume & Progress Sliders */
+.sliders {
+  padding: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: #aaa;
+}
+input[type=range] {
+  flex: 1;
+  -webkit-appearance: none;
+  background: transparent;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: var(--highlight);
+  cursor: pointer;
+  margin-top: -4px;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: #333;
+  border-radius: 2px;
+}
+
+/* Playlist */
+.playlist-container {
+  flex: 1;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.playlist-header {
+  background: #222;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: #888;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #333;
+}
+.playlist-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px;
+  font-size: 11px;
+  color: #ccc;
+}
+.pl-item {
+  padding: 4px 6px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dotted #222;
+}
+.pl-item:hover { background: #111; color: #fff; }
+.pl-item.current { background: #003300; color: #0f0; font-weight: bold; }
+.pl-item.playing { color: var(--highlight); }
+.pl-num { color: #666; width: 20px; }
+.pl-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-time { color: #888; font-size: 10px; }
+
+/* Actions Footer */
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 4px;
+}
+.action-btn {
+  background: #222;
+  border: 1px solid #444;
+  color: #aaa;
+  padding: 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+}
+.action-btn:active { background: #333; color: #fff; }
+
+/* Hidden File Input */
+#fileInput { display: none; }
+
+/* Modal for Loading */
+.modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,.8);
+  display: none; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.modal.show { display: flex; }
+.modal-card {
+  background: #1a1a1a; border: 1px solid #444; padding: 16px;
+  border-radius: 8px; width: 90%; max-width: 400px;
+  color: #ccc; font-size: 12px;
+}
+</style>
+</head>
+<body>
+<div id="fatal" class="fatal"></div>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <span>BARSIK AMP v1.0</span>
+    <span class="title-text">WINAMP STYLE</span>
+  </div>
+
+  <!-- Display -->
+  <div class="display">
+    <div class="viz-container">
+      <canvas id="viz"></canvas>
+    </div>
+    <div class="info-panel">
+      <div class="track-name" id="trackName">No Track Loaded</div>
+      <div class="time-info"><span id="currentTime">00:00</span> / <span id="duration">00:00</span></div>
+    </div>
+  </div>
+
+  <!-- Sliders -->
+  <div class="sliders">
+    <div class="slider-row">
+      <span>VOL</span>
+      <input type="range" id="volSlider" min="0" max="100" value="80">
+      <span id="volVal">80%</span>
+    </div>
+    <div class="slider-row">
+      <span>POS</span>
+      <input type="range" id="posSlider" min="0" max="100" value="0">
+      <span id="posVal">0%</span>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="btn btn-prev" id="btnPrev">⏮</button>
+    <button class="btn btn-play" id="btnPlay">▶</button>
+    <button class="btn btn-pause" id="btnPause">⏸</button>
+    <button class="btn btn-stop" id="btnStop">⏹</button>
+    <button class="btn btn-next" id="btnNext">⏭</button>
+    
+    <button class="btn" id="btnShuffle">🔀</button>
+    <button class="btn" id="btnRepeatOne">🔂</button>
+    <button class="btn" id="btnRepeatList">🔁</button>
+    <button class="btn" id="btnEq">EQ</button>
+    <button class="btn" id="btnLoad">📂 LOAD</button>
+  </div>
+
+  <!-- Playlist -->
+  <div class="playlist-container">
+    <div class="playlist-header">
+      <span>PLAYLIST (<span id="plCount">0</span>)</span>
+      <span>CLEAR ALL</span>
+    </div>
+    <div class="playlist-list" id="playlistList">
+      <!-- Items injected here -->
+      <div style="padding:10px;color:#555;text-align:center;">Playlist empty.<br>Tap LOAD to add music.</div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="action-btn" id="btnSaveState">💾 Save State</button>
+    <button class="action-btn" id="btnSendBot">📤 Send to Bot</button>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="audio/*" multiple>
+
+<!-- Simple EQ Modal -->
+<div class="modal" id="eqModal">
+  <div class="modal-card">
+    <h3 style="margin-top:0;color:#0f0;">Equalizer</h3>
+    <div style="display:flex;justify-content:space-around;margin:10px 0;">
+      <div><small>Low</small><br><input type="range" id="eqLow" min="-10" max="10" value="0"></div>
+      <div><small>Mid</small><br><input type="range" id="eqMid" min="-10" max="10" value="0"></div>
+      <div><small>High</small><br><input type="range" id="eqHigh" min="-10" max="10" value="0"></div>
+    </div>
+    <button class="btn" style="width:100%" onclick="closeEq()">Close</button>
+  </div>
+</div>
+
+<audio id="audioPlayer"></audio>
+
+<script>
+function showFatal(e){
+  var el=document.getElementById('fatal');
+  el.style.display='block';
+  el.textContent='Error:\n\n'+(e&&e.stack?e.stack:String(e));
+}
+window.onerror=function(m,s,l,c,e){showFatal(e||(m+' @ '+l+':'+c));};
+
+(function(){
+try{
+  // --- Telegram Init ---
+  var tg = window.Telegram && window.Telegram.WebApp ? Telegram.WebApp : null;
+  if(tg){
+    try{
+      tg.ready();
+      tg.expand();
+      if(tg.setHeaderColor) tg.setHeaderColor('#000000');
+      if(tg.setBackgroundColor) tg.setBackgroundColor('#000000');
+      if(tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+    }catch(e){}
+    setTimeout(function(){try{tg.expand();}catch(e){}},300);
+  }
+
+  // --- DOM Elements ---
+  const audio = document.getElementById('audioPlayer');
+  const vizCanvas = document.getElementById('viz');
+  const ctx = vizCanvas.getContext('2d');
+  
+  const trackNameEl = document.getElementById('trackName');
+  const currentTimeEl = document.getElementById('currentTime');
+  const durationEl = document.getElementById('duration');
+  const volSlider = document.getElementById('volSlider');
+  const volVal = document.getElementById('volVal');
+  const posSlider = document.getElementById('posSlider');
+  const posVal = document.getElementById('posVal');
+  
+  const playlistList = document.getElementById('playlistList');
+  const plCount = document.getElementById('plCount');
+  const fileInput = document.getElementById('fileInput');
+  
+  const btnPlay = document.getElementById('btnPlay');
+  const btnPause = document.getElementById('btnPause');
+  const btnStop = document.getElementById('btnStop');
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
+  const btnShuffle = document.getElementById('btnShuffle');
+  const btnRepeatOne = document.getElementById('btnRepeatOne');
+  const btnRepeatList = document.getElementById('btnRepeatList');
+  const btnEq = document.getElementById('btnEq');
+  const btnLoad = document.getElementById('btnLoad');
+  const btnSaveState = document.getElementById('btnSaveState');
+  const btnSendBot = document.getElementById('btnSendBot');
+  const eqModal = document.getElementById('eqModal');
+
+  // --- Audio Context for Visualization ---
+  let audioCtx, analyser, source;
+  let isAudioContextInitialized = false;
+
+  function initAudioContext() {
+    if (isAudioContextInitialized) return;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      
+      source = audioCtx.createMediaElementSource(audio);
+      source.connect(analyser);
+      analyser.connect(audioCtx.destination);
+      
+      isAudioContextInitialized = true;
+      drawVisualizer();
+    } catch (e) {
+      console.warn("AudioContext failed", e);
+    }
+  }
+
+  // --- Visualizer Loop ---
+  function drawVisualizer() {
+    if (!analyser) return;
+    
+    requestAnimationFrame(drawVisualizer);
+    
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyser.getByteFrequencyData(dataArray);
+    
+    const width = vizCanvas.width;
+    const height = vizCanvas.height;
+    
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, width, height);
+    
+    const barWidth = (width / bufferLength) * 2.5;
+    let x = 0;
+    
+    for (let i = 0; i < bufferLength; i++) {
+      const barHeight = (dataArray[i] / 255) * height;
+      
+      // Color gradient based on frequency
+      const hue = 120 + (i / bufferLength) * 120; // Green to Blue/Purple
+      ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+      
+      ctx.fillRect(x, height - barHeight, barWidth, barHeight);
+      x += barWidth + 1;
+    }
+  }
+
+  // Resize canvas
+  function resizeCanvas() {
+    vizCanvas.width = vizCanvas.parentElement.clientWidth;
+    vizCanvas.height = vizCanvas.parentElement.clientHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  // --- State Management ---
+  let tracks = []; // Array of objects: { id, name, url, blob, duration }
+  let currentIndex = -1;
+  let isPlaying = false;
+  let shuffleMode = false;
+  let repeatMode = 0; // 0: off, 1: one, 2: list
+  
+  const STORAGE_KEY = 'barsik_amp_state';
+
+  // --- Helpers ---
+  function formatTime(sec) {
+    if (isNaN(sec)) return "00:00";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  }
+
+  function updateUI() {
+    plCount.textContent = tracks.length;
+    renderPlaylist();
+    
+    if (currentIndex >= 0 && tracks[currentIndex]) {
+      const t = tracks[currentIndex];
+      trackNameEl.textContent = t.name;
+      durationEl.textContent = formatTime(t.duration || 0);
+    } else {
+      trackNameEl.textContent = "No Track Selected";
+      durationEl.textContent = "00:00";
+      currentTimeEl.textContent = "00:00";
+    }
+    
+    // Button states
+    btnPlay.classList.toggle('active', isPlaying);
+    btnPause.classList.toggle('active', !isPlaying && audio.src !== "");
+    btnShuffle.classList.toggle('active', shuffleMode);
+    btnRepeatOne.classList.toggle('active', repeatMode === 1);
+    btnRepeatList.classList.toggle('active', repeatMode === 2);
+  }
+
+  function renderPlaylist() {
+    playlistList.innerHTML = '';
+    if (tracks.length === 0) {
+      playlistList.innerHTML = '<div style="padding:10px;color:#555;text-align:center;">Playlist empty.<br>Tap LOAD to add music.</div>';
+      return;
+    }
+    
+    tracks.forEach((t, idx) => {
+      const div = document.createElement('div');
+      div.className = 'pl-item' + (idx === currentIndex ? ' current playing' : '');
+      div.innerHTML = `
+        <span class="pl-num">${idx + 1}</span>
+        <span class="pl-title">${t.name}</span>
+        <span class="pl-time">${formatTime(t.duration)}</span>
+      `;
+      div.onclick = () => loadTrack(idx);
+      playlistList.appendChild(div);
+    });
+  }
+
+  // --- Core Logic ---
+  async function loadTrack(index) {
+    if (index < 0 || index >= tracks.length) return;
+    
+    stopPlayback();
+    currentIndex = index;
+    const track = tracks[index];
+    
+    // If we have a Blob URL from previous session or memory
+    if (track.blobUrl) {
+      audio.src = track.blobUrl;
+    } else if (track.file) {
+      // Create object URL from File/Blob
+      track.blobUrl = URL.createObjectURL(track.file);
+      audio.src = track.blobUrl;
+    } else {
+      // Try to fetch remote URL if stored as string
+      audio.src = track.url; 
+    }
+
+    audio.load();
+    updateUI();
+    
+    // Wait for metadata to get duration
+    audio.onloadedmetadata = () => {
+      tracks[currentIndex].duration = audio.duration;
+      updateUI();
+    };
+  }
+
+  function play() {
+    if (currentIndex === -1 && tracks.length > 0) {
+      loadTrack(shuffleMode ? Math.floor(Math.random() * tracks.length) : 0);
+    }
+    if (currentIndex === -1) return;
+
+    initAudioContext();
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    
+    audio.play().then(() => {
+      isPlaying = true;
+      updateUI();
+    }).catch(e => {
+      console.error("Play error", e);
+      alert("Cannot play this file.");
+    });
+  }
+
+  function pause() {
+    audio.pause();
+    isPlaying = false;
+    updateUI();
+  }
+
+  function stop() {
+    audio.pause();
+    audio.currentTime = 0;
+    isPlaying = false;
+    updateUI();
+  }
+
+  function next() {
+    if (tracks.length === 0) return;
+    let nextIdx;
+    if (shuffleMode) {
+      nextIdx = Math.floor(Math.random() * tracks.length);
+      // Avoid same track if possible
+      if (nextIdx === currentIndex && tracks.length > 1) {
+        nextIdx = (nextIdx + 1) % tracks.length;
+      }
+    } else {
+      nextIdx = currentIndex + 1;
+      if (nextIdx >= tracks.length) {
+        if (repeatMode === 2) nextIdx = 0;
+        else {
+          stop();
+          return;
+        }
+      }
+    }
+    loadTrack(nextIdx);
+    play();
+  }
+
+  function prev() {
+    if (tracks.length === 0) return;
+    if (audio.currentTime > 3) {
+      audio.currentTime = 0;
+      return;
+    }
+    let prevIdx = currentIndex - 1;
+    if (prevIdx < 0) {
+      if (repeatMode === 2) prevIdx = tracks.length - 1;
+      else prevIdx = 0;
+    }
+    loadTrack(prevIdx);
+    play();
+  }
+
+  // --- Event Listeners ---
+  btnPlay.onclick = play;
+  btnPause.onclick = pause;
+  btnStop.onclick = stop;
+  btnNext.onclick = next;
+  btnPrev.onclick = prev;
+
+  btnShuffle.onclick = () => { shuffleMode = !shuffleMode; updateUI(); };
+  btnRepeatOne.onclick = () => { repeatMode = repeatMode === 1 ? 0 : 1; updateUI(); };
+  btnRepeatList.onclick = () => { repeatMode = repeatMode === 2 ? 0 : 2; updateUI(); };
+
+  btnEq.onclick = () => eqModal.classList.add('show');
+  window.closeEq = () => eqModal.classList.remove('show');
+
+  // Volume
+  volSlider.oninput = (e) => {
+    const val = e.target.value;
+    audio.volume = val / 100;
+    volVal.textContent = val + '%';
+  };
+
+  // Position Seek
+  posSlider.onchange = (e) => {
+    if (!audio.duration) return;
+    const pct = e.target.value / 100;
+    audio.currentTime = pct * audio.duration;
+    posVal.textContent = Math.round(pct * 100) + '%';
+  };
+
+  // Audio Events
+  audio.ontimeupdate = () => {
+    if (audio.duration) {
+      const pct = (audio.currentTime / audio.duration) * 100;
+      posSlider.value = pct;
+      posVal.textContent = Math.round(pct) + '%';
+      currentTimeEl.textContent = formatTime(audio.currentTime);
+    }
+  };
+
+  audio.onended = () => {
+    if (repeatMode === 1) {
+      audio.currentTime = 0;
+      play();
+    } else {
+      next();
+    }
+  };
+
+  // Load Files
+  btnLoad.onclick = () => fileInput.click();
+  
+  fileInput.onchange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    // Show loading modal/text briefly
+    const oldContent = playlistList.innerHTML;
+    playlistList.innerHTML = '<div style="padding:10px;color:#0f0;text-align:center;">Loading...</div>';
+
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const arrayBuffer = ev.target.result;
+        const blob = new Blob([arrayBuffer], { type: file.type });
+        const url = URL.createObjectURL(blob);
+        
+        tracks.push({
+          id: Date.now() + Math.random(),
+          name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
+          file: file,
+          blobUrl: url,
+          duration: 0
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // Small delay to allow reading
+    setTimeout(() => {
+      updateUI();
+      if (tracks.length > 0 && currentIndex === -1) {
+        loadTrack(0);
+      }
+    }, 500);
+    
+    fileInput.value = ''; // Reset input
+  };
+
+  // Clear All (Double click header or specific logic could be added, simplified here via button in actions if needed, but let's stick to UI)
+  // For simplicity, adding a clear function to the header span
+  document.querySelector('.playlist-header span:last-child').onclick = () => {
+    if(confirm("Clear playlist?")) {
+      tracks.forEach(t => { if(t.blobUrl) URL.revokeObjectURL(t.blobUrl); });
+      tracks = [];
+      currentIndex = -1;
+      stop();
+      updateUI();
+    }
+  };
+
+  // --- Persistence (IndexedDB would be better for large files, but LocalStorage for state) ---
+  // Note: We cannot store Blobs in LocalStorage easily. 
+  // This version keeps tracks in memory during session. 
+  // To persist across reloads without server, you'd need IndexedDB implementation which is complex for single file.
+  // Here we save only settings and last played index/name reference.
+  
+  function saveState() {
+    const state = {
+      volume: volSlider.value,
+      shuffle: shuffleMode,
+      repeat: repeatMode,
+      lastTrackName: currentIndex >= 0 ? tracks[currentIndex].name : null
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    alert("Settings saved!");
+  }
+
+  function loadState() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        const state = JSON.parse(raw);
+        volSlider.value = state.volume || 80;
+        audio.volume = state.volume / 100;
+        volVal.textContent = state.volume + '%';
+        shuffleMode = state.shuffle || false;
+        repeatMode = state.repeat || 0;
+        updateUI();
+      } catch(e) {}
+    }
+  }
+
+  btnSaveState.onclick = saveState;
+  loadState();
+
+  // --- Send to Bot ---
+  btnSendBot.onclick = () => {
+    if (!tg || !tg.sendData) {
+      alert("Only works inside Telegram");
+      return;
+    }
+    const data = {
+      game: 'winamp',
+      action: 'status',
+      currentTrack: currentIndex >= 0 ? tracks[currentIndex].name : "None",
+      isPlaying: isPlaying,
+      volume: volSlider.value,
+      playlistLength: tracks.length
+    };
+    tg.sendData(JSON.stringify(data));
+    alert("Status sent to bot!");
+  };
+
+  // Initial Render
+  updateUI();
+
+}catch(e){showFatal(e);}
+})();
+</script>
+</body>
+</html>
