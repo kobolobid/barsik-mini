@@ -3,54 +3,138 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Barsik NES Emulator</title>
+<title>Barsik NES Hub</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  body { margin: 0; padding: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; touch-action: none; }
-  #app { width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+  :root { --bg:#000; --panel:#111; --accent:#0f0; --btn:#333; }
+  body { margin:0; background:var(--bg); color:#fff; font-family:'Courier New', monospace; overflow:hidden; touch-action:none; user-select:none; height:100vh; width:100vw; display:flex; flex-direction:column; }
   
-  .header {
-    height: 40px;
-    background: #111;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 10px;
-    font-size: 12px;
-    border-bottom: 1px solid #333;
-    z-index: 10;
-  }
+  /* Header */
+  .header { padding:10px; background:var(--panel); border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; z-index:10; }
+  .title { color:var(--accent); font-weight:bold; font-size:16px; }
+  .back-btn { background:none; border:1px solid var(--accent); color:var(--accent); padding:5px 10px; cursor:pointer; font-family:inherit; display:none; }
   
-  /* Container for the emulator canvas */
-  #game-container {
-    flex: 1;
-    position: relative;
-    background: #000;
-    overflow: hidden;
+  /* Game List View */
+  #gameList { flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:10px; }
+  .game-card { background:#222; border:1px solid #444; padding:15px; border-radius:8px; cursor:pointer; transition:all .2s; text-align:center; }
+  .game-card:active { transform:scale(.98); background:#333; border-color:var(--accent); }
+  .game-name { font-size:18px; font-weight:bold; color:#fff; margin-bottom:5px; }
+  .game-desc { font-size:12px; color:#aaa; }
+
+  /* Emulator Container */
+  #emulatorContainer { flex:1; position:relative; background:#000; display:none; }
+  canvas { width:100%; height:100%; image-rendering:pixelated; object-fit:contain; }
+
+  /* Custom Controls Overlay */
+  #controls { 
+    position:absolute; bottom:0; left:0; right:0; height:140px; 
+    background:rgba(0,0,0,.8); 
+    display:none; /* Hidden until game starts */
+    pointer-events:none; 
+    z-index:20;
   }
+  .ctrl-zone { position:absolute; pointer-events:auto; }
   
-  /* Force controls to be visible on mobile */
-  .ejs_controls {
-    opacity: 1 !important;
-    visibility: visible !important;
+  /* D-PAD */
+  #dpad { left:20px; top:20px; width:120px; height:120px; }
+  .d-btn { 
+    position:absolute; width:40px; height:40px; 
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.3); 
+    color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; 
+    border-radius:4px; cursor:pointer; 
   }
+  .d-btn:active { background:rgba(255,255,255,.4); border-color:var(--accent); color:var(--accent); }
+  #d-up { top:0; left:40px; }
+  #d-down { bottom:0; left:40px; }
+  #d-left { top:40px; left:0; }
+  #d-right { top:40px; right:0; }
+
+  /* ACTION BUTTONS */
+  #actions { right:20px; top:20px; width:120px; height:120px; }
+  .a-btn { 
+    position:absolute; width:45px; height:45px; 
+    background:rgba(255,0,0,.2); border:2px solid rgba(255,0,0,.5); 
+    color:#fff; font-weight:bold; font-size:16px; display:flex; align-items:center; justify-content:center; 
+    border-radius:50%; cursor:pointer; 
+  }
+  .a-btn:active { background:rgba(255,0,0,.6); box-shadow:0 0 10px rgba(255,0,0,.5); }
+  #btn-a { bottom:0; right:0; }
+  #btn-b { bottom:0; left:0; }
+  
+  /* SYSTEM BUTTONS */
+  #sys { right:20px; top:0; width:120px; height:40px; display:flex; justify-content:space-around; align-items:center; }
+  .s-btn { 
+    width:40px; height:20px; 
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.3); 
+    color:#ccc; font-size:10px; display:flex; align-items:center; justify-content:center; 
+    border-radius:2px; cursor:pointer; 
+  }
+  .s-btn:active { background:rgba(255,255,255,.3); color:#fff; }
+
+  /* Loading Spinner */
+  #loader { position:absolute; inset:0; background:rgba(0,0,0,.9); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:50; color:var(--accent); font-size:18px; }
+  .spinner { width:40px; height:40px; border:4px solid #333; border-top:4px solid var(--accent); border-radius:50%; animation:spin 1s linear infinite; margin-bottom:10px; }
+  @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
 </style>
+<!-- EmulatorJS CSS -->
 <link rel="stylesheet" href="https://cdn.emulatorjs.org/stable/data/loader.css">
 </head>
 <body>
 
-<div id="app">
-  <div class="header">
-    <span>🎮 BARSIK NES</span>
-    <button style="background:#333;border:none;color:#fff;padding:5px 10px;font-size:10px;" onclick="location.reload()">⟳ RELOAD</button>
+<div class="header">
+  <span class="title">🎮 BARSIK NES HUB</span>
+  <button id="backBtn" class="back-btn">← НАЗАД</button>
+</div>
+
+<!-- LIST VIEW -->
+<div id="gameList">
+  <div class="game-card" onclick="loadGame('roms/battle_city.nes')">
+    <div class="game-name">Battle City (Танчики)</div>
+    <div class="game-desc">Классика Dendy. Защити базу!</div>
   </div>
-  <div id="game-container"></div>
+  <!-- Добавляй другие игры сюда аналогично -->
+  <!--
+  <div class="game-card" onclick="loadGame('roms/super_mario_bros.nes')">
+    <div class="game-name">Super Mario Bros.</div>
+    <div class="game-desc">Легендарный платформер.</div>
+  </div>
+  <div class="game-card" onclick="loadGame('roms/contra.nes')">
+    <div class="game-name">Contra</div>
+    <div class="game-desc">Run and Gun экшн.</div>
+  </div>
+  -->
+</div>
+
+<!-- EMULATOR VIEW -->
+<div id="emulatorContainer">
+  <div id="loader"><div class="spinner"></div>Загрузка...</div>
+  <div id="ejs-player"></div>
+  
+  <!-- CUSTOM CONTROLS -->
+  <div id="controls">
+    <div id="dpad" class="ctrl-zone">
+      <div class="d-btn" id="d-up">▲</div>
+      <div class="d-btn" id="d-down">▼</div>
+      <div class="d-btn" id="d-left">◀</div>
+      <div class="d-btn" id="d-right">▶</div>
+    </div>
+    
+    <div id="sys" class="ctrl-zone">
+      <div class="s-btn" id="btn-select">SEL</div>
+      <div class="s-btn" id="btn-start">STRT</div>
+    </div>
+    
+    <div id="actions" class="ctrl-zone">
+      <div class="a-btn" id="btn-b">B</div>
+      <div class="a-btn" id="btn-a">A</div>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 
 <script>
-// Telegram Init
+// --- TELEGRAM INIT ---
 var tg = window.Telegram && window.Telegram.WebApp ? Telegram.WebApp : null;
 if(tg){
   try{
@@ -62,40 +146,130 @@ if(tg){
   }catch(e){}
 }
 
-// --- CRITICAL CONFIG FOR MOBILE BUTTONS ---
-window.EJS_player = "#game-container";
-window.EJS_core = "nes";
-window.EJS_color = "#ffffff";
-window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
-window.EJS_startOnLoaded = true;
-window.EJS_language = "ru";
+// --- STATE MANAGEMENT ---
+let currentRomUrl = "";
+let ejsInstance = null;
 
-// THIS IS THE KEY LINE TO SHOW BUTTONS ON MOBILE
-window.EJS_mobileControls = true; 
+// --- NAVIGATION ---
+window.loadGame = function(url) {
+  currentRomUrl = url;
+  
+  // Hide list, show emulator
+  document.getElementById('gameList').style.display = 'none';
+  document.getElementById('emulatorContainer').style.display = 'block';
+  document.getElementById('controls').style.display = 'block';
+  document.getElementById('backBtn').style.display = 'block';
+  document.getElementById('loader').style.display = 'flex';
+  
+  // Initialize EmulatorJS
+  initEmulator(url);
+};
 
-// Optional: Adjust button size/layout if needed
-// window.EJS_controlScheme = "custom"; // Can define custom layouts later
-
-// THE GAME FILE PATH
-// Make sure this matches your GitHub structure exactly!
-window.EJS_gameUrl = "roms/battle_city.nes"; 
-
-// Initialize
-EJS_loader();
-
-// Fallback: If buttons don't appear automatically, force them via DOM manipulation after load
-setTimeout(function(){
-  var controls = document.querySelector('.ejs_controls');
-  if(controls) {
-    controls.style.opacity = '1';
-    controls.style.visibility = 'visible';
-    console.log("Forced controls visibility");
-  } else {
-    console.warn("Controls element not found yet, waiting...");
+document.getElementById('backBtn').onclick = function() {
+  // Stop emulation
+  if(ejsInstance) {
+    try { ejsInstance.stop(); } catch(e){}
   }
-}, 2000);
+  
+  // Show list again
+  document.getElementById('gameList').style.display = 'flex';
+  document.getElementById('emulatorContainer').style.display = 'none';
+  document.getElementById('controls').style.display = 'none';
+  document.getElementById('backBtn').style.display = 'none';
+  document.getElementById('loader').style.display = 'none';
+  
+  // Clear player div to reset EJS state
+  document.getElementById('ejs-player').innerHTML = '';
+  ejsInstance = null;
+};
+
+// --- EMULATOR INITIALIZATION ---
+function initEmulator(gameUrl) {
+  // Configure EJS
+  window.EJS_player = "#ejs-player";
+  window.EJS_core = "nes";
+  window.EJS_gameUrl = gameUrl;
+  window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
+  window.EJS_startOnLoaded = true;
+  window.EJS_language = "ru";
+  
+  // CRITICAL: Disable built-in mobile controls because we have custom ones
+  window.EJS_mobileControls = false; 
+  
+  // Optional: Hide the default EJS toolbar/header if it interferes
+  window.EJS_defaultOptions = { disableMobileControls: true };
+
+  // Load the script dynamically if not already loaded globally
+  // Since we included loader.js in head, we just call the function
+  if(typeof EJS_loader === 'function') {
+    EJS_loader().then(instance => {
+      ejsInstance = instance;
+      document.getElementById('loader').style.display = 'none';
+      console.log("Emulator Ready");
+      
+      // Hook into EJS input system for our custom buttons
+      setupCustomInputs(instance);
+    }).catch(err => {
+      console.error("EJS Error:", err);
+      document.getElementById('loader').innerHTML = "<span style='color:red'>Ошибка загрузки эмулятора</span>";
+    });
+  } else {
+    console.error("EJS Loader not found");
+  }
+}
+
+// --- CUSTOM INPUT MAPPING ---
+function setupCustomInputs(instance) {
+  // NES Controller Mapping IDs in RetroArch/EJS usually correspond to standard indices
+  // Index 0: Up, 1: Down, 2: Left, 3: Right, 4: A, 5: B, 6: Start, 7: Select
+  
+  const map = {
+    'd-up': 0,
+    'd-down': 1,
+    'd-left': 2,
+    'd-right': 3,
+    'btn-a': 4,
+    'btn-b': 5,
+    'btn-start': 6,
+    'btn-select': 7
+  };
+
+  Object.keys(map).forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    
+    const index = map[id];
+    
+    // Touch/Mouse Down
+    const press = () => {
+      if(instance && instance.setControllerInput) {
+        instance.setControllerInput(index, true);
+      }
+      // Visual feedback
+      el.style.background = "rgba(255,255,255,0.5)";
+    };
+    
+    // Touch/Mouse Up
+    const release = () => {
+      if(instance && instance.setControllerInput) {
+        instance.setControllerInput(index, false);
+      }
+      // Visual feedback
+      el.style.background = "";
+    };
+
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); press(); }, {passive:false});
+    el.addEventListener('touchend', (e) => { e.preventDefault(); release(); }, {passive:false});
+    el.addEventListener('mousedown', press);
+    el.addEventListener('mouseup', release);
+    el.addEventListener('mouseleave', release);
+  });
+}
+
+// Fallback: If setControllerInput doesn't work directly on instance, 
+// some versions expose it via window.EJS_instance or require dispatching events.
+// However, modern EJS usually attaches methods to the returned promise object.
 
 </script>
-
 </body>
 </html>
