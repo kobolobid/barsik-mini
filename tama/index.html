@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#141a2e">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Barsik Life — Домик снежного барса</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
@@ -110,7 +113,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;touch-action:
 .chatin button{border:none;border-radius:11px;padding:0 16px;font-size:16px;background:linear-gradient(135deg,var(--mint),#2fbf85);color:#062018;cursor:pointer;font-weight:900}
 .fld{margin:10px 0}
 .fld label{font-size:11px;color:var(--muted);font-weight:800;display:block;margin-bottom:4px}
-.fld input,.fld select,.fld textarea{width:100%;background:#0e1430;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:9px 11px;font-size:12px;outline:none;font-family:inherit}
+.fld input,.fld select{width:100%;background:#0e1430;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:9px 11px;font-size:12px;outline:none;font-family:inherit}
 .tog{display:flex;align-items:center;justify-content:space-between;background:#101736;border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin:8px 0;font-size:12px;font-weight:800}
 .sw{width:44px;height:24px;border-radius:999px;background:#2a3560;position:relative;cursor:pointer;transition:.2s}
 .sw i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#8b98c2;transition:.2s}
@@ -126,10 +129,15 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;touch-action:
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #fatal{display:none;position:fixed;inset:0;z-index:999;background:#101018;color:#ffd7d7;padding:18px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow:auto}
 #fatal b{color:#ff8080;font-size:14px}
+#boot{position:fixed;inset:0;z-index:998;background:#0b0f1e;color:#7fd8ff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;text-align:center;padding:20px}
+#boot .spin{width:38px;height:38px;border:4px solid #1c2444;border-top-color:#7fd8ff;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#boot .st{color:#93a0c4;font-size:11px;max-width:90vw;word-break:break-word}
 @media(max-width:380px){.stats{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
+<div id="boot"><div class="spin"></div><div>🐾 Барсик просыпается…</div><div class="st" id="bootStage">инициализация</div></div>
 <div id="fatal"></div>
 <div class="app">
   <div class="hud">
@@ -165,16 +173,20 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;touch-action:
 <div id="toast"></div>
 <script>
 (function(){'use strict';
-/* ===== ERROR SCREEN (чтобы больше не было «молчаливого» падения) ===== */
+var BOOTLOG=[];
+function boot(msg){BOOTLOG.push(msg);var el=document.getElementById('bootStage');if(el)el.textContent=msg;}
+function bootHide(){var b=document.getElementById('boot');if(b&&b.parentNode)b.parentNode.removeChild(b);}
 function showFatal(err){
-  var el=document.getElementById('fatal');
-  el.style.display='block';
-  el.innerHTML='<b>⚠ Ошибка Barsik Life</b>\n\nСкопируй и пришли разработчику:\n\n'+(err&&err.stack?err.stack:String(err));
+ var el=document.getElementById('fatal');
+ el.style.display='block';
+ el.innerHTML='<b>⚠ Ошибка Barsik Life</b>\n\nШаги: '+BOOTLOG.join(' → ')+'\n\n'+(err&&err.stack?err.stack:String(err))+'\n\nПришли этот экран разработчику.';
 }
 window.onerror=function(m,s,l,c,e){showFatal(e||(m+' @ '+l+':'+c));return true;};
 window.addEventListener('unhandledrejection',function(ev){showFatal(ev.reason);});
+boot('скрипт загружен');
 try{ main(); }catch(e){ showFatal(e); }
 function main(){
+boot('main()');
 /* ============ TELEGRAM ============ */
 var TG=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();if(TG.setHeaderColor)TG.setHeaderColor('#141a2e');if(TG.setBackgroundColor)TG.setBackgroundColor('#0e1322');if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();}catch(e){}}
@@ -191,7 +203,7 @@ function rr(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);c.a
 function qp(x0,y0,cx,cy,x1,y1,t){var u=1-t;return[u*u*x0+2*u*t*cx+t*t*x1,u*u*y0+2*u*t*cy+t*t*y1];}
 function wrapText(c,text,maxW){var words=String(text).split(' '),lines=[],cur='';for(var i=0;i<words.length;i++){var test=cur?cur+' '+words[i]:words[i];if(c.measureText(test).width>maxW&&cur){lines.push(cur);cur=words[i];}else cur=test;}if(cur)lines.push(cur);return lines;}
 var toastT=null;
-function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2200);}
+function toast(msg){var t=$('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2200);}
 /* ============ AUDIO ============ */
 var A={ctx:null,on:true,master:null};
 function audioInit(){if(A.ctx)return;try{var AC=window.AudioContext||window.webkitAudioContext;A.ctx=new AC();A.master=A.ctx.createGain();A.master.gain.value=A.on?0.5:0;A.master.connect(A.ctx.destination);}catch(e){}}
@@ -418,11 +430,11 @@ var SLOTS={
  yard:[[.28,.9,.9],[.75,.92,1.1],[.9,.62,1.1],[.1,.78,.9],[.5,.52,1],[.5,.94,.9],[.12,.92,.9]]
 };
 /* ============ STATE ============ */
-var KEY='barsik_life_v7';
+var KEY='barsik_life_v8';
 var DEF={
  coins:250,level:1,xp:0,
  hunger:78,mood:72,energy:88,health:100,
- stomach:0,wet:0,foamUsed:false,washBonus:true,
+ stomach:0,wet:0,washBonus:true,
  room:'living',tool:'hand',shampoo:'basic',
  inv:{fish:3,milk:2,kibble:3,treat:1,water:5,basic:3,chamomile:1,mint:1,lux:0,heal:1},
  owned:['hat_cap_7','eyes_round_0','neck_bell_5','body_tshirt_10'],
@@ -454,6 +466,7 @@ function load(){
  return s;
 }
 var S=load();
+boot('сохранение загружено');
 var saveT=null;
 function save(){S.lastSeen=now();clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}},250);renderHUD();}
 /* ============ ECONOMY ============ */
@@ -467,8 +480,9 @@ var CV=$('cv'),CX=CV.getContext('2d'),DPR=1,CW=0,CH=0,FLOOR=0,SC=1;
 var CACHE={cv:null,key:''};
 function resize(){
  var st=$('stage');DPR=Math.min(window.devicePixelRatio||1,2);
- CW=st.clientWidth;CH=st.clientHeight;
- CV.width=Math.round(CW*DPR);CV.height=Math.round(CH*DPR);
+ CW=st.clientWidth||window.innerWidth||360;
+ CH=st.clientHeight||Math.max(240,Math.floor(window.innerHeight*0.45));
+ CV.width=Math.max(1,Math.round(CW*DPR));CV.height=Math.max(1,Math.round(CH*DPR));
  FLOOR=CH*0.88;SC=clamp(Math.min(CW,CH)/430,0.62,1.5);
  R.catX=clamp(R.catX||CW/2,CW*0.22,CW*0.78);
  CACHE.key='';
@@ -491,7 +505,7 @@ var R={
  frame:0,lastTS:0,secAcc:0,
  foamSession:false
 };
-/* ============ NEEDS / WISHES ============ */
+/* ============ WISHES ============ */
 function hygiene(){return clamp(100-S.dirt.length*13-S.piles.length*9-(S.wet>0.6?6:0),0,100);}
 function belly(){return clamp(S.stomach,0,100);}
 var WISHES=[
@@ -533,7 +547,7 @@ function wishHook(kind,n){
  renderWish();
 }
 function renderWish(){
- var el=$('wishChip');
+ var el=$('wishChip');if(!el)return;
  if(!S.wish){el.classList.remove('show');return;}
  var def=null;for(var i=0;i<WISHES.length;i++)if(WISHES[i].id===S.wish.id)def=WISHES[i];
  if(!def){el.classList.remove('show');return;}
@@ -670,21 +684,20 @@ function schedulePoop(){
  else target=(R.catX<CW/2)?CW*0.85:CW*0.15;
  R.walkTo=target;R.state='walk';
 }
+function recomputeStomach(){
+ var st=0;S.meals.forEach(function(m){var fr=clamp(((m.start+m.dur*1000)-now())/(m.dur*1000),0,1);st+=m.amount*fr;});
+ S.stomach=st;
+}
 function doPoop(){
  var px=R.catX+rand(-10,10);
  S.piles.push({x:px,y:FLOOR+rand(-4,6),born:now(),id:now()+Math.random()});
  S.poops++;
- // реально уменьшаем желудок: гасим старейшую еду
  if(S.meals.length){S.meals[0].amount=Math.max(0,S.meals[0].amount-14);}
  recomputeStomach();
  S.mood=clamp(S.mood+3,0,100);
  speak(pick(LINES.poopDone),true);
  for(var i=0;i<4;i++)part(px,FLOOR-10,'crumb',{col:'#7a5230'});
  save();renderStats();
-}
-function recomputeStomach(){
- var st=0;S.meals.forEach(function(m){var fr=clamp(((m.start+m.dur*1000)-now())/(m.dur*1000),0,1);st+=m.amount*fr;});
- S.stomach=st;
 }
 function scoopAt(x,y){
  for(var i=S.piles.length-1;i>=0;i--){var p=S.piles[i];
@@ -798,7 +811,7 @@ function buildCache(){
    c.fillStyle=g;c.fillRect(pl.x-160*pl.s,pl.y-230*pl.s,320*pl.s,320*pl.s);}});
  }
 }
-/* ============ CAT RENDER (исправленные ноги) ============ */
+/* ============ CAT ============ */
 function drawCat(){
  var P=R.pose,s=SC,cx=R.catX;
  var full=belly()/100;
@@ -847,7 +860,7 @@ function drawCat(){
   if(lie>0.5){CX.beginPath();CX.ellipse(lx*1.4,-6,14,8,0,0,7);CX.fill();CX.stroke();}
   else{
    var legTop=bodyY+26-lift;
-   var legH=(-legTop)-6+lift; /* ИСПРАВЛЕНО: локальные координаты, пол = 0 */
+   var legH=(-legTop)-6+lift;
    rr(CX,lx-8+sw*0.3,legTop,16,legH,7);CX.fill();CX.stroke();
    CX.beginPath();CX.ellipse(lx+sw,-4-lift,11,7,0,0,7);CX.fill();CX.stroke();
    CX.strokeStyle='#8fa0b8';CX.beginPath();CX.moveTo(lx+sw-4,-6-lift);CX.lineTo(lx+sw-4,-1-lift);CX.moveTo(lx+sw+1,-7-lift);CX.lineTo(lx+sw+1,-1-lift);CX.stroke();CX.strokeStyle='#9fb0c6';
@@ -934,7 +947,7 @@ function drawSpeech(){
  CX.beginPath();CX.moveTo(clamp(x-7,bx+12,bx+w-24),by+h);CX.lineTo(clamp(x,bx+16,bx+w-16),by+h+9);CX.lineTo(clamp(x+9,bx+24,bx+w-12),by+h);CX.closePath();CX.fillStyle='rgba(250,252,255,.96)';CX.fill();
  CX.fillStyle='#1d2540';lines.forEach(function(l,i){CX.fillText(l,bx+11,by+19+i*16);});
 }
-/* ============ BRAIN / POSE ============ */
+/* ============ BRAIN ============ */
 function setTargets(){
  var T=R.tgt;
  T.lean=0;T.bob=0;T.tilt=0;T.eyeOpen=1;T.pupil=0.4;T.mouth=0;T.sit=0;T.lie=0;T.paw=0;T.squash=1;
@@ -1356,13 +1369,13 @@ function renderHUD(){
 }
 var STATDEF=[['hunger','🍖','Сытость','#f0703c'],['mood','😊','Радость','#ffc94d'],['energy','⚡','Силы','#7fd8ff'],['hyg','🧼','Чистота','#5fe3b3'],['health','❤️','Здоровье','#ff6d9d'],['belly','🫃','Живот','#b48bff']];
 function renderStats(){
- var row=$('statsRow');
+ var row=$('statsRow');if(!row)return;
  if(!row.childElementCount){STATDEF.forEach(function(sd){var d=document.createElement('div');d.className='stat';d.innerHTML='<div class="l"><span>'+sd[1]+' '+sd[2]+'</span><b id="sv_'+sd[0]+'">0</b></div><div class="t"><i id="sf_'+sd[0]+'" style="background:'+sd[3]+'"></i></div>';row.appendChild(d);});}
  var vals={hunger:S.hunger,mood:S.mood,energy:S.energy,hyg:hygiene(),health:S.health,belly:belly()};
- STATDEF.forEach(function(sd){var v=vals[sd[0]];$('sv_'+sd[0]).textContent=Math.round(v)+'%';$('sf_'+sd[0]).style.width=clamp(v,0,100)+'%';});
+ STATDEF.forEach(function(sd){var v=vals[sd[0]];var a=$('sv_'+sd[0]),b2=$('sf_'+sd[0]);if(a)a.textContent=Math.round(v)+'%';if(b2)b2.style.width=clamp(v,0,100)+'%';});
 }
 function renderTabs(){
- var el=$('roomTabs');el.innerHTML='';
+ var el=$('roomTabs');if(!el)return;el.innerHTML='';
  ROOM_ORDER.forEach(function(rid){
   var b=document.createElement('button');b.className='rtab'+(S.room===rid?' on':'');
   b.innerHTML='<span class="ri">'+ROOMS[rid].i+'</span>'+ROOMS[rid].n;
@@ -1381,7 +1394,7 @@ function setRoom(rid){
 }
 function setTool(t){S.tool=t;save();renderToolbar();}
 function renderToolbar(){
- var el=$('toolBar');el.innerHTML='';
+ var el=$('toolBar');if(!el)return;el.innerHTML='';
  function chip(id,icon,label,count,on,fn){
   var b=document.createElement('button');b.className='tool'+(on?' on':'');
   b.innerHTML='<span class="ti">'+icon+'</span>'+label+(count!=null?'<span class="tc">×'+count+'</span>':'');
@@ -1666,7 +1679,6 @@ window.addEventListener('keydown',function(e){
  if(e.key==='Escape'){if(R.mg)finishGame(true);else if(modalOpen)closeModal();}
 });
 document.addEventListener('visibilitychange',function(){R.lastTS=0;});
-/* nav */
 $('navShop').onclick=function(){SFX.click();openShop();};
 $('navWard').onclick=function(){SFX.click();openWard();};
 $('navGames').onclick=function(){SFX.click();openGames();};
@@ -1682,12 +1694,13 @@ function loop(ts){
   if(!R.lastTS)R.lastTS=ts;
   var dt=clamp((ts-R.lastTS)/1000,0,0.05);R.lastTS=ts;
   R.frame++;
+  if(CW<10||CH<10)resize();
   updateBrain(dt);setTargets();updatePose(dt);
   updateFlies(dt);updateButterflies(dt);updateParticles(dt);
   if(R.mg)updateGame(dt);
   CX.setTransform(DPR,0,0,DPR,0,0);
   CX.clearRect(0,0,CW,CH);
-  if(R.mg){drawGame();drawParticles();return;}
+  if(R.mg){drawGame();drawParticles();if(R.frame===3)bootHide();return;}
   buildCache();
   CX.drawImage(CACHE.cv,0,0,CW,CH);
   if(R.state==='watch'){R.placed.forEach(function(pl){if(pl.f.id==='tv'){CX.fillStyle='rgba(127,216,255,'+(0.15+Math.random()*0.25)+')';CX.fillRect(pl.x-32*pl.s,pl.y-64*pl.s,64*pl.s,36*pl.s);}});}
@@ -1701,18 +1714,26 @@ function loop(ts){
    var ic=S.tool==='sponge'?'🧽':S.tool==='shower'?'🚿':S.tool==='towel'?'🧻':'🧹';
    CX.fillText(ic,R.pointer.x,R.pointer.y-8);CX.textAlign='left';
   }
+  if(R.frame===3)bootHide();
  }catch(err){ showFatal(err); }
 }
 /* ============ INIT ============ */
+boot('инициализация интерфейса');
 A.on=S.sound;
 resize();
+boot('canvas '+CW+'x'+CH);
 R.catX=CW/2;
 var h0=new Date().getHours();R.night=(h0<7||h0>=20);
 if(!S.nextWish)S.nextWish=now()+15000;
 R.flies=[];
 renderHUD();renderStats();renderTabs();renderToolbar();renderWish();
 ensureButterflies();
+boot('первый кадр');
 speak(pick(LINES.greet).replace('{name}',userName()),true);
 requestAnimationFrame(loop);
+setTimeout(function(){var b=document.getElementById('boot');if(b&&b.parentNode){boot('ЗАВИС: '+BOOTLOG[BOOTLOG.length-1]);b.querySelector('.st').innerHTML+='<br><br>Если это видно дольше 5 секунд — пришли скрин разработчику.';}},5000);
 } /* end main */
 })();
+</script>
+</body>
+</html>
