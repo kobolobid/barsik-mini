@@ -83,8 +83,6 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;touch-action:
 .chatin{display:flex;gap:7px;padding-top:10px;border-top:1px solid var(--line);margin-top:10px}
 .chatin input{flex:1;background:#0e1430;border:1px solid var(--line);border-radius:11px;color:var(--text);padding:10px 12px;font-size:13px;outline:none}
 .chatin button{border:none;border-radius:11px;padding:0 16px;font-size:16px;background:linear-gradient(135deg,var(--mint),#2fbf85);color:#062018;cursor:pointer;font-weight:900}
-.fld{margin:10px 0}.fld label{font-size:11px;color:var(--muted);font-weight:800;display:block;margin-bottom:4px}
-.fld input,.fld select{width:100%;background:#0e1430;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:9px 11px;font-size:12px;outline:none}
 .tog{display:flex;align-items:center;justify-content:space-between;background:#101736;border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin:8px 0;font-size:12px;font-weight:800}
 .sw{width:44px;height:24px;border-radius:999px;background:#2a3560;position:relative;cursor:pointer;transition:.2s}
 .sw i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#8b98c2;transition:.2s}
@@ -172,7 +170,7 @@ function qp(x0,y0,cx,cy,x1,y1,t){var u=1-t;return[u*u*x0+2*u*t*cx+t*t*x1,u*u*y0+
 function wrapText(c,text,maxW){var words=String(text).split(' '),lines=[],cur='';for(var i=0;i<words.length;i++){var test=cur?cur+' '+words[i]:words[i];if(c.measureText(test).width>maxW&&cur){lines.push(cur);cur=words[i];}else cur=test;}if(cur)lines.push(cur);return lines;}
 var toastT=null;
 function toast(msg){var t=$('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2200);}
-/* ============ AUDIO + MUSIC (3 МЕЛОДИИ) ============ */
+/* ============ AUDIO + MUSIC ============ */
 var A={ctx:null,on:true,master:null};
 function audioInit(){if(A.ctx)return;try{var AC=window.AudioContext||window.webkitAudioContext;A.ctx=new AC();A.master=A.ctx.createGain();A.master.gain.value=A.on?0.25:0;A.master.connect(A.ctx.destination);MU.next=A.ctx.currentTime+0.1;}catch(e){}}
 function tone(f,dur,type,vol,slide){if(!A.ctx||!A.on)return;try{var o=A.ctx.createOscillator(),g=A.ctx.createGain(),t=A.ctx.currentTime;o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),t+dur);g.gain.setValueAtTime(vol||0.15,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(A.master);o.start(t);o.stop(t+dur+0.02);}catch(e){}}
@@ -193,78 +191,45 @@ var SFX={
  squeak:function(){tone(1900,0.08,'square',0.07,600);},
  zzz:function(){tone(300,0.4,'sine',0.04,-80);}
 };
-/* 3 разные мелодии: спокойная, игривая, ночная */
-var MU_THEMES = [
-  { name:'Спокойная', bpm:0.28, type:'sine', vol:0.04, bass:0.07,
-    lead:[0,4,7,11,12,11,7,4, 0,2,4,7,9,7,4,2, -2,2,5,9,10,9,5,2, -5,-2,2,5,7,5,2,-2, 0,4,7,11,14,11,7,4, 2,5,9,12,11,9,5,2, 0,-3,0,4,7,4,0,-3, -5,-3,0,4,2,0,-3,-5],
-    roots:[0,0,5,5,7,7,2,2]},
-  { name:'Игривая', bpm:0.18, type:'triangle', vol:0.05, bass:0.08,
-    lead:[12,7,9,12,14,12,9,7, 5,7,9,12,11,9,7,5, 14,12,10,7,9,12,14,16, 14,12,9,7,5,7,9,12, 7,9,12,14,16,14,12,9, 5,9,12,14,12,9,5,2, 0,4,7,12,11,7,4,0, -3,0,4,7,5,4,0,-3],
-    roots:[0,5,7,2,9,4,11,7]},
-  { name:'Ночная', bpm:0.42, type:'sine', vol:0.035, bass:0.06,
-    lead:[-1,0,-1,3,-1,0,-1,5, -1,-3,-1,0,-1,2,-1,0, -1,-5,-1,-3,-1,0,-1,3, -1,5,-1,3,-1,0,-1,-3, -1,7,-1,5,-1,3,-1,2, -1,0,-1,-3,-1,-5,-1,-3, -1,3,-1,5,-1,7,-1,5, -1,2,-1,0,-1,-2,-1,-3],
-    roots:[9,9,2,2,7,7,4,4]}
+var MU_THEMES=[
+ {name:'Спокойная',bpm:0.28,type:'sine',vol:0.04,bass:0.07,
+  lead:[0,4,7,11,12,11,7,4,0,2,4,7,9,7,4,2,-2,2,5,9,10,9,5,2,-5,-2,2,5,7,5,2,-2,0,4,7,11,14,11,7,4,2,5,9,12,11,9,5,2,0,-3,0,4,7,4,0,-3,-5,-3,0,4,2,0,-3,-5],
+  roots:[0,0,5,5,7,7,2,2]},
+ {name:'Игривая',bpm:0.18,type:'triangle',vol:0.05,bass:0.08,
+  lead:[12,7,9,12,14,12,9,7,5,7,9,12,11,9,7,5,14,12,10,7,9,12,14,16,14,12,9,7,5,7,9,12,7,9,12,14,16,14,12,9,5,9,12,14,12,9,5,2,0,4,7,12,11,7,4,0,-3,0,4,7,5,4,0,-3],
+  roots:[0,5,7,2,9,4,11,7]},
+ {name:'Ночная',bpm:0.42,type:'sine',vol:0.035,bass:0.06,
+  lead:[-1,0,-1,3,-1,0,-1,5,-1,-3,-1,0,-1,2,-1,0,-1,-5,-1,-3,-1,0,-1,3,-1,5,-1,3,-1,0,-1,-3,-1,7,-1,5,-1,3,-1,2,-1,0,-1,-3,-1,-5,-1,-3,-1,3,-1,5,-1,7,-1,5,-1,2,-1,0,-1,-2,-1,-3],
+  roots:[9,9,2,2,7,7,4,4]}
 ];
 var MU={step:0,next:0,theme:0};
 function muFreq(base,semi){return base*Math.pow(2,semi/12);}
 function muSchedule(step){
-  var th = MU_THEMES[MU.theme];
-  var bar = Math.floor(step/4)%8, root = th.roots[bar];
-  if(step%4===0) tone(muFreq(65.41, root), 0.5, 'sine', th.bass);
-  if(step%4===2) tone(muFreq(65.41, root+7), 0.35, 'sine', th.bass*0.7);
-  if(step%2===0) noise(0.02, 0.015, 5500);
-  var s = th.lead[step % th.lead.length];
-  if(s !== -1){
-    var oct = (Math.floor(step/th.lead.length)%2) ? 12 : 0;
-    tone(muFreq(261.63, s+oct), 0.22, th.type, th.vol);
-  }
+ var th=MU_THEMES[MU.theme];
+ var bar=Math.floor(step/4)%8,root=th.roots[bar];
+ if(step%4===0)tone(muFreq(65.41,root),0.5,'sine',th.bass);
+ if(step%4===2)tone(muFreq(65.41,root+7),0.35,'sine',th.bass*0.7);
+ if(step%2===0)noise(0.02,0.015,5500);
+ var s=th.lead[step%th.lead.length];
+ if(s!==-1){var oct=(Math.floor(step/th.lead.length)%2)?12:0;tone(muFreq(261.63,s+oct),0.22,th.type,th.vol);}
 }
-function muTick(){
-  if(!A.ctx||!A.on||!S.music||MU.theme<0) return;
-  var th = MU_THEMES[MU.theme];
-  if(MU.next < A.ctx.currentTime) MU.next = A.ctx.currentTime + 0.05;
-  while(MU.next < A.ctx.currentTime + 0.3){
-    muSchedule(MU.step);
-    MU.step++;
-    MU.next += th.bpm;
-  }
-}
-setInterval(muTick, 120);
+function muTick(){if(!A.ctx||!A.on||!S.music)return;var th=MU_THEMES[MU.theme];if(MU.next<A.ctx.currentTime)MU.next=A.ctx.currentTime+0.05;while(MU.next<A.ctx.currentTime+0.3){muSchedule(MU.step);MU.step++;MU.next+=th.bpm;}}
+setInterval(muTick,120);
 function firstTouch(){audioInit();if(A.ctx&&A.ctx.state==='suspended')A.ctx.resume();if(A.ctx)MU.next=A.ctx.currentTime+0.1;document.removeEventListener('pointerdown',firstTouch);document.removeEventListener('touchstart',firstTouch);}
 document.addEventListener('pointerdown',firstTouch,{passive:true});
 document.addEventListener('touchstart',firstTouch,{passive:true});
-/* ============ ИМЯ ИЗ TELEGRAM (с фолбэками) ============ */
+/* ============ ИМЯ ИЗ TELEGRAM ============ */
 function userName(){
-  try{
-    if(TG){
-      // Способ 1: initDataUnsafe (современный)
-      if(TG.initDataUnsafe && TG.initDataUnsafe.user && TG.initDataUnsafe.user.first_name){
-        return String(TG.initDataUnsafe.user.first_name);
-      }
-      // Способ 2: initData
-      if(TG.initData && TG.initData.user && TG.initData.user.first_name){
-        return String(TG.initData.user.first_name);
-      }
-      // Способ 3: HapticFeedback fallback через WebApp
-      if(TG.user && TG.user.first_name){
-        return String(TG.user.first_name);
-      }
-    }
-  }catch(e){}
-  // Способ 4: сохраняем из любого успешного вызова
-  try{
-    var cached = localStorage.getItem('barsik_user_name');
-    if(cached) return cached;
-  }catch(e){}
-  return 'друг';
+ try{
+  if(TG){
+   if(TG.initDataUnsafe&&TG.initDataUnsafe.user&&TG.initDataUnsafe.user.first_name)return String(TG.initDataUnsafe.user.first_name);
+   if(TG.initData&&TG.initData.user&&TG.initData.user.first_name)return String(TG.initData.user.first_name);
+  }
+ }catch(e){}
+ try{var c=localStorage.getItem('barsik_user_name');if(c)return c;}catch(e){}
+ return 'друг';
 }
-function cacheUserName(){
-  try{
-    var n = userName();
-    if(n && n !== 'друг') localStorage.setItem('barsik_user_name', n);
-  }catch(e){}
-}
-cacheUserName();
+try{var _n=userName();if(_n&&_n!=='друг')localStorage.setItem('barsik_user_name',_n);}catch(e){}
 /* ============ PALETTES / RARITY ============ */
 var PAL=[
  {n:'Океан',c1:'#2e8fd8',c2:'#1b5e96',c3:'#bfe6ff'},{n:'Закат',c1:'#f0703c',c2:'#b3441e',c3:'#ffd9b8'},
@@ -429,7 +394,7 @@ var SLOTS={
 };
 var KEY='barsik_life_v11';
 var DEF={coins:250,level:1,xp:0,hunger:78,mood:72,energy:88,health:100,stomach:0,wet:0,washBonus:true,room:'living',tool:'hand',shampoo:'basic',inv:{fish:3,milk:2,kibble:3,treat:1,water:5,basic:3,chamomile:1,mint:1,lux:0,heal:1},owned:['hat_cap_7','eyes_round_0','neck_bell_5','body_tshirt_10'],equipped:{hat:null,eyes:null,neck:null,body:null},furnOwned:['bowl','sofa','bed','litter','ball'],lampOn:true,res:{wood:2,fabric:2,metal:1,crystal:0},meals:[],piles:[],dirt:[],wish:null,nextWish:0,lastDaily:0,lastHelp:0,best:{mice:0,fish:0,memory:0,bubbles:0},gamesPlayed:0,poops:0,washes:0,pets:0,sound:true,music:true,musicTheme:0,chat:[],born:now(),lastSeen:now()};
-function load(){var s=JSON.parse(JSON.stringify(DEF));try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);for(var k in DEF){if(o[k]===undefined)continue;if(k==='inv'||k==='equipped'||k==='res'||k==='best'){for(var kk in DEF[k])s[k][kk]=(o[k]&&o[k][kk]!==undefined)?o[k][kk]:DEF[k][kk];}else s[k]=o[k];}}}catch(e){}var away=clamp((now()-(s.lastSeen||now()))/1000,0,8*3600);s.hunger=clamp(s.hunger-away*0.004,5,100);s.mood=clamp(s.mood-away*0.003,5,100);s.energy=clamp(s.energy+away*0.006,0,100);if(typeof s.musicTheme !== 'number') s.musicTheme = 0; return s;}
+function load(){var s=JSON.parse(JSON.stringify(DEF));try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);for(var k in DEF){if(o[k]===undefined)continue;if(k==='inv'||k==='equipped'||k==='res'||k==='best'){for(var kk in DEF[k])s[k][kk]=(o[k]&&o[k][kk]!==undefined)?o[k][kk]:DEF[k][kk];}else s[k]=o[k];}}}catch(e){}var away=clamp((now()-(s.lastSeen||now()))/1000,0,8*3600);s.hunger=clamp(s.hunger-away*0.004,5,100);s.mood=clamp(s.mood-away*0.003,5,100);s.energy=clamp(s.energy+away*0.006,0,100);if(typeof s.musicTheme!=='number')s.musicTheme=0;return s;}
 var S=load();boot('сохранение загружено');
 var saveT=null;
 function save(){S.lastSeen=now();clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}},250);renderHUD();}
@@ -447,9 +412,9 @@ function hygiene(){return clamp(100-S.dirt.length*13-S.piles.length*9-(S.wet>0.6
 function belly(){return clamp(S.stomach,0,100);}
 var WISHES=[{id:'feed_fish',i:'🐟',t:'Хочу рыбку!',chk:'feed_fish'},{id:'feed_milk',i:'🥛',t:'Хочу молока!',chk:'feed_milk'},{id:'feed_treat',i:'🍰',t:'Хочу лакомство!',chk:'feed_treat'},{id:'play',i:'🎮',t:'Поиграй со мной!',chk:'play'},{id:'wash',i:'🫧',t:'Хочу купаться!',chk:'wash'},{id:'sleep',i:'😴',t:'Хочу поспать…',chk:'sleep'},{id:'pet',i:'💗',t:'Погладь меня 5 раз',chk:'pet',need:5},{id:'clean',i:'🧹',t:'Убери кучки совком',chk:'clean',need:2},{id:'equip',i:'🎩',t:'Наряди меня!',chk:'equip'},{id:'butterfly',i:'🦋',t:'Поймай бабочку!',chk:'butterfly'}];
 function wishNew(){var pool=WISHES.filter(function(w){if(w.id==='wash'&&hygiene()>75)return false;if(w.id==='clean'&&S.piles.length===0)return false;if(w.id==='sleep'&&S.energy>60)return false;if(w.id.indexOf('feed')===0&&S.hunger>85)return false;return true;});var w=pick(pool.length?pool:WISHES);S.wish={id:w.id,prog:0,until:now()+120000};save();renderWish();}
-function wishHook(kind,n){if(!S.wish)return;var def=null;for(var i=0;i<WISHES.length;i++)if(WISHES[i].id===S.wish.id)def=WISHES[i];if(!def)return;if(def.chk!==kind)return;S.wish.prog+=(n||1);var need=def.need||1;if(S.wish.prog>=need){var reward=randi(20,40);addCoins(reward);addXP(15);S.mood=clamp(S.mood+10,0,100);toast('Желание исполнено! +'+reward+' 🪙');SFX.win();heartBurst(R.catX,FLOOR-160*SC,8);speak(pick(['Спасибо, '+userName()+'! Ты лучший! 💖','Муррр! Мечты сбываются!','Именно этого я хотел! 🐾']));S.wish=null;S.nextWish=now()+randi(40000,80000);save();}renderWish();}
+function wishHook(kind,n){if(!S.wish)return;var def=null;for(var i=0;i<WISHES.length;i++)if(WISHES[i].id===S.wish.id)def=WISHES[i];if(!def)return;if(def.chk!==kind)return;S.wish.prog+=(n||1);var need=def.need||1;if(S.wish.prog>=need){var reward=randi(20,40);addCoins(reward);addXP(15);S.mood=clamp(S.mood+10,0,100);toast('Желание исполнено! +'+reward+' 🪙');SFX.win();heartBurst(R.catX,FLOOR-160*SC,8);speak(pick(['Спасибо, {name}! Ты лучший! 💖','Муррр! Мечты сбываются!','Именно этого я хотел! 🐾']));S.wish=null;S.nextWish=now()+randi(40000,80000);save();}renderWish();}
 function renderWish(){var el=$('wishChip');if(!el)return;if(!S.wish){el.classList.remove('show');return;}var def=null;for(var i=0;i<WISHES.length;i++)if(WISHES[i].id===S.wish.id)def=WISHES[i];if(!def){el.classList.remove('show');return;}el.classList.add('show');$('wishIcon').textContent=def.i;$('wishText').textContent=def.t;var left=Math.max(0,S.wish.until-now());var need=def.need||1;$('wishTime').textContent=(need>1?('Прогресс '+S.wish.prog+'/'+need+' · '):'')+Math.ceil(left/1000)+'с · награда 🪙';}
-var LINES={greet:['Мурр~ Привет, {name}! 🐾','Я соскучился, {name}! Давай играть?','О, {name}, ты пришёл! Мой хвост уже виляет!'],hungry:['Живот урчит… Покорми меня, {name}? 🐟','Рыбку бы… {name}, несёт вкусненького?','Я голодный барс, {name}, это серьёзно!'],full:['Ох, {name}, переел… 🫃','Больше не могу, {name}… пуговицы трещат!','Мне тяжело, {name}… дай переварить.'],dirty:['Я весь в пятнах, {name}… помоем? 🫧','Фу, {name}, чем это пахнет? А, это я…','Мочалку в лапы, {name}!'],sleepy:['Глаза слипаются, {name}… 😴','Кровать зовёт меня, {name}…','Мур… посплю немножко, {name}…'],bored:['Ску-у-учно, {name}. Поиграем? 🎾','Мышей бы погонять, {name}!','Развлеки меня, {name}!'],happy:['Муррр~ Жизнь прекрасна, {name}! ✨','Я самый счастливый барс с тобой, {name}!','Хвост трубой, {name}!'],sad:['Мне грустно, {name}… погладь меня?','Барсы тоже плачут… {name}, обними.'],sick:['Что-то мне нехорошо, {name}… 💊','Аптечку, {name}, пожалуйста…','Лапы дрожат, {name}…'],kitchen:['Пахнет едой, {name}!','Холодильник — мой друг, {name}.','Тут живёт вкуснятина, {name}!'],living:['Диван такой мягкий, {name}…','Мультики про птиц, {name}!','Дом, милый дом, {name}.'],bedroom:['Одеялко… рай, {name}…','Луна в окне, {name}.','Спать — это святое, {name}.'],bath:['Вода! Пена, {name}! 🫧','Я чистый барс, {name}!','Полотенце — это объятия, {name}.'],yard:['Свежий воздух, {name}! Бабочки! 🦋','Трава щекочет лапы, {name}!','Дерево качается, {name}…'],pet:['Муррр-р-р, {name}… 💗','Ещё, ещё, {name}! За ушком!','Ты знаешь путь к моему сердцу, {name}.'],eat:['Ням-ням-ням, {name}! 🐟','Вкуснотища, {name}! Мур!','Спасибо, {name}!'],wash:['Пузырики, {name}! Щекотно! 🫧','Я как новый, {name}!','Спасибо, {name}, я блестю!'],poopDone:['Ох, полегчало, {name}… 😌','Кхм, {name}. Убери, пожалуйста.','Природа позвала, {name}…'],idle:['Интересно, {name}, рыбы тоже спят?','У меня 500 нарядов, {name}!','Хвост живёт своей жизнью, {name}.','Мурчание — суперсила, {name}.','Барсы умеют мечтать, {name}!']};
+var LINES={greet:['Мурр~ Привет, {name}! 🐾','Я соскучился, {name}! Давай играть?','О, {name}, ты пришёл! Мой хвост уже виляет!'],hungry:['Живот урчит… Покорми меня, {name}? 🐟','Рыбку бы… {name}, несёшь вкусненького?','Я голодный барс, {name}, это серьёзно!'],full:['Ох, {name}, переел… 🫃','Больше не могу, {name}… пуговицы трещат!','Мне тяжело, {name}… дай переварить.'],dirty:['Я весь в пятнах, {name}… помоем? 🫧','Фу, {name}, чем это пахнет? А, это я…','Мочалку в лапы, {name}!'],sleepy:['Глаза слипаются, {name}… 😴','Кровать зовёт меня, {name}…','Мур… посплю немножко, {name}…'],bored:['Ску-у-учно, {name}. Поиграем? 🎾','Мышей бы погонять, {name}!','Развлеки меня, {name}!'],happy:['Муррр~ Жизнь прекрасна, {name}! ✨','Я самый счастливый барс с тобой, {name}!','Хвост трубой, {name}!'],sad:['Мне грустно, {name}… погладь меня?','Барсы тоже плачут… {name}, обними.'],sick:['Что-то мне нехорошо, {name}… 💊','Аптечку, {name}, пожалуйста…','Лапы дрожат, {name}…'],kitchen:['Пахнет едой, {name}!','Холодильник — мой друг, {name}.','Тут живёт вкуснятина, {name}!'],living:['Диван такой мягкий, {name}…','Мультики про птиц, {name}!','Дом, милый дом, {name}.'],bedroom:['Одеялко… рай, {name}…','Луна в окне, {name}.','Спать — это святое, {name}.'],bath:['Вода! Пена, {name}! 🫧','Я чистый барс, {name}!','Полотенце — это объятия, {name}.'],yard:['Свежий воздух, {name}! Бабочки! 🦋','Трава щекочет лапы, {name}!','Дерево качается, {name}…'],pet:['Муррр-р-р, {name}… 💗','Ещё, ещё, {name}! За ушком!','Ты знаешь путь к моему сердцу, {name}.'],eat:['Ням-ням-ням, {name}! 🐟','Вкуснотища, {name}! Мур!','Спасибо, {name}!'],wash:['Пузырики, {name}! Щекотно! 🫧','Я как новый, {name}!','Спасибо, {name}, я блестю!'],poopDone:['Ох, полегчало, {name}… 😌','Кхм, {name}. Убери, пожалуйста.','Природа позвала, {name}…'],idle:['Интересно, {name}, рыбы тоже спят?','У меня 500 нарядов, {name}!','Хвост живёт своей жизнью, {name}.','Мурчание — суперсила, {name}.','Барсы умеют мечтать, {name}!']};
 function contextLine(){if(S.health<35)return pick(LINES.sick);if(S.hunger<30)return pick(LINES.hungry);if(belly()>80)return pick(LINES.full);if(hygiene()<35)return pick(LINES.dirty);if(S.energy<25)return pick(LINES.sleepy);if(S.mood<35)return pick(LINES.sad);if(S.mood>80)return pick(LINES.happy);if(Math.random()<0.4)return pick(LINES[S.room]||LINES.idle);return pick(LINES.idle);}
 function speak(text,force){if(!force&&R.mg)return;var t=String(text).replace(/\{name\}/g,userName());R.speech=t;R.speechUntil=now()+3600;if(Math.random()<0.35)SFX.meow();}
 function localReply(q){q=q.toLowerCase();var nm=userName();if(/привет|здравств|хай|мяу/.test(q))return pick(LINES.greet).replace(/\{name\}/g,nm);if(/как дела|как ты|настроен/.test(q))return 'Мур, '+nm+'! Сытость '+Math.round(S.hunger)+'%, настроение '+Math.round(S.mood)+'%. '+(S.mood>60?'В целом — я счастливый барс!':'Но ты рядом, '+nm+', и уже лучше.');if(/еда|кушать|голод|рыб|корм/.test(q))return S.hunger<50?'Да, '+nm+'! Рыбку! Неси рыбку! 🐟':'Я сыт, '+nm+', но рыбку никогда не отвергну…';if(/игр|мыш|скуч/.test(q))return 'Жми 🎮 внизу, '+nm+'! Мышки, рыбалка, память, пузыри — выбирай!';if(/спать|устал|кроват/.test(q))return 'Иди в спальню, '+nm+', и жми «Спать». Я уже зеваю… 🥱';if(/мо[йе]|мыть|ванн|душ|чист/.test(q))return 'В ванной, '+nm+': шампунь → мочалка → душ → полотенце. Я буду блестеть! ✨';if(/люблю|нрави|красив|мил/.test(q))return 'Муррр… ты тоже мой любимый, '+nm+'! 💗';if(/кто ты|что ты/.test(q))return 'Я Барсик — снежный барс. У меня пятна, гордый хвост и '+S.owned.length+' нарядов, '+nm+'!';if(/какаш|убор|лоток|совок/.test(q))return 'Кхм, '+nm+'… Возьми совок и убери. Мухи уже кружат!';if(/магазин|одежд|наряд|шапк/.test(q))return 'В магазине больше 500 вещей, '+nm+'! Легендарные дают +5% к монетам.';if(/мебел|крафт|ресурс/.test(q))return 'Играй в мини-игры, '+nm+' — получишь 🪵🧵⚙️💎. Крафти мебель!';if(/уровень|опыт/.test(q))return 'У меня '+S.level+' уровень, '+nm+'!';if(/музык|пев/.test(q))return 'Нажми 🎵, '+nm+', чтобы переключить мелодию — их целых три!';if(/спасибо/.test(q))return 'Мур, '+nm+'! Всегда пожалуйста 🐾';return pick(['Мур, '+nm+'? Расскажи ещё!','Интересно, '+nm+'! А теперь погладь меня 😌','Хм, '+nm+'… над этим надо подумать.','Мяу, '+nm+'! Я барс простой: еда, игры, обнимашки.']);}
@@ -459,9 +424,9 @@ function askAI(q,cb){
  aiBusy=true;
  var ctrl=('AbortController'in window)?new AbortController():null;
  var to=setTimeout(function(){if(ctrl)ctrl.abort();},15000);
- var nm = userName();
+ var nm=userName();
  var sys='Ты — Барсик, живой снежный барс-питомец в игре-тамагочи. Отвечай по-русски, 1-3 коротких предложения, игриво, с мурчанием, 1 эмодзи. ОБЯЗАТЕЛЬНО называй хозяина по имени: '+nm+'. Параметры: сытость '+Math.round(S.hunger)+'%, настроение '+Math.round(S.mood)+'%, энергия '+Math.round(S.energy)+'%, чистота '+Math.round(hygiene())+'%, живот '+Math.round(belly())+'%, уровень '+S.level+', комната: '+ROOMS[S.room].n+'. Кучек: '+S.piles.length+'.';
- fetch(AI_ENDPOINT,{method:'POST',signal:ctrl?ctrl.signal:undefined,headers:{'Content-Type':'application/json','Authorization':'Bearer '+AI_EMBED_KEY},body:JSON.stringify({model:AI_MODEL,max_tokens:250,temperature:0.9,messages:[{role:'system',content:sys},{role:'user',content:q}]})}).then(function(r){if(!r.ok) throw new Error('HTTP '+r.status);return r.json();}).then(function(j){clearTimeout(to);aiBusy=false;var t=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;if(!t){cb(localReply(q));return;}cb(String(t).trim());}).catch(function(err){clearTimeout(to);aiBusy=false;console.error('AI error:',err);cb(localReply(q));});
+ fetch(AI_ENDPOINT,{method:'POST',signal:ctrl?ctrl.signal:undefined,headers:{'Content-Type':'application/json','Authorization':'Bearer '+AI_EMBED_KEY},body:JSON.stringify({model:AI_MODEL,max_tokens:250,temperature:0.9,messages:[{role:'system',content:sys},{role:'user',content:q}]})}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(j){clearTimeout(to);aiBusy=false;var t=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;if(!t){cb(localReply(q));return;}cb(String(t).trim());}).catch(function(err){clearTimeout(to);aiBusy=false;cb(localReply(q));});
 }
 function part(x,y,type,opt){var p={x:x,y:y,t:type,life:1,vx:rand(-30,30),vy:rand(-90,-40),r:rand(3,7),rot:rand(0,6),ch:opt&&opt.ch,col:opt&&opt.col};if(type==='heart'){p.ch='💗';p.vy=rand(-70,-40);}if(type==='foam'){p.vy=rand(-20,-5);p.vx=rand(-15,15);p.r=rand(4,9);}if(type==='drop'){p.vy=rand(20,60);p.vx=rand(-10,10);p.r=rand(2,4);}if(type==='spark'){p.ch='✨';}if(type==='zzz'){p.ch='💤';p.vy=-25;p.vx=rand(-8,8);}if(type==='crumb'){p.vy=rand(-40,-10);p.r=rand(1.5,3);p.col='#c98a4b';}if(type==='confetti'){p.vy=rand(-160,-60);p.vx=rand(-90,90);p.col=pick(['#ff6d9d','#7fd8ff','#5fe3b3','#ffc94d','#b48bff']);p.r=rand(3,6);}if(type==='flyaway'){p.ch='🪰';p.vx=rand(-120,120);p.vy=rand(-120,-40);}if(type==='leaf'){p.ch='🍃';p.vy=rand(-60,-20);}R.particles.push(p);}
 function heartBurst(x,y,n){for(var i=0;i<n;i++)part(x+rand(-30,30),y+rand(-20,20),'heart');}
@@ -490,8 +455,8 @@ function updatePose(dt){var P=R.pose,T=R.tgt,k=clamp(dt*8,0,1);['lean','bob','ti
 function updateBrain(dt){R.secAcc+=dt;if(R.state==='eat'){R.eatT-=dt;if(R.eatT<=0){R.state='idle';}}if(R.state==='watch'){R.watchT-=dt;S.mood=clamp(S.mood+dt*1.6,0,100);if(R.watchT<=0){R.state='idle';speak('Классный фильм! 📺');save();}}if(R.state==='squat'){R.squatT-=dt;if(R.squatT<=0){doPoop();R.state='idle';R.pendingPoop=false;}}if(R.state==='walk'&&R.walkTo!=null){var dir=R.walkTo>R.catX?1:-1;var spd=(belly()>78?55:95)*SC;R.catX+=dir*spd*dt;if(Math.abs(R.catX-R.walkTo)<6){R.catX=R.walkTo;R.walkTo=null;if(R.pendingPoop){R.state='squat';R.squatT=1.4;}else R.state='idle';}}if(R.secAcc>=1){var secs=R.secAcc;R.secAcc=0;var expired=false;for(var i=S.meals.length-1;i>=0;i--){var m=S.meals[i];if((m.start+m.dur*1000)<=now()){S.meals.splice(i,1);expired=true;}}recomputeStomach();if(expired&&R.state!=='sleep'&&!R.mg&&!R.pendingPoop)schedulePoop();S.hunger=clamp(S.hunger-secs*0.05,0,100);S.mood=clamp(S.mood-secs*(S.piles.length?0.09:0.04),0,100);if(R.state==='sleep'){S.energy=clamp(S.energy+secs*1.4,0,100);if(S.energy>=100){wake(true);}}else S.energy=clamp(S.energy-secs*0.035,0,100);S.wet=clamp(S.wet-secs*0.01,0,100);if(S.hunger<12||hygiene()<15||S.piles.length>=4||belly()>88)S.health=clamp(S.health-secs*0.12,0,100);else if(S.hunger>45&&hygiene()>55&&belly()<70)S.health=clamp(S.health+secs*0.08,0,100);if(S.wish&&now()>S.wish.until){S.wish=null;S.mood=clamp(S.mood-4,0,100);S.nextWish=now()+randi(25000,50000);renderWish();save();}if(!S.wish&&now()>S.nextWish&&!R.mg)wishNew();if(now()>R.nextTalk&&!R.mg){R.nextTalk=now()+randi(26000,52000);var line=contextLine();if(line!==R.lastTalk){R.lastTalk=line;speak(line);}}var h=new Date().getHours();var night=(h<7||h>=20);if(night!==R.night){R.night=night;CACHE.key='';}save();renderStats();renderWish();}}
 function feed(kind){if(R.mg)return;if(R.state==='sleep'){toast('Барсик спит 💤');return;}var f=FOODS[kind];if(!f)return;if((S.inv[kind]||0)<=0){toast('Нет «'+f.n+'» — купи в магазине');openShop('food');return;}S.inv[kind]--;S.hunger=clamp(S.hunger+f.hunger,0,100);S.mood=clamp(S.mood+f.mood,0,100);if(f.belly>0&&S.meals.length<6)S.meals.push({start:now(),dur:randi(100,160),amount:f.belly});recomputeStomach();R.state='eat';R.eatT=1.6;SFX.eat();for(var i=0;i<5;i++)part(R.catX+rand(-14,14)*SC,FLOOR-140*SC,'crumb');floatText(f.i+' +'+f.hunger,R.catX,FLOOR-200*SC,'#5fe3b3');if(Math.random()<0.55)addDirt('muzzle');addXP(3);wishHook('feed_'+kind,1);speak(pick(LINES.eat));save();renderToolbar();renderStats();}
 function petTick(x,y){if(R.state==='sleep'){wake();return;}var t=now();if(t-R.lastPet<160)return;R.lastPet=t;S.mood=clamp(S.mood+1.4,0,100);S.pets++;R.petStreak++;part(x,y,'heart');if(R.petStreak%4===0)SFX.purr();wishHook('pet',1);if(R.petStreak===6)speak(pick(LINES.pet));addXP(1);save();renderStats();}
-function startSleep(){if(R.mg)return;if(S.room!=='bedroom'){setRoom('bedroom');toast('Идём в спальню…');}R.state='sleep';R.walkTo=null;SFX.zzz();speak('Спокойной ночи, '+userName()+'… 💤',true);wishHook('sleep',1);save();renderToolbar();}
-function wake(auto){R.state='idle';speak(auto?'Выспался! ☀️':'Мур, '+userName()+'? Уже утро?',true);save();renderToolbar();}
+function startSleep(){if(R.mg)return;if(S.room!=='bedroom'){setRoom('bedroom');toast('Идём в спальню…');}R.state='sleep';R.walkTo=null;SFX.zzz();speak('Спокойной ночи, {name}… 💤',true);wishHook('sleep',1);save();renderToolbar();}
+function wake(auto){R.state='idle';speak(auto?'Выспался! ☀️':'Мур, {name}? Уже утро?',true);save();renderToolbar();}
 function watchTV(){if(R.state==='sleep')wake();R.state='watch';R.watchT=6;S.energy=clamp(S.energy-3,0,100);speak('О! Птички! 📺');save();}
 function furnitureTap(pl){var t=now(),cd=R.cool[pl.f.id]||0;if(t<cd){toast('Подожди…');return;}R.cool[pl.f.id]=t+8000;var a=pl.f.act;if(a==='feed'){if(S.inv.kibble>0)feed('kibble');else if(S.inv.fish>0)feed('fish');else{toast('Миска пуста');openShop('food');}}else if(a==='shopfood')openShop('food');else if(a==='drink'){S.hunger=clamp(S.hunger+3,0,100);SFX.splash();part(pl.x,pl.y-40*pl.s,'drop');save();renderStats();}else if(a==='rest'){S.energy=clamp(S.energy+6,0,100);S.mood=clamp(S.mood+2,0,100);part(pl.x,pl.y-50,'heart');speak('Отдыхаю… мурр');save();renderStats();}else if(a==='tv')watchTV();else if(a==='lamp'){S.lampOn=!S.lampOn;CACHE.key='';SFX.click();toast(S.lampOn?'💡 Свет':'🌙 Темно');save();}else if(a==='sniff'){S.mood=clamp(S.mood+2,0,100);part(pl.x,pl.y-70,'leaf');SFX.pop();save();renderStats();}else if(a==='roll'){S.mood=clamp(S.mood+4,0,100);heartBurst(pl.x,pl.y-20,3);addXP(2);save();renderStats();}else if(a==='read'){addXP(4);speak('Читаю книгу 📖');save();}else if(a==='climb'){S.mood=clamp(S.mood+6,0,100);heartBurst(pl.x,pl.y-90*pl.s,4);addXP(3);speak('Я на вершине! 🐾');save();renderStats();}else if(a==='sleep')startSleep();else if(a==='ward')openWard();else if(a==='litter')toast(S.piles.length?'Совок в помощь! 🧹':'Чисто ✨');else if(a==='sponge')setTool('sponge');else if(a==='shower')setTool('shower');else if(a==='towel')setTool('towel');else if(a==='mirror'){S.mood=clamp(S.mood+3,0,100);speak('Кто этот красавец? А, это я! 😎');save();renderStats();}else if(a==='mice')startGame('mice');else if(a==='fish')startGame('fish');else if(a==='shake'){for(var i=0;i<6;i++)part(pl.x+rand(-30,30),pl.y-70*pl.s,'leaf');if(Math.random()<0.4){addCoins(3);}SFX.pop();}else if(a==='butterfly'){ensureButterflies();R.butterflies.push({x:pl.x,y:pl.y-40,a:0,col:pick(['#ff6d9d','#7fd8ff','#ffc94d']),t:0});SFX.pop();}else if(a==='dig'){var rk=pick(['wood','fabric','metal']);addRes(rk,1);floatText(RES_META[rk].i+' +1',pl.x,pl.y-40,'#b48bff');SFX.scoop();toast('Нашёл: '+RES_META[rk].n+'!');}else if(a==='flavor')speak(pl.f.say||'Мур!');}
 function washMove(x,y){var s=SC,cx=R.catX;var onCat=Math.hypot(x-cx,y-(FLOOR-100*s))<95*s;if(!onCat)return;R.state='wash';R.stateT=now();var tool=S.tool;if(tool==='sponge'){if((S.inv[S.shampoo]||0)<=0&&!R.foamSession){toast('Шампунь закончился');openShop('care');return;}var touched=false;S.dirt.forEach(function(d){var dx=cx+d.ax*s,dy=FLOOR+d.ay*s;if(Math.hypot(x-dx,y-dy)<26*s+8){d.foam=clamp(d.foam+0.09,0,1);if(d.foam>=1)d.loose=true;touched=true;}});if(touched){if(!R.foamSession){R.foamSession=true;S.inv[S.shampoo]--;renderToolbar();save();}part(x,y,'foam');}}else if(tool==='shower'){S.wet=clamp(S.wet+0.05,0,1);for(var i=0;i<2;i++)part(x+rand(-8,8),y,'drop');var removed=false;for(var j=S.dirt.length-1;j>=0;j--){var d2=S.dirt[j];var dx2=cx+d2.ax*s,dy2=FLOOR+d2.ay*s;if(d2.loose&&Math.hypot(x-dx2,y-dy2)<28*s+8){S.dirt.splice(j,1);removed=true;}}if(removed)checkWashDone();}else if(tool==='towel'){if(S.wet>0){S.wet=clamp(S.wet-0.07,0,1);checkWashDone();}}}
@@ -509,7 +474,7 @@ function drawMiniIcon(ic,x,y,r){CX.save();CX.translate(x,y);if(ic==='fish'){CX.f
 function calcRewards(g){var coins=Math.round(g.score*(g.id==='memory'?2.5:3));var xp=Math.round(g.score*1.5)+5;var res=null;if(g.score>0){var pool=GAME_DEFS[g.id].res;res={k:pick(pool),n:1+(g.score>=15?1:0)+(g.score>=30?1:0)};}return{coins:coins,xp:xp,res:res};}
 function applyGameRewards(){var g=R.mg;if(!g)return;var rew=calcRewards(g);addCoins(rew.coins);addXP(rew.xp);if(rew.res)addRes(rew.res.k,rew.res.n);if(g.score>(S.best[g.id]||0))S.best[g.id]=g.score;S.mood=clamp(S.mood+Math.min(14,g.score),0,100);S.energy=clamp(S.energy-8,0,100);S.hunger=clamp(S.hunger-4,0,100);if(S.room==='yard'&&Math.random()<0.5)addDirt('paw');wishHook('play',1);SFX.win();heartBurst(R.catX,FLOOR-150*SC,5);speak('Вот это игра! 🎮');save();renderStats();renderToolbar();}
 function finishGame(early){if(R.mg){R.mg.done=true;if(early&&R.mg.score===0){R.mg=null;toast('Игра прервана');}}}
-function renderHUD(){$('coinsVal').textContent=fmt(S.coins);$('lvlVal').textContent=S.level;$('xpFill').style.width=clamp(S.xp/(S.level*100)*100,0,100)+'%';$('btnSound').textContent=S.sound?'🔊':'🔇';var mu=S.music&&S.musicTheme>=0;if(mu){var th=MU_THEMES[S.musicTheme%MU_THEMES.length];$('btnMusic').textContent='🎵';$('btnMusic').style.opacity=1;$('btnMusic').title='Мелодия: '+th.name;}else{$('btnMusic').textContent='🎶';$('btnMusic').style.opacity=0.4;$('btnMusic').title='Музыка выключена';}}
+function renderHUD(){$('coinsVal').textContent=fmt(S.coins);$('lvlVal').textContent=S.level;$('xpFill').style.width=clamp(S.xp/(S.level*100)*100,0,100)+'%';$('btnSound').textContent=S.sound?'🔊':'🔇';if(S.music){$('btnMusic').textContent='🎵';$('btnMusic').style.opacity=1;$('btnMusic').title='Мелодия: '+MU_THEMES[S.musicTheme%MU_THEMES.length].name;}else{$('btnMusic').textContent='🎶';$('btnMusic').style.opacity=0.4;$('btnMusic').title='Музыка выключена';}}
 var STATDEF=[['hunger','🍖','Сытость','#f0703c'],['mood','😊','Радость','#ffc94d'],['energy','⚡','Силы','#7fd8ff'],['hyg','🧼','Чистота','#5fe3b3'],['health','❤️','Здоровье','#ff6d9d'],['belly','🫃','Живот','#b48bff']];
 function renderStats(){var row=$('statsRow');if(!row)return;if(!row.childElementCount){STATDEF.forEach(function(sd){var d=document.createElement('div');d.className='stat';d.innerHTML='<div class="l"><span>'+sd[1]+' '+sd[2]+'</span><b id="sv_'+sd[0]+'">0</b></div><div class="t"><i id="sf_'+sd[0]+'" style="background:'+sd[3]+'"></i></div>';row.appendChild(d);});}var vals={hunger:S.hunger,mood:S.mood,energy:S.energy,hyg:hygiene(),health:S.health,belly:belly()};STATDEF.forEach(function(sd){var v=vals[sd[0]];var a=$('sv_'+sd[0]),b2=$('sf_'+sd[0]);if(a)a.textContent=Math.round(v)+'%';if(b2)b2.style.width=clamp(v,0,100)+'%';});}
 function renderTabs(){var el=$('roomTabs');if(!el)return;el.innerHTML='';ROOM_ORDER.forEach(function(rid){var b=document.createElement('button');b.className='rtab'+(S.room===rid?' on':'');b.innerHTML='<span class="ri">'+ROOMS[rid].i+'</span>'+ROOMS[rid].n;b.onclick=function(){SFX.click();setRoom(rid);};el.appendChild(b);});$('roomTag').textContent=ROOMS[S.room].i+' '+ROOMS[S.room].n;}
@@ -525,7 +490,7 @@ var shopTab='food',shopPages={hat:1,eyes:1,neck:1,body:1};
 function openShop(tab){shopTab=tab||shopTab;renderShop();}
 function renderShop(){var b=openModal('🛍 Магазин Барсика');var head=document.createElement('div');head.className='row';head.style.marginBottom='8px';head.innerHTML='<div class="pill">🪙 <b>'+fmt(S.coins)+'</b></div>';b.appendChild(head);var tabs=document.createElement('div');tabs.className='tabs';[['food','🍖 Еда'],['care','🧼 Уход'],['hat','🧢 Шапки '+CATALOG.hat.length],['eyes','👓 Очки '+CATALOG.eyes.length],['neck','🧣 Шея '+CATALOG.neck.length],['body','👕 Одежда '+CATALOG.body.length]].forEach(function(t){var btn=document.createElement('button');btn.className='stab'+(shopTab===t[0]?' on':'');btn.textContent=t[1];btn.onclick=function(){SFX.click();shopTab=t[0];renderShop();};tabs.appendChild(btn);});b.appendChild(tabs);var grid=document.createElement('div');grid.className='grid';b.appendChild(grid);if(shopTab==='food'){Object.keys(FOODS).forEach(function(k){var f=FOODS[k];cardSimple(grid,f.i,f.n+' ×'+(S.inv[k]||0),f.price+' 🪙','Купить','',function(){if(spend(f.price)){S.inv[k]=(S.inv[k]||0)+1;SFX.coin();toast(f.n+' куплено!');save();renderShop();renderToolbar();}});});}else if(shopTab==='care'){Object.keys(SHAMPOOS).forEach(function(k){var sh=SHAMPOOS[k];cardSimple(grid,sh.i,sh.n+' ×'+(S.inv[k]||0),sh.price+' 🪙','Купить','',function(){if(spend(sh.price)){S.inv[k]=(S.inv[k]||0)+1;SFX.coin();save();renderShop();renderToolbar();}},sh.desc);});cardSimple(grid,'💊','Аптечка ×'+(S.inv.heal||0),'40 🪙','Купить','g',function(){if(spend(40)){S.inv.heal=(S.inv.heal||0)+1;save();renderShop();}});cardSimple(grid,'❤️','Вылечить сейчас','Бесплатно',S.health>=100?'Здоров':'Лечить (💊'+(S.inv.heal||0)+')','r',function(){if((S.inv.heal||0)<=0){toast('Нужна аптечка!');return;}S.inv.heal--;S.health=clamp(S.health+45,0,100);SFX.win();heartBurst(R.catX,FLOOR-140*SC,5);speak('Лучше! 💊');save();renderStats();renderShop();});}else{var list=CATALOG[shopTab];var page=shopPages[shopTab]||1,per=24,show=list.slice(0,page*per);show.forEach(function(it){var owned=S.owned.indexOf(it.id)>=0;var c=document.createElement('div');c.className='card'+(owned?' own':'');var img=document.createElement('img');img.src=itemPreview(it);c.appendChild(img);var rar=document.createElement('span');rar.className='rar r'+it.rar;rar.textContent=RARN[it.rar][0];c.appendChild(rar);var nm=document.createElement('div');nm.className='cn';nm.textContent=it.name;c.appendChild(nm);var pr=document.createElement('div');pr.className='cp';pr.textContent=owned?'В шкафу':it.price+' 🪙';c.appendChild(pr);var btn=document.createElement('button');if(owned){btn.className='cbtn g';btn.textContent='Надеть';btn.onclick=function(){equipItem(it);renderShop();};}else{btn.className='cbtn';btn.textContent='Купить';btn.onclick=function(){if(spend(it.price)){S.owned.push(it.id);SFX.coin();toast('Куплено: '+it.name);equipItem(it);renderShop();}};}c.appendChild(btn);grid.appendChild(c);});if(show.length<list.length){var more=document.createElement('button');more.className='more';more.textContent='Показать ещё ('+(list.length-show.length)+')';more.onclick=function(){shopPages[shopTab]=page+1;renderShop();};b.appendChild(more);}}}
 function cardSimple(grid,icon,name,price,btnTxt,btnCls,fn,extra){var c=document.createElement('div');c.className='card';c.innerHTML='<div style="font-size:34px;line-height:64px">'+icon+'</div><div class="cn">'+name+'</div><div class="cp">'+price+'</div>'+(extra?'<div style="font-size:8.5px;color:#93a0c4">'+extra+'</div>':'');var btn=document.createElement('button');btn.className='cbtn '+btnCls;btn.textContent=btnTxt;btn.onclick=fn;c.appendChild(btn);grid.appendChild(c);}
-function equipItem(it){S.equipped[it.slot]=it.id;SFX.pop();heartBurst(R.catX,FLOOR-170*SC,3);speak('Как мне идёт, '+userName()+'? 😎');wishHook('equip',1);save();}
+function equipItem(it){S.equipped[it.slot]=it.id;SFX.pop();heartBurst(R.catX,FLOOR-170*SC,3);speak('Как мне идёт, {name}? 😎');wishHook('equip',1);save();}
 var wardTab='hat';
 function openWard(){renderWard();}
 function renderWard(){var b=openModal('👗 Гардероб ('+S.owned.length+' вещей)');var tabs=document.createElement('div');tabs.className='tabs';[['hat','🧢 Шапки'],['eyes','👓 Очки'],['neck','🧣 Шея'],['body','👕 Одежда']].forEach(function(t){var cnt=S.owned.filter(function(id){return ITEM_BY_ID[id]&&ITEM_BY_ID[id].slot===t[0];}).length;var btn=document.createElement('button');btn.className='stab'+(wardTab===t[0]?' on':'');btn.textContent=t[1]+' '+cnt;btn.onclick=function(){SFX.click();wardTab=t[0];renderWard();};tabs.appendChild(btn);});b.appendChild(tabs);var grid=document.createElement('div');grid.className='grid';b.appendChild(grid);var items=S.owned.map(function(id){return ITEM_BY_ID[id];}).filter(function(it){return it&&it.slot===wardTab;});if(!items.length){var n=document.createElement('div');n.className='note';n.textContent='Пусто. Загляни в магазин!';b.appendChild(n);}items.forEach(function(it){var eq=S.equipped[it.slot]===it.id;var c=document.createElement('div');c.className='card'+(eq?' eq':'');var img=document.createElement('img');img.src=itemPreview(it);c.appendChild(img);var rar=document.createElement('span');rar.className='rar r'+it.rar;rar.textContent=RARN[it.rar][0];c.appendChild(rar);var nm=document.createElement('div');nm.className='cn';nm.textContent=it.name;c.appendChild(nm);var btn=document.createElement('button');btn.className='cbtn '+(eq?'r':'g');btn.textContent=eq?'Снять':'Надеть';btn.onclick=function(){SFX.click();if(eq){S.equipped[it.slot]=null;save();}else equipItem(it);renderWard();};c.appendChild(btn);grid.appendChild(c);});var off=document.createElement('button');off.className='big d';off.textContent='Снять всё';off.onclick=function(){S.equipped={hat:null,eyes:null,neck:null,body:null};save();renderWard();};b.appendChild(off);}
@@ -536,46 +501,67 @@ function renderFurn(){var b=openModal('🛋 Мебель и крафт');var res
 function openGames(){var b=openModal('🎮 Мини-игры');var note=document.createElement('div');note.className='note';note.textContent='Игры дают монеты, опыт и ресурсы для крафта!';b.appendChild(note);Object.keys(GAME_DEFS).forEach(function(id){var gd=GAME_DEFS[id];var c=document.createElement('div');c.className='gcard';c.innerHTML='<div class="gi">'+gd.i+'</div><div><div class="gn">'+gd.n+'</div><div class="gd">'+gd.d+'</div></div><div class="gb">🏆 '+(S.best[id]||0)+'</div>';c.onclick=function(){SFX.click();startGame(id);};b.appendChild(c);});}
 function openChat(){var b=openModal('💬 Поговорить с Барсиком');var note=document.createElement('div');note.className='note';note.textContent='Барсик отвечает через Nemotron Ultra и называет тебя по имени, '+userName()+'.';b.appendChild(note);var list=document.createElement('div');list.className='chat';list.id='chatList';b.appendChild(list);S.chat.slice(-30).forEach(function(m){appendChatMsg(m.r,m.t,false);});if(!S.chat.length)appendChatMsg('b','Мурр~ Привет, '+userName()+'! 🐾',false);var inp=document.createElement('div');inp.className='chatin';inp.innerHTML='<input id="chatIn" placeholder="Скажи Барсику что-нибудь…" maxlength="300"><button id="chatSend">➤</button>';b.appendChild(inp);function send(){var v=$('chatIn').value.trim();if(!v)return;$('chatIn').value='';appendChatMsg('u',v,true);var typing=appendChatMsg('b','мур… печатает…',false);askAI(v,function(reply){if(typing&&typing.parentNode)typing.parentNode.removeChild(typing);appendChatMsg('b',reply,true);speak(String(reply).slice(0,120));});}$('chatSend').onclick=send;$('chatIn').addEventListener('keydown',function(e){if(e.key==='Enter')send();});setTimeout(function(){var mb=$('mBody');if(mb)mb.scrollTop=mb.scrollHeight;},50);}
 function appendChatMsg(role,text,persist){var l=$('chatList');if(!l)return null;var d=document.createElement('div');d.className='msg '+role;d.innerHTML=(role==='b'?'<div class="who">🐾 БАРСИК</div>':'')+String(text).replace(/</g,'&lt;');l.appendChild(d);var mb=$('mBody');if(mb)mb.scrollTop=mb.scrollHeight;if(persist){S.chat.push({r:role,t:text});if(S.chat.length>60)S.chat=S.chat.slice(-60);save();}return d;}
-function openSettings(){var b=openModal('⚙️ Настройки');var t1=document.createElement('div');t1.className='tog';t1.innerHTML='<span>🔊 Звуки и эффекты</span>';var sw=document.createElement('div');sw.className='sw'+(S.sound?' on':'');sw.innerHTML='<i></i>';sw.onclick=function(){S.sound=!S.sound;A.on=S.sound;if(A.master)A.master.gain.value=S.sound?0.25:0;sw.classList.toggle('on',S.sound);save();renderHUD();};t1.appendChild(sw);b.appendChild(t1);var t2=document.createElement('div');t2.className='tog';t2.innerHTML='<span>🎵 Музыка ('+(S.music?MU_THEMES[S.musicTheme%MU_THEMES.length].name:'выкл')+')</span>';var sw2=document.createElement('div');sw2.className='sw'+(S.music?' on':'');sw2.innerHTML='<i></i>';sw2.onclick=function(){cycleMusic();sw2.classList.toggle('on',S.music);save();renderHUD();t2.querySelector('span').textContent='🎵 Музыка ('+(S.music?MU_THEMES[S.musicTheme%MU_THEMES.length].name:'выкл')+')';};t2.appendChild(sw2);b.appendChild(t2);var stats=document.createElement('div');stats.className='note';stats.innerHTML='📊 Игр: '+S.gamesPlayed+' · Кучек убрано: '+S.poops+' · Мытий: '+S.washes+' · Поглаживаний: '+S.pets+'<br>Барсик с нами с '+new Date(S.born).toLocaleDateString('ru');b.appendChild(stats);var toBot=document.createElement('button');toBot.className='big v';toBot.textContent='📤 Сохранить прогресс в бота';toBot.onclick=function(){var payload={game:'tama',level:S.level,coins:S.coins,hunger:Math.round(S.hunger),mood:Math.round(S.mood),health:Math.round(S.health)};if(TG&&TG.sendData){TG.sendData(JSON.stringify(payload));toast('Отправлено в бота! 📤');}else toast('Только внутри Telegram');};b.appendChild(toBot);var rst=document.createElement('button');rst.className='big d';rst.style.background='#5e2430';rst.style.color='#ffb8c4';rst.textContent='🗑 Сбросить весь прогресс';rst.onclick=function(){if(confirm('Точно сбросить?')&&confirm('Удалить сохранение?')){try{localStorage.removeItem(KEY);}catch(e){}location.reload();}};b.appendChild(rst);}
-function cycleMusic(){
-  if(!S.music){S.music=true;S.musicTheme=0;}
-  else{
-    S.musicTheme++;
-    if(S.musicTheme >= MU_THEMES.length){S.music=false;S.musicTheme=0;}
-    MU.step=0;if(A.ctx)MU.next=A.ctx.currentTime+0.1;
-  }
-  toast(S.music?'🎵 '+MU_THEMES[S.musicTheme%MU_THEMES.length].name:'Музыка выключена');
-  renderHUD();
-}
+function openSettings(){var b=openModal('⚙️ Настройки');var t1=document.createElement('div');t1.className='tog';t1.innerHTML='<span>🔊 Звуки и эффекты</span>';var sw=document.createElement('div');sw.className='sw'+(S.sound?' on':'');sw.innerHTML='<i></i>';sw.onclick=function(){S.sound=!S.sound;A.on=S.sound;if(A.master)A.master.gain.value=S.sound?0.25:0;sw.classList.toggle('on',S.sound);save();renderHUD();};t1.appendChild(sw);b.appendChild(t1);var t2=document.createElement('div');t2.className='tog';t2.innerHTML='<span>🎵 Музыка: '+(S.music?MU_THEMES[S.musicTheme%MU_THEMES.length].name:'выкл')+'</span>';var sw2=document.createElement('div');sw2.className='sw'+(S.music?' on':'');sw2.innerHTML='<i></i>';sw2.onclick=function(){cycleMusic();sw2.classList.toggle('on',S.music);save();renderHUD();t2.querySelector('span').textContent='🎵 Музыка: '+(S.music?MU_THEMES[S.musicTheme%MU_THEMES.length].name:'выкл');};t2.appendChild(sw2);b.appendChild(t2);var stats=document.createElement('div');stats.className='note';stats.innerHTML='📊 Игр: '+S.gamesPlayed+' · Кучек убрано: '+S.poops+' · Мытий: '+S.washes+' · Поглаживаний: '+S.pets+'<br>Барсик с нами с '+new Date(S.born).toLocaleDateString('ru');b.appendChild(stats);var toBot=document.createElement('button');toBot.className='big v';toBot.textContent='📤 Сохранить прогресс в бота';toBot.onclick=function(){var payload={game:'tama',level:S.level,coins:S.coins,hunger:Math.round(S.hunger),mood:Math.round(S.mood),health:Math.round(S.health)};if(TG&&TG.sendData){TG.sendData(JSON.stringify(payload));toast('Отправлено в бота! 📤');}else toast('Только внутри Telegram');};b.appendChild(toBot);var rst=document.createElement('button');rst.className='big d';rst.style.background='#5e2430';rst.style.color='#ffb8c4';rst.textContent='🗑 Сбросить весь прогресс';rst.onclick=function(){if(confirm('Точно сбросить?')&&confirm('Удалить сохранение?')){try{localStorage.removeItem(KEY);}catch(e){}location.reload();}};b.appendChild(rst);}
+function cycleMusic(){if(!S.music){S.music=true;S.musicTheme=0;}else{S.musicTheme++;if(S.musicTheme>=MU_THEMES.length){S.music=false;S.musicTheme=0;}MU.step=0;if(A.ctx)MU.next=A.ctx.currentTime+0.1;}toast(S.music?'🎵 '+MU_THEMES[S.musicTheme%MU_THEMES.length].name:'Музыка выключена');renderHUD();}
 function claimDaily(){var left=now()-S.lastDaily;if(left<20*3600*1000){var h=Math.ceil((20*3600*1000-left)/3600000);toast('Бонус через '+h+' ч ⏳');return;}S.lastDaily=now();addCoins(100);addRes(pick(['wood','fabric','metal']),2);SFX.win();confetti();speak('Подарок! 🎁',true);toast('Ежедневный бонус: +100 🪙 + ресурсы!');save();}
-/* ============ ИСПРАВЛЕННЫЙ КУРСОР (с учётом scroll и touch) ============ */
+/* ============ ТОЧНЫЙ КУРСОР v12 ============
+   Координаты берём ТОЛЬКО от getBoundingClientRect канваса.
+   Никаких добавок scrollTop (rect уже учитывает прокрутку).
+   Обработчики единые: pointer events, touch только как fallback. */
 function ptr(e){
-  var stage = $('stage');
-  var rect = stage.getBoundingClientRect();
-  var cx, cy;
-  if(e.touches && e.touches.length > 0){ cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
-  else if(e.changedTouches && e.changedTouches.length > 0){ cx = e.changedTouches[0].clientX; cy = e.changedTouches[0].clientY; }
-  else { cx = e.clientX; cy = e.clientY; }
-  // Вычитаем scroll всех родителей (для Telegram WebApp где есть прокрутка)
-  var scrollX = 0, scrollY = 0;
-  var p = stage;
-  while(p){
-    scrollX += p.scrollLeft || 0;
-    scrollY += p.scrollTop || 0;
-    p = p.parentElement;
-  }
-  return { x: cx - rect.left + scrollX, y: cy - rect.top + scrollY };
+ var rect=CV.getBoundingClientRect();
+ var cx,cy;
+ if(e.touches&&e.touches.length){cx=e.touches[0].clientX;cy=e.touches[0].clientY;}
+ else if(e.changedTouches&&e.changedTouches.length){cx=e.changedTouches[0].clientX;cy=e.changedTouches[0].clientY;}
+ else{cx=e.clientX;cy=e.clientY;}
+ return{x:cx-rect.left,y:cy-rect.top};
 }
 var lastWash=0;
-CV.addEventListener('pointerdown',function(e){e.preventDefault();var p=ptr(e);R.pointer.x=p.x;R.pointer.y=p.y;R.pointer.down=true;if(R.mg){mgTap(p.x,p.y);return;}if(modalOpen)return;if(S.tool==='scoop'){if(scoopAt(p.x,p.y))return;}if(S.room==='yard'&&butterflyTap(p.x,p.y))return;var s=SC,cx=R.catX;var onCat=Math.hypot(p.x-cx,p.y-(FLOOR-100*s))<100*s;if(onCat){if(R.state==='sleep'){wake();return;}if(S.tool==='hand'){petTick(p.x,p.y);return;}if(S.tool==='sponge'||S.tool==='shower'||S.tool==='towel'){washMove(p.x,p.y);return;}}for(var i=R.placed.length-1;i>=0;i--){var pl=R.placed[i];if(Math.abs(p.x-pl.x)<pl.w/2&&p.y>pl.y-pl.h&&p.y<pl.y+14){furnitureTap(pl);return;}}if(S.tool==='hand'&&p.y>FLOOR-40&&!R.pendingPoop){R.walkTo=clamp(p.x,CW*0.15,CW*0.85);R.state='walk';}},{passive:false});
-CV.addEventListener('pointermove',function(e){if(!R.pointer.down)return;var p=ptr(e);R.pointer.x=p.x;R.pointer.y=p.y;if(R.mg||modalOpen)return;var t=now();if(S.tool==='hand'){var s=SC;if(Math.hypot(p.x-R.catX,p.y-(FLOOR-100*s))<100*s)petTick(p.x,p.y);}else if(S.tool==='sponge'||S.tool==='shower'||S.tool==='towel'){if(t-lastWash>40){lastWash=t;washMove(p.x,p.y);}}else if(S.tool==='scoop')scoopAt(p.x,p.y);},{passive:true});
-CV.addEventListener('touchstart',function(e){var p=ptr(e);R.pointer.x=p.x;R.pointer.y=p.y;R.pointer.down=true;if(R.mg){mgTap(p.x,p.y);return;}if(modalOpen)return;var s=SC,cx=R.catX;var onCat=Math.hypot(p.x-cx,p.y-(FLOOR-100*s))<100*s;if(onCat&&S.tool==='hand'){petTick(p.x,p.y);}},{passive:true});
-CV.addEventListener('touchmove',function(e){if(!R.pointer.down)return;var p=ptr(e);R.pointer.x=p.x;R.pointer.y=p.y;if(S.tool==='hand'){var s=SC;if(Math.hypot(p.x-R.catX,p.y-(FLOOR-100*s))<100*s)petTick(p.x,p.y);}},{passive:true});
-CV.addEventListener('touchend',function(){R.pointer.down=false;R.petStreak=0;});
-window.addEventListener('pointerup',function(){R.pointer.down=false;R.petStreak=0;if(R.state==='wash'&&(now()-R.stateT)>400)R.state='idle';});
-CV.addEventListener('pointercancel',function(){R.pointer.down=false;});
+function onDown(e){
+ if(e.cancelable)e.preventDefault();
+ var p=ptr(e);
+ R.pointer.x=p.x;R.pointer.y=p.y;R.pointer.down=true;
+ if(R.mg){mgTap(p.x,p.y);return;}
+ if(modalOpen)return;
+ if(S.tool==='scoop'){if(scoopAt(p.x,p.y))return;}
+ if(S.room==='yard'&&butterflyTap(p.x,p.y))return;
+ var s=SC,cx=R.catX;
+ var onCat=Math.hypot(p.x-cx,p.y-(FLOOR-100*s))<100*s;
+ if(onCat){
+  if(R.state==='sleep'){wake();return;}
+  if(S.tool==='hand'){petTick(p.x,p.y);return;}
+  if(S.tool==='sponge'||S.tool==='shower'||S.tool==='towel'){washMove(p.x,p.y);return;}
+ }
+ for(var i=R.placed.length-1;i>=0;i--){
+  var pl=R.placed[i];
+  if(Math.abs(p.x-pl.x)<pl.w/2&&p.y>pl.y-pl.h&&p.y<pl.y+14){furnitureTap(pl);return;}
+ }
+ if(S.tool==='hand'&&p.y>FLOOR-40&&!R.pendingPoop){R.walkTo=clamp(p.x,CW*0.15,CW*0.85);R.state='walk';}
+}
+function onMove(e){
+ if(!R.pointer.down)return;
+ var p=ptr(e);
+ R.pointer.x=p.x;R.pointer.y=p.y;
+ if(R.mg||modalOpen)return;
+ var t=now();
+ if(S.tool==='hand'){var s=SC;if(Math.hypot(p.x-R.catX,p.y-(FLOOR-100*s))<100*s)petTick(p.x,p.y);}
+ else if(S.tool==='sponge'||S.tool==='shower'||S.tool==='towel'){if(t-lastWash>40){lastWash=t;washMove(p.x,p.y);}}
+ else if(S.tool==='scoop')scoopAt(p.x,p.y);
+}
+function onUp(){R.pointer.down=false;R.petStreak=0;if(R.state==='wash'&&(now()-R.stateT)>400)R.state='idle';}
+CV.addEventListener('pointerdown',onDown,{passive:false});
+CV.addEventListener('pointermove',onMove,{passive:true});
+window.addEventListener('pointerup',onUp);
+CV.addEventListener('pointercancel',onUp);
+if(!('PointerEvent' in window)){
+ CV.addEventListener('touchstart',onDown,{passive:false});
+ CV.addEventListener('touchmove',onMove,{passive:true});
+ CV.addEventListener('touchend',onUp);
+}
 window.addEventListener('keydown',function(e){if(e.key==='Escape'){if(R.mg)finishGame(true);else if(modalOpen)closeModal();}});
 document.addEventListener('visibilitychange',function(){R.lastTS=0;});
+window.addEventListener('orientationchange',function(){setTimeout(resize,60);});
+if(TG&&TG.onEvent){try{TG.onEvent('viewportChanged',function(){resize();});}catch(e){}}
 $('navShop').onclick=function(){SFX.click();openShop();};
 $('navWard').onclick=function(){SFX.click();openWard();};
 $('navGames').onclick=function(){SFX.click();openGames();};
@@ -586,7 +572,7 @@ $('btnMusic').onclick=function(){cycleMusic();SFX.click();save();};
 $('btnSound').onclick=function(){S.sound=!S.sound;A.on=S.sound;if(A.master)A.master.gain.value=S.sound?0.25:0;SFX.click();save();};
 $('btnSettings').onclick=function(){SFX.click();openSettings();};
 function loop(ts){requestAnimationFrame(loop);try{if(!R.lastTS)R.lastTS=ts;var dt=clamp((ts-R.lastTS)/1000,0,0.05);R.lastTS=ts;R.frame++;if(CW<10||CH<10)resize();updateBrain(dt);setTargets();updatePose(dt);updateFlies(dt);updateButterflies(dt);updateParticles(dt);if(R.mg)updateGame(dt);CX.setTransform(DPR,0,0,DPR,0,0);CX.clearRect(0,0,CW,CH);if(R.mg){drawGame();drawParticles();if(R.frame===3)bootHide();return;}buildCache();CX.drawImage(CACHE.cv,0,0,CW,CH);drawButterflies();drawPiles();drawCat();drawParticles();drawSpeech();if(R.frame===3)bootHide();}catch(err){showFatal(err);}}
-boot('инициализация');A.on=S.sound;resize();boot('canvas '+CW+'x'+CH);R.catX=CW/2;var h0=new Date().getHours();R.night=(h0<7||h0>=20);if(!S.nextWish)S.nextWish=now()+15000;R.flies=[];MU.theme = (S.music && S.musicTheme >= 0) ? S.musicTheme : 0;renderHUD();renderStats();renderTabs();renderToolbar();renderWish();ensureButterflies();boot('первый кадр');speak(pick(LINES.greet).replace(/\{name\}/g,userName()),true);requestAnimationFrame(loop);setTimeout(function(){var b=document.getElementById('boot');if(b&&b.parentNode){b.querySelector('.st').innerHTML+='<br><br>Если застряло — пришли скрин.';}},5000);
+boot('инициализация');A.on=S.sound;resize();boot('canvas '+CW+'x'+CH);R.catX=CW/2;var h0=new Date().getHours();R.night=(h0<7||h0>=20);if(!S.nextWish)S.nextWish=now()+15000;R.flies=[];MU.theme=(S.music&&S.musicTheme>=0)?S.musicTheme%MU_THEMES.length:0;renderHUD();renderStats();renderTabs();renderToolbar();renderWish();ensureButterflies();boot('первый кадр');speak(pick(LINES.greet),true);requestAnimationFrame(loop);setTimeout(function(){var b=document.getElementById('boot');if(b&&b.parentNode){b.querySelector('.st').innerHTML+='<br><br>Если застряло — пришли скрин.';}},5000);
 } /* end main */
 })();
 </script>
