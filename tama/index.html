@@ -3,263 +3,115 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Barsik PU Clone</title>
+<title>Barsik Pet Universe Pro</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg-dark: #0f172a;
-    --panel-bg: #1e293b;
+    --bg: #0f172a;
+    --panel: #1e293b;
     --accent: #38bdf8;
     --gold: #fbbf24;
     --danger: #ef4444;
     --success: #22c55e;
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
-    --fur-light: #e2e8f0;
-    --fur-dark: #cbd5e1;
-    --spot-color: #64748b;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
   }
-
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-  body { margin:0; background:var(--bg-dark); color:var(--text-main); font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; touch-action:none; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:'Segoe UI', sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
 
   /* Header */
-  .header { padding:10px 15px; background:rgba(30,41,59,.9); backdrop-filter:blur(10px); border-bottom:1px solid rgba(255,255,255,.1); display:flex; justify-content:space-between; align-items:center; z-index:10; }
-  .logo { font-weight:900; font-size:18px; background:linear-gradient(90deg,var(--accent),#a78bfa); -webkit-background-clip:text; color:transparent; }
-  .stats-top { display:flex; gap:15px; font-size:13px; font-weight:bold; }
-  .stat-item { display:flex; align-items:center; gap:5px; }
-  .coin-icon { color:var(--gold); }
+  .header { padding:8px 15px; background:rgba(30,41,59,.95); backdrop-filter:blur(10px); border-bottom:1px solid rgba(255,255,255,.1); display:flex; justify-content:space-between; align-items:center; z-index:10; }
+  .logo { font-weight:900; font-size:16px; color:var(--accent); }
+  .stats { display:flex; gap:10px; font-size:12px; font-weight:bold; }
+  .stat-item { display:flex; align-items:center; gap:4px; }
 
-  /* Room Tabs */
-  .tabs { display:flex; overflow-x:auto; padding:8px 10px; gap:8px; background:#0f172a; scrollbar-width:none; }
-  .tabs::-webkit-scrollbar { display:none; }
-  .tab-btn { 
-    min-width:70px; text-align:center; padding:8px 5px; border-radius:12px; 
-    background:var(--panel-bg); border:1px solid transparent; 
-    font-size:11px; font-weight:600; color:var(--text-muted); cursor:pointer; transition:.2s;
+  /* Main Stage (Canvas) */
+  #stage-container { flex:1; position:relative; background:#000; overflow:hidden; cursor:crosshair; }
+  canvas#game-canvas { width:100%; height:100%; display:block; image-rendering:pixelated; }
+  
+  /* Tool Selection Bar (Floating) */
+  .tools-bar {
+    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+    display:flex; gap:8px; background:rgba(15,23,42,.9); padding:8px; border-radius:20px;
+    border:1px solid var(--line); z-index:20; transition:opacity .3s;
   }
-  .tab-btn.active { background:var(--accent); color:#fff; box-shadow:0 4px 12px rgba(56,189,248,.3); transform:translateY(-2px); }
+  .tool-btn {
+    width:50px; height:50px; border-radius:12px; background:var(--panel); border:2px solid transparent;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:20px; cursor:pointer; transition:.2s;
+  }
+  .tool-btn.active { border-color:var(--accent); background:#0c4a6e; box-shadow:0 0 10px rgba(56,189,248,.3); }
+  .tool-label { font-size:9px; color:var(--muted); margin-top:2px; }
 
-  /* Main Stage */
-  .stage { flex:1; position:relative; overflow:hidden; background:#000; }
-  
-  /* Dynamic Backgrounds per Room - Now with Images/Patterns */
-  .room-kitchen { 
-    background: linear-gradient(to bottom, #fefce8, #d9f99d);
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23fefce8"/><path d="M0 0 L100 100 M100 0 L0 100" stroke="%23eab308" stroke-width="1" opacity="0.1"/></svg>');
-  }
-  .room-living { 
-    background: radial-gradient(circle at center, #1e293b, #0f172a);
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><circle cx="100" cy="100" r="80" fill="none" stroke="%23334155" stroke-width="2" opacity="0.3"/></svg>');
-  }
-  .room-bedroom { 
-    background: linear-gradient(to bottom, #312e81, #1e1b4b);
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23312e81"/><circle cx="20" cy="20" r="2" fill="%23fff" opacity="0.5"/><circle cx="80" cy="80" r="1.5" fill="%23fff" opacity="0.3"/></svg>');
-  }
-  .room-bath { 
-    background: linear-gradient(to bottom, #cffafe, #a5f3fc);
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%23cffafe"/><line x1="0" y1="25" x2="50" y2="25" stroke="%230ea5e9" stroke-width="1" opacity="0.2"/></svg>');
-  }
-  .room-yard { 
-    background: linear-gradient(to bottom, #86efac, #4ade80);
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M0 100 Q50 50 100 100 Z" fill="%2322c55e" opacity="0.3"/></svg>');
-  }
-  
-  /* Furniture Layer */
-  #furniture-layer { position:absolute; inset:0; pointer-events:none; z-index:1; }
-  .furn-object { 
-    position:absolute; width:60px; height:60px; 
-    display:flex; align-items:center; justify-content:center;
-    filter: drop-shadow(0 5px 10px rgba(0,0,0,.3));
-    transition: transform .3s cubic-bezier(.17,.67,.83,.67);
-  }
-  .furn-object:hover { transform: scale(1.1); cursor:pointer; }
+  /* Bottom Stats Panel */
+  .bottom-panel { background:var(--panel); padding:10px; border-top:1px solid rgba(255,255,255,.1); }
+  .bars-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-bottom:8px; }
+  .bar-box { background:rgba(0,0,0,.2); padding:4px; border-radius:6px; }
+  .bar-label { font-size:9px; color:var(--muted); display:flex; justify-content:space-between; margin-bottom:2px; }
+  .bar-track { height:4px; background:#334155; border-radius:2px; overflow:hidden; }
+  .bar-fill { height:100%; width:0%; transition:width .3s ease; }
 
-  /* The Cat Container */
-  #cat-container {
-    position:absolute; bottom:20%; left:50%; transform:translateX(-50%);
-    width:180px; height:180px; z-index:5;
-    animation: breathe 4s infinite ease-in-out;
-  }
-  
-  @keyframes breathe { 0%,100%{transform:translateX(-50%) scaleY(1)} 50%{transform:translateX(-50%) scaleY(1.02)} }
-  
-  /* Physics Classes */
-  .fat-mode { animation: fat-wobble 3s infinite ease-in-out !important; }
-  @keyframes fat-wobble { 0%,100%{transform:translateX(-50%) rotate(0deg)} 25%{transform:translateX(-52%) rotate(-2deg)} 75%{transform:translateX(-48%) rotate(2deg)} }
-  
-  .sad-mode { filter: grayscale(0.5) brightness(0.8); opacity: 0.9; }
-  .happy-mode { animation: jump-happy 0.5s ease; }
-  @keyframes jump-happy { 0%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-30px)} 100%{transform:translateX(-50%) translateY(0)} }
-
-  /* Speech Bubble */
-  #bubble {
-    position:absolute; top:-40px; left:50%; transform:translateX(-50%);
-    background:#fff; color:#000; padding:6px 12px; border-radius:15px;
-    font-size:12px; font-weight:bold; white-space:nowrap;
-    opacity:0; transition:opacity .3s; z-index:20;
-    box-shadow:0 4px 10px rgba(0,0,0,.2);
-  }
-  #bubble::after { content:''; position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid #fff; }
-  #bubble.show { opacity:1; }
-
-  /* Bottom Panel (Stats & Actions) */
-  .bottom-panel { background:var(--panel-bg); padding:10px; border-top:1px solid rgba(255,255,255,.1); }
-  
-  .bars-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:10px; }
-  .bar-box { background:rgba(0,0,0,.2); padding:6px; border-radius:8px; }
-  .bar-label { font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; margin-bottom:3px; }
-  .bar-track { height:6px; background:#334155; border-radius:3px; overflow:hidden; }
-  .bar-fill { height:100%; width:0%; transition:width .5s ease; border-radius:3px; }
-  
-  .actions-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+  /* Actions Row */
+  .actions-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; }
   .act-btn { 
-    background:var(--panel-bg); border:1px solid rgba(255,255,255,.1); 
-    color:var(--text-main); padding:10px 5px; border-radius:10px; 
+    background:var(--bg); border:1px solid rgba(255,255,255,.1); 
+    color:var(--text); padding:8px; border-radius:8px; 
     font-size:11px; font-weight:bold; cursor:pointer; text-align:center;
-    transition:.2s;
   }
   .act-btn:active { transform:scale(.95); background:var(--accent); color:#fff; }
-  .act-btn.craft { border-color:var(--gold); color:var(--gold); }
-  .act-btn.game { border-color:var(--success); color:var(--success); }
+  .act-btn.shop { border-color:var(--gold); color:var(--gold); }
 
   /* Modals */
-  .modal { position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:100; display:none; align-items:center; justify-content:center; }
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:100; display:none; align-items:center; justify-content:center; }
   .modal.open { display:flex; }
-  .modal-content { 
-    background:var(--panel-bg); width:90%; max-width:400px; max-height:80vh; 
-    border-radius:16px; padding:20px; overflow-y:auto; border:1px solid rgba(255,255,255,.1);
-    box-shadow:0 10px 30px rgba(0,0,0,.5);
-  }
-  .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
-  .close-btn { background:none; border:none; color:var(--text-muted); font-size:24px; cursor:pointer; }
+  .modal-content { background:var(--panel); width:90%; max-width:350px; max-height:80vh; border-radius:16px; padding:15px; overflow-y:auto; border:1px solid rgba(255,255,255,.1); }
+  .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-weight:bold; }
+  .close-btn { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; }
   
-  /* Craft Grid */
-  .craft-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
-  .craft-card { background:rgba(0,0,0,.3); padding:10px; border-radius:10px; text-align:center; border:1px solid transparent; }
-  .craft-card.can-craft { border-color:var(--success); }
-  .craft-icon { font-size:30px; margin-bottom:5px; }
-  .craft-name { font-size:12px; font-weight:bold; }
-  .craft-cost { font-size:10px; color:var(--text-muted); margin-top:5px; }
-  .craft-btn { margin-top:8px; width:100%; padding:5px; border:none; border-radius:5px; background:var(--accent); color:#fff; font-size:11px; cursor:pointer; }
-  .craft-btn:disabled { background:#475569; cursor:not-allowed; }
+  /* Shop Grid */
+  .shop-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+  .shop-item { background:rgba(0,0,0,.3); padding:10px; border-radius:10px; text-align:center; border:1px solid transparent; }
+  .shop-item.selected { border-color:var(--accent); background:#0c4a6e; }
+  .item-icon { font-size:24px; }
+  .item-name { font-size:11px; margin:5px 0; }
+  .item-price { font-size:10px; color:var(--gold); }
+  .buy-btn { width:100%; padding:5px; border:none; border-radius:5px; background:var(--accent); color:#fff; font-size:10px; cursor:pointer; margin-top:5px; }
+  .buy-btn:disabled { background:#475569; }
 
-  /* Wardrobe Grid */
-  .wardrobe-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
-  .cloth-item { background:rgba(0,0,0,.3); padding:10px; border-radius:10px; text-align:center; cursor:pointer; border:2px solid transparent; }
-  .cloth-item.equipped { border-color:var(--gold); background:rgba(251,191,36,.1); }
-  .cloth-preview { font-size:24px; }
-  .cloth-name { font-size:10px; margin-top:5px; }
-
-  /* Mini-game Overlay */
-  #minigame-overlay {
-    position:absolute; inset:0; background:rgba(0,0,0,.9); z-index:50;
-    display:none; flex-direction:column; align-items:center; justify-content:center;
+  /* Toast Notification */
+  #toast {
+    position:absolute; top:60px; left:50%; transform:translateX(-50%);
+    background:rgba(0,0,0,.8); color:#fff; padding:8px 16px; border-radius:20px;
+    font-size:12px; opacity:0; transition:opacity .3s; z-index:50; pointer-events:none;
   }
-  #minigame-overlay.active { display:flex; }
-  .mg-title { font-size:20px; font-weight:bold; color:var(--accent); margin-bottom:10px; }
-  .mg-area { width:300px; height:300px; background:#1e293b; border:2px solid var(--accent); border-radius:10px; position:relative; overflow:hidden; }
-  .mg-target { position:absolute; width:40px; height:40px; background:var(--danger); border-radius:50%; cursor:pointer; transition:all .1s; }
-  .mg-score { font-size:16px; margin-top:10px; }
-  .mg-close { margin-top:15px; padding:10px 20px; background:var(--panel-bg); border:1px solid var(--text-muted); color:white; border-radius:5px; cursor:pointer; }
-
+  #toast.show { opacity:1; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="logo">🐾 Barsik PU</div>
-  <div class="stats-top">
-    <div class="stat-item"><span class="coin-icon">🪙</span> <span id="ui-coins">0</span></div>
+  <div class="logo">🐾 BARSIK PU PRO</div>
+  <div class="stats">
+    <div class="stat-item"><span style="color:var(--gold)">🪙</span> <span id="ui-coins">0</span></div>
     <div class="stat-item">⭐ Lv.<span id="ui-level">1</span></div>
   </div>
 </div>
 
-<nav class="tabs" id="tabs-nav">
-  <!-- Generated by JS -->
-</nav>
-
-<div class="stage room-living" id="main-stage">
-  <div id="furniture-layer"></div>
+<div id="stage-container">
+  <canvas id="game-canvas"></canvas>
   
-  <div id="cat-container">
-    <div id="bubble">Привет!</div>
-    
-    <!-- SVG Snow Leopard -->
-    <svg viewBox="0 0 200 200" width="100%" height="100%">
-      <defs>
-        <radialGradient id="furGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#f8fafc"/>
-          <stop offset="100%" stop-color="#cbd5e1"/>
-        </radialGradient>
-        <filter id="shadow">
-          <feDropShadow dx="0" dy="5" stdDeviation="5" flood-opacity="0.3"/>
-        </filter>
-      </defs>
-      
-      <!-- Tail -->
-      <path id="tail" d="M160 140 Q190 120 180 90" stroke="#cbd5e1" stroke-width="12" fill="none" stroke-linecap="round"/>
-      
-      <!-- Body -->
-      <ellipse id="body-base" cx="100" cy="130" rx="60" ry="50" fill="url(#furGrad)" filter="url(#shadow)"/>
-      
-      <!-- Belly Patch (Dynamic) -->
-      <ellipse id="belly-patch" cx="100" cy="140" rx="40" ry="30" fill="#f1f5f9" opacity="0.8"/>
-      
-      <!-- Spots (Snow Leopard Pattern) -->
-      <g id="spots-group" fill="#64748b" opacity="0.6">
-        <circle cx="70" cy="110" r="4"/><circle cx="85" cy="105" r="3"/>
-        <circle cx="130" cy="110" r="4"/><circle cx="115" cy="105" r="3"/>
-        <circle cx="60" cy="130" r="3"/><circle cx="140" cy="130" r="3"/>
-        <circle cx="100" cy="150" r="4"/>
-        <path d="M75 120 Q80 125 75 130" stroke="#64748b" stroke-width="2" fill="none"/>
-        <path d="M125 120 Q120 125 125 130" stroke="#64748b" stroke-width="2" fill="none"/>
-      </g>
-
-      <!-- Head -->
-      <circle cx="100" cy="70" r="45" fill="url(#furGrad)" filter="url(#shadow)"/>
-      
-      <!-- Ears -->
-      <path d="M65 40 L55 15 L80 30 Z" fill="#cbd5e1"/>
-      <path d="M135 40 L145 15 L120 30 Z" fill="#cbd5e1"/>
-      <path d="M65 40 L60 25 L75 35 Z" fill="#fda4af"/> <!-- Inner ear -->
-      <path d="M135 40 L140 25 L125 35 Z" fill="#fda4af"/>
-
-      <!-- Face Details -->
-      <!-- Eyes -->
-      <g id="eyes">
-        <ellipse cx="85" cy="65" rx="6" ry="8" fill="#1e293b"/>
-        <ellipse cx="115" cy="65" rx="6" ry="8" fill="#1e293b"/>
-        <circle cx="87" cy="63" r="2" fill="#fff"/>
-        <circle cx="117" cy="63" r="2" fill="#fff"/>
-      </g>
-      
-      <!-- Nose -->
-      <path d="M100 80 L95 85 L105 85 Z" fill="#fda4af"/>
-      
-      <!-- Mouth -->
-      <path id="mouth" d="M100 85 Q90 95 80 90 M100 85 Q110 95 120 90" stroke="#1e293b" stroke-width="2" fill="none"/>
-      
-      <!-- Whiskers -->
-      <line x1="70" y1="85" x2="40" y2="80" stroke="#94a3b8" stroke-width="1"/>
-      <line x1="70" y1="90" x2="40" y2="95" stroke="#94a3b8" stroke-width="1"/>
-      <line x1="130" y1="85" x2="160" y2="80" stroke="#94a3b8" stroke-width="1"/>
-      <line x1="130" y1="90" x2="160" y2="95" stroke="#94a3b8" stroke-width="1"/>
-
-      <!-- Accessories Group -->
-      <g id="acc-group"></g>
-    </svg>
+  <!-- Floating Tools -->
+  <div class="tools-bar" id="tools-bar">
+    <div class="tool-btn active" data-tool="hand" title="Рука/Интерактив">✋<span class="tool-label">Рука</span></div>
+    <div class="tool-btn" data-tool="food" title="Еда">🍖<span class="tool-label">Еда</span></div>
+    <div class="tool-btn" data-tool="water" title="Вода">💧<span class="tool-label">Вода</span></div>
+    <div class="tool-btn" data-tool="soap" title="Шампунь">🧼<span class="tool-label">Мыло</span></div>
+    <div class="tool-btn" data-tool="scrub" title="Мочалка">🧽<span class="tool-label">Тереть</span></div>
+    <div class="tool-btn" data-tool="shovel" title="Совок">🥄<span class="tool-label">Совок</span></div>
+    <div class="tool-btn" data-tool="toy" title="Игрушка">🎾<span class="tool-label">Игрушка</span></div>
   </div>
 
-  <!-- Mini-game Overlay -->
-  <div id="minigame-overlay">
-    <div class="mg-title">🎮 Лови Мышь!</div>
-    <div class="mg-area" id="mg-area">
-      <!-- Targets injected here -->
-    </div>
-    <div class="mg-score">Счёт: <span id="mg-score">0</span></div>
-    <button class="mg-close" onclick="closeMinigame()">Закрыть</button>
-  </div>
+  <div id="toast">Сообщение</div>
 </div>
 
 <div class="bottom-panel">
@@ -291,22 +143,22 @@
   </div>
 
   <div class="actions-row">
-    <button class="act-btn" onclick="feed()">🍖 Кормить</button>
-    <button class="act-btn game" onclick="startMinigame()">🎮 Игра</button>
-    <button class="act-btn craft" onclick="openCraft()">🔨 Крафт</button>
-    <button class="act-btn" onclick="openWardrobe()">👗 Гардероб</button>
+    <button class="act-btn shop" onclick="openShop()">🛒 Магазин</button>
+    <button class="act-btn" onclick="toggleWardrobe()">👗 Шкаф</button>
+    <button class="act-btn" onclick="resetGame()">🔄 Сброс</button>
+    <button class="act-btn" onclick="sendToBot()">📤 Бот</button>
   </div>
 </div>
 
-<!-- Craft Modal -->
-<div class="modal" id="craft-modal">
+<!-- Shop Modal -->
+<div class="modal" id="shop-modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>🔨 Мастерская</h3>
-      <button class="close-btn" onclick="closeModal('craft-modal')">×</button>
+      <span>🛒 Магазин</span>
+      <button class="close-btn" onclick="closeModal('shop-modal')">×</button>
     </div>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Создавай мебель для комнат. Ресурсы падают при играх.</p>
-    <div class="craft-grid" id="craft-list"></div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">Покупай еду, шампуни и игрушки.</p>
+    <div class="shop-grid" id="shop-list"></div>
   </div>
 </div>
 
@@ -314,10 +166,10 @@
 <div class="modal" id="wardrobe-modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>👗 Гардероб</h3>
+      <span>👗 Гардероб</span>
       <button class="close-btn" onclick="closeModal('wardrobe-modal')">×</button>
     </div>
-    <div class="wardrobe-grid" id="wardrobe-list"></div>
+    <div class="shop-grid" id="wardrobe-list"></div>
   </div>
 </div>
 
@@ -326,17 +178,18 @@
 var tg = window.Telegram && window.Telegram.WebApp ? Telegram.WebApp : null;
 if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 
-// --- DATA & STATE ---
-const KEY = 'barsik_pu_v3';
-
+// --- CONFIG & STATE ---
+const KEY = 'barsik_pu_pro_v4';
 let state = {
-  coins: 100, level: 1, xp: 0,
+  coins: 500, level: 1, xp: 0,
   hunger: 80, mood: 70, energy: 90, clean: 85, health: 100, belly: 0,
-  currentRoom: 'living',
-  inventory: [], // Owned clothes IDs
+  currentTool: 'hand',
+  inventory: { food: 5, soap: 2, toy: 1 }, // Counts of consumables/items owned
   equipped: { hat: null, scarf: null, glasses: null },
-  furniture: { kitchen: [], living: [], bedroom: [], bath: [], yard: [] },
-  resources: { wood: 0, fabric: 0, metal: 0 }
+  dirtSpots: [], // Array of {x, y, size, type} on the cat
+  poopPiles: [], // Array of {x, y, type} in the room
+  mice: [], // Active mice entities
+  lastTick: Date.now()
 };
 
 // Load State
@@ -346,400 +199,520 @@ try {
 } catch(e) {}
 
 function save() {
+  state.lastTick = Date.now();
   localStorage.setItem(KEY, JSON.stringify(state));
   updateUI();
 }
 
-// --- ROOMS CONFIG ---
-const ROOMS = [
-  { id: 'kitchen', name: 'Кухня', icon: '🍽', bgClass: 'room-kitchen' },
-  { id: 'living', name: 'Гостиная', icon: '🛋', bgClass: 'room-living' },
-  { id: 'bedroom', name: 'Спальня', icon: '🛏', bgClass: 'room-bedroom' },
-  { id: 'bath', name: 'Ванная', icon: '🚿', bgClass: 'room-bath' },
-  { id: 'yard', name: 'Двор', icon: '🌳', bgClass: 'room-yard' }
-];
+// --- CANVAS SETUP ---
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+let cw, ch;
 
-// --- CRAFT RECIPES ---
-const RECIPES = [
-  { id: 'rug_blue', name: 'Синий Ковер', cost: {wood:0, fabric:5, metal:0}, icon: '🟦', room: 'living' },
-  { id: 'table_wood', name: 'Столик', cost: {wood:5, fabric:0, metal:0}, icon: '🪵', room: 'kitchen' },
-  { id: 'lamp_neon', name: 'Неон Лампа', cost: {wood:2, fabric:2, metal:3}, icon: '💡', room: 'living' },
-  { id: 'bed_soft', name: 'Мягкая Лежанка', cost: {wood:3, fabric:5, metal:0}, icon: '🛌', room: 'bedroom' },
-  { id: 'plant_tall', name: 'Фикус', cost: {wood:4, fabric:1, metal:0}, icon: '🪴', room: 'yard' },
-  { id: 'toy_ball', name: 'Мячик', cost: {wood:1, fabric:2, metal:0}, icon: '🏀', room: 'living' }
-];
+function resize() {
+  cw = canvas.width = canvas.parentElement.clientWidth;
+  ch = canvas.height = canvas.parentElement.clientHeight;
+}
+window.addEventListener('resize', resize);
+resize();
 
-// --- WARDROBE ITEMS ---
-const CLOTHES = [
-  { id: 'hat_cap', slot: 'hat', name: 'Кепка', cost: 50, svg: '<rect x="80" y="20" width="40" height="10" fill="#333"/><path d="M80 30 Q100 40 120 30" fill="#333"/>' },
-  { id: 'hat_crown', slot: 'hat', name: 'Корона', cost: 200, svg: '<polygon points="80,25 90,10 100,25 110,10 120,25" fill="gold"/>' },
-  { id: 'glass_sun', slot: 'glasses', name: 'Очки', cost: 80, svg: '<circle cx="85" cy="65" r="8" fill="#111"/><circle cx="115" cy="65" r="8" fill="#111"/><line x1="93" y1="65" x2="107" y2="65" stroke="#111"/>' },
-  { id: 'scarf_red', slot: 'scarf', name: 'Шарф', cost: 60, svg: '<path d="M70 90 Q100 110 130 90" stroke="red" stroke-width="6" fill="none"/>' },
-  { id: 'bowtie', slot: 'scarf', name: 'Бабочка', cost: 100, svg: '<path d="M100 95 L90 90 L90 100 Z M100 95 L110 90 L110 100 Z" fill="purple"/>' }
-];
+// --- ASSETS / DRAWING HELPERS ---
 
-// --- INITIALIZATION ---
-function initTabs() {
-  const nav = document.getElementById('tabs-nav');
-  nav.innerHTML = '';
-  ROOMS.forEach(r => {
-    const btn = document.createElement('div');
-    btn.className = 'tab-btn' + (state.currentRoom === r.id ? ' active' : '');
-    btn.textContent = r.icon + ' ' + r.name;
-    btn.onclick = () => switchRoom(r.id);
-    nav.appendChild(btn);
+// Draw Snow Leopard Body
+function drawCat(x, y, scale, bellyFactor, mood) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.beginPath();
+  ctx.ellipse(0, 40, 50, 10, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // Tail
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 12;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(40, 20);
+  ctx.quadraticCurveTo(80, 0, 70, -30);
+  ctx.stroke();
+
+  // Body (Egg shape, expands with belly)
+  const bodyRx = 45 + (bellyFactor * 10);
+  const bodyRy = 35 + (bellyFactor * 5);
+  
+  ctx.fillStyle = '#e2e8f0';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, bodyRx, bodyRy, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Spots (Snow Leopard rosettes)
+  ctx.fillStyle = 'rgba(100, 116, 139, 0.4)';
+  const spots = [
+    [-20, -10, 4], [10, -15, 3], [-10, 10, 5], [20, 5, 4],
+    [-30, 0, 3], [30, -5, 3], [0, 20, 4]
+  ];
+  spots.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s[0], s[1], s[2], 0, Math.PI*2);
+    ctx.fill();
   });
+
+  // Head
+  ctx.fillStyle = '#f1f5f9';
+  ctx.beginPath();
+  ctx.arc(0, -35, 25, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Ears
+  ctx.fillStyle = '#cbd5e1';
+  ctx.beginPath(); ctx.moveTo(-15, -50); ctx.lineTo(-25, -65); ctx.lineTo(-5, -55); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(15, -50); ctx.lineTo(25, -65); ctx.lineTo(5, -55); ctx.fill();
+  
+  // Inner ears
+  ctx.fillStyle = '#fda4af';
+  ctx.beginPath(); ctx.moveTo(-15, -52); ctx.lineTo(-20, -60); ctx.lineTo(-8, -55); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(15, -52); ctx.lineTo(20, -60); ctx.lineTo(8, -55); ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#1e293b';
+  const eyeOpenness = mood > 30 ? 1 : 0.5; // Squint if sad
+  ctx.beginPath(); ctx.ellipse(-8, -35, 3, 4 * eyeOpenness, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(8, -35, 3, 4 * eyeOpenness, 0, 0, Math.PI*2); ctx.fill();
+  
+  // Highlights
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(-7, -36, 1, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(9, -36, 1, 0, Math.PI*2); ctx.fill();
+
+  // Nose
+  ctx.fillStyle = '#fda4af';
+  ctx.beginPath(); ctx.moveTo(0, -28); ctx.lineTo(-3, -25); ctx.lineTo(3, -25); ctx.fill();
+
+  // Mouth
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if(mood > 50) {
+    ctx.moveTo(0, -25); ctx.quadraticCurveTo(-5, -20, -10, -22); // Smile L
+    ctx.moveTo(0, -25); ctx.quadraticCurveTo(5, -20, 10, -22);   // Smile R
+  } else {
+    ctx.moveTo(0, -25); ctx.quadraticCurveTo(-5, -28, -10, -26); // Frown L
+    ctx.moveTo(0, -25); ctx.quadraticCurveTo(5, -28, 10, -26);   // Frown R
+  }
+  ctx.stroke();
+
+  // Whiskers
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-15, -28); ctx.lineTo(-35, -30); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-15, -25); ctx.lineTo(-35, -22); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(15, -28); ctx.lineTo(35, -30); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(15, -25); ctx.lineTo(35, -22); ctx.stroke();
+
+  // Accessories
+  drawAccessories(ctx, 0, -35); // Head pos relative to center
+
+  ctx.restore();
 }
 
-function switchRoom(roomId) {
-  state.currentRoom = roomId;
-  save();
-  initTabs();
-  renderStage();
-  say(getRandomComment());
+function drawAccessories(ctx, hx, hy) {
+  // Hat
+  if(state.equipped.hat === 'cap') {
+    ctx.fillStyle = '#333';
+    ctx.fillRect(hx-10, hy-25, 20, 5);
+    ctx.beginPath(); ctx.arc(hx, hy-20, 10, Math.PI, 0); ctx.fill();
+  } else if(state.equipped.hat === 'crown') {
+    ctx.fillStyle = 'gold';
+    ctx.beginPath();
+    ctx.moveTo(hx-10, hy-20); ctx.lineTo(hx-5, hy-30); ctx.lineTo(hx, hy-20);
+    ctx.lineTo(hx+5, hy-30); ctx.lineTo(hx+10, hy-20);
+    ctx.fill();
+  }
+
+  // Glasses
+  if(state.equipped.glasses === 'sun') {
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillRect(hx-12, hy-5, 8, 6);
+    ctx.fillRect(hx+4, hy-5, 8, 6);
+    ctx.strokeStyle = '#333'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(hx-4, hy-2); ctx.lineTo(hx+4, hy-2); ctx.stroke();
+  }
+
+  // Scarf
+  if(state.equipped.scarf === 'red') {
+    ctx.strokeStyle = 'red'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(hx-15, hy+10); ctx.quadraticCurveTo(hx, hy+20, hx+15, hy+10); ctx.stroke();
+  }
 }
 
-function renderStage() {
-  const stage = document.getElementById('main-stage');
-  const roomData = ROOMS.find(r => r.id === state.currentRoom);
-  
-  // Update BG Class
-  stage.className = 'stage ' + roomData.bgClass;
-  
-  // Render Furniture
-  const layer = document.getElementById('furniture-layer');
-  layer.innerHTML = '';
-  
-  const items = state.furniture[state.currentRoom] || [];
-  items.forEach((itemId, index) => {
-    const recipe = RECIPES.find(r => r.id === itemId);
-    if(recipe) {
-      const el = document.createElement('div');
-      el.className = 'furn-object';
-      el.textContent = recipe.icon;
-      // Position logic: spread them out
-      const angle = (index / Math.max(items.length, 1)) * Math.PI * 2;
-      const radius = 60 + (index * 10);
-      el.style.left = `calc(50% + ${Math.cos(angle) * radius}px)`;
-      el.style.top = `calc(50% + ${Math.sin(angle) * radius}px)`;
-      el.onclick = () => interactWithFurniture(recipe);
-      layer.appendChild(el);
+// Draw Dirt/Poop
+function drawDirt(spots) {
+  spots.forEach(d => {
+    ctx.fillStyle = d.type === 'poop' ? '#78350f' : '#475569';
+    ctx.globalAlpha = 0.7;
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.size, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    
+    // Poop smell waves
+    if(d.type === 'poop') {
+      ctx.strokeStyle = 'rgba(100,100,100,0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y-d.size);
+      ctx.quadraticCurveTo(d.x+5, d.y-d.size-10, d.x, d.y-d.size-20);
+      ctx.stroke();
     }
   });
 }
 
-function interactWithFurniture(item) {
-  if(item.id === 'toy_ball') { startMinigame(); return; }
-  if(item.id === 'bed_soft') { sleep(); return; }
-  say("Это " + item.name);
+// Draw Mice
+function drawMice(mices) {
+  mices.forEach(m => {
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    ctx.rotate(m.angle);
+    
+    // Body
+    ctx.fillStyle = '#94a3b8';
+    ctx.beginPath(); ctx.ellipse(0, 0, 8, 5, 0, 0, Math.PI*2); ctx.fill();
+    // Ears
+    ctx.fillStyle = '#cbd5e1';
+    ctx.beginPath(); ctx.arc(-4, -3, 3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4, -3, 3, 0, Math.PI*2); ctx.fill();
+    // Tail
+    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(8, 0); ctx.quadraticCurveTo(15, 5, 12, 10); ctx.stroke();
+    
+    ctx.restore();
+  });
 }
 
-// --- CAT PHYSICS & RENDERING ---
-function updateCatVisuals() {
-  const container = document.getElementById('cat-container');
-  const bellyPatch = document.getElementById('belly-patch');
-  const mouth = document.getElementById('mouth');
-  const eyes = document.getElementById('eyes');
-  
-  // Reset classes
-  container.classList.remove('fat-mode', 'sad-mode', 'happy-mode');
-  
-  // Belly Logic
-  if(state.belly > 60) {
-    container.classList.add('fat-mode');
-    // Expand belly visually
-    const scale = 1 + (state.belly / 100);
-    bellyPatch.setAttribute('rx', 40 * scale);
-    bellyPatch.setAttribute('ry', 30 * scale);
-    bellyPatch.setAttribute('fill', '#fecaca'); // Reddish tint for overfed
-  } else {
-    bellyPatch.setAttribute('rx', 40);
-    bellyPatch.setAttribute('ry', 30);
-    bellyPatch.setAttribute('fill', '#f1f5f9');
-  }
-  
-  // Mood Logic
-  if(state.mood < 30 || state.health < 30) {
-    container.classList.add('sad-mode');
-    mouth.setAttribute('d', 'M100 85 Q90 80 80 85 M100 85 Q110 80 120 85'); // Sad frown
-  } else {
-    mouth.setAttribute('d', 'M100 85 Q90 95 80 90 M100 85 Q110 95 120 90'); // Happy smile
-  }
-  
-  renderAccessories();
+// --- GAME LOGIC ---
+
+let gameLoopId;
+let mouseX = 0, mouseY = 0;
+let isDragging = false;
+
+// Mouse Interaction
+canvas.addEventListener('mousedown', handleInputStart);
+canvas.addEventListener('mousemove', handleInputMove);
+canvas.addEventListener('mouseup', handleInputEnd);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); handleInputStart(e.touches[0]); }, {passive:false});
+canvas.addEventListener('touchmove', e => { e.preventDefault(); handleInputMove(e.touches[0]); }, {passive:false});
+canvas.addEventListener('touchend', e => { e.preventDefault(); handleInputEnd(); }, {passive:false});
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
 }
 
-function renderAccessories() {
-  const group = document.getElementById('acc-group');
-  group.innerHTML = '';
+function handleInputStart(e) {
+  const pos = getPos(e);
+  mouseX = pos.x; mouseY = pos.y;
+  isDragging = true;
+  performAction(pos.x, pos.y);
+}
+
+function handleInputMove(e) {
+  if(!isDragging) return;
+  const pos = getPos(e);
+  mouseX = pos.x; mouseY = pos.y;
   
-  ['hat', 'scarf', 'glasses'].forEach(slot => {
-    const itemId = state.equipped[slot];
-    if(itemId) {
-      const item = CLOTHES.find(c => c.id === itemId);
-      if(item) {
-        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        g.innerHTML = item.svg;
-        group.appendChild(g);
+  // Continuous actions like scrubbing or feeding drag
+  if(state.currentTool === 'scrub' || state.currentTool === 'soap' || state.currentTool === 'water') {
+    performContinuousAction(pos.x, pos.y);
+  }
+}
+
+function handleInputEnd() {
+  isDragging = false;
+}
+
+function performAction(x, y) {
+  const tool = state.currentTool;
+  const catCenter = { x: cw/2, y: ch/2 + 20 };
+  const distToCat = Math.hypot(x - catCenter.x, y - catCenter.y);
+  const isOnCat = distToCat < 60;
+
+  if(tool === 'hand') {
+    // Petting
+    if(isOnCat) {
+      state.mood = Math.min(100, state.mood + 2);
+      spawnParticle(x, y, '❤️', '#f472b6');
+      showToast("Барсику приятно!");
+      save();
+    }
+  } 
+  else if(tool === 'food') {
+    if(state.inventory.food > 0) {
+      // Drop food near cat
+      if(distToCat < 100) {
+        state.inventory.food--;
+        state.hunger = Math.min(100, state.hunger + 15);
+        state.belly += 5;
+        spawnParticle(catCenter.x, catCenter.y - 40, '🍖', '#f97316');
+        showToast("Ням! +15 сытости");
+        checkLevelUp(5);
+        save();
+      } else {
+        showToast("Поднеси ближе к миске/барсу");
+      }
+    } else {
+      showToast("Нет еды! Купи в магазине.");
+    }
+  }
+  else if(tool === 'shovel') {
+    // Clean poop
+    for(let i=state.poopPiles.length-1; i>=0; i--) {
+      const p = state.poopPiles[i];
+      if(Math.hypot(x-p.x, y-p.y) < 30) {
+        state.poopPiles.splice(i, 1);
+        state.clean = Math.min(100, state.clean + 10);
+        spawnParticle(p.x, p.y, '✨', '#22c55e');
+        showToast("Чисто!");
+        save();
+        break;
       }
     }
+  }
+  else if(tool === 'toy') {
+    // Spawn mouse
+    if(state.inventory.toy > 0 || true) { // Free toys for now
+       state.mice.push({
+         x: x, y: y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, angle: 0, life: 300
+       });
+       showToast("Мышь появилась! Лови её!");
+    }
+  }
+}
+
+function performContinuousAction(x, y) {
+  const tool = state.currentTool;
+  const catCenter = { x: cw/2, y: ch/2 + 20 };
+  const distToCat = Math.hypot(x - catCenter.x, y - catCenter.y);
+
+  if(tool === 'soap' || tool === 'water' || tool === 'scrub') {
+    if(distToCat < 60) {
+      // Cleaning logic
+      let cleanedSomething = false;
+      
+      // Check dirt spots on cat
+      for(let i=state.dirtSpots.length-1; i>=0; i--) {
+        const d = state.dirtSpots[i];
+        // Transform dirt coords to screen approx
+        const dx = catCenter.x + d.rx;
+        const dy = catCenter.y + d.ry;
+        
+        if(Math.hypot(x-dx, y-dy) < 20) {
+          state.dirtSpots.splice(i, 1);
+          state.clean = Math.min(100, state.clean + 5);
+          spawnParticle(dx, dy, '🫧', '#bae6fd');
+          cleanedSomething = true;
+        }
+      }
+      
+      if(cleanedSomething) {
+        showToast("Чище!");
+        save();
+      }
+    }
+  }
+}
+
+function spawnParticle(x, y, char, color) {
+  // Simple particle system could be added here, using temporary array
+  // For brevity, we just flash text via toast or simple visual cue in draw loop
+  particles.push({x, y, char, color, life: 30, vy: -2});
+}
+let particles = [];
+
+function updateParticles() {
+  for(let i=particles.length-1; i>=0; i--) {
+    let p = particles[i];
+    p.y += p.vy;
+    p.life--;
+    if(p.life <= 0) particles.splice(i, 1);
+  }
+}
+
+function drawParticles() {
+  particles.forEach(p => {
+    ctx.font = '16px Arial';
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.life / 30;
+    ctx.fillText(p.char, p.x, p.y);
+    ctx.globalAlpha = 1;
   });
 }
 
-// --- ACTIONS ---
-function feed() {
-  if(state.hunger >= 95) {
-    say("Я сыт! Не перекармливай!");
-    state.belly += 10;
-    state.health -= 5;
-    triggerAnim('sad');
+// --- MOUSE AI ---
+function updateMice() {
+  const catPos = { x: cw/2, y: ch/2 + 20 };
+  
+  for(let i=state.mice.length-1; i>=0; i--) {
+    let m = state.mice[i];
+    m.life--;
+    
+    // Move randomly
+    m.x += m.vx;
+    m.y += m.vy;
+    
+    // Bounce off walls
+    if(m.x < 10 || m.x > cw-10) m.vx *= -1;
+    if(m.y < 10 || m.y > ch-10) m.vy *= -1;
+    
+    // Attract to player cursor slightly if close? No, run away from cat
+    const distToCat = Math.hypot(m.x - catPos.x, m.y - catPos.y);
+    if(distToCat < 80) {
+      // Run away
+      const angle = Math.atan2(m.y - catPos.y, m.x - catPos.x);
+      m.vx += Math.cos(angle) * 0.5;
+      m.vy += Math.sin(angle) * 0.5;
+    }
+    
+    // Friction
+    m.vx *= 0.98;
+    m.vy *= 0.98;
+    m.angle = Math.atan2(m.vy, m.vx);
+
+    // Catch condition (Player clicks mouse)
+    // Handled in performAction if tool is hand and click is on mouse
+    
+    if(m.life <= 0) state.mice.splice(i, 1);
+  }
+}
+
+// Check if player caught a mouse manually
+function checkMouseCatch(x, y) {
+  for(let i=state.mice.length-1; i>=0; i--) {
+    let m = state.mice[i];
+    if(Math.hypot(x-m.x, y-m.y) < 15) {
+      state.mice.splice(i, 1);
+      state.mood = Math.min(100, state.mood + 10);
+      state.energy -= 5;
+      spawnParticle(x, y, '🎉', '#fbbf24');
+      showToast("Поймал мышь! +Настроение");
+      checkLevelUp(10);
+      save();
+      return true;
+    }
+  }
+  return false;
+}
+
+// Modify performAction to include mouse catching
+const originalPerformAction = performAction;
+performAction = function(x, y) {
+  if(checkMouseCatch(x, y)) return; // If caught mouse, stop other actions
+  originalPerformAction(x, y);
+};
+
+
+// --- SPAWNERS ---
+function spawnPoop() {
+  if(state.poopPiles.length < 3 && Math.random() < 0.01) {
+    state.poopPiles.push({
+      x: Math.random() * (cw - 40) + 20,
+      y: Math.random() * (ch - 100) + 50,
+      type: 'poop'
+    });
+    state.clean = Math.max(0, state.clean - 5);
+    showToast("Ой... Барсик сделал дела.");
     save();
-    return;
-  }
-  
-  state.hunger = Math.min(100, state.hunger + 15);
-  state.belly += 5;
-  state.xp += 2;
-  state.coins += 1;
-  
-  triggerAnim('eat');
-  say("Ням! 🍖");
-  checkLevelUp();
-  save();
-}
-
-function play() {
-  if(state.energy < 20) { say("Устал... 😴"); return; }
-  if(state.belly > 70) { say("Тяжело прыгать! 🫃"); return; }
-  
-  state.mood = Math.min(100, state.mood + 10);
-  state.energy -= 10;
-  state.hunger -= 5;
-  state.belly -= 2; // Burn calories
-  state.xp += 5;
-  
-  // Drop Resources Chance
-  if(Math.random() < 0.3) {
-    const resTypes = ['wood', 'fabric', 'metal'];
-    const type = resTypes[Math.floor(Math.random()*resTypes.length)];
-    state.resources[type] += 1;
-    say("+1 " + type.toUpperCase());
-  }
-  
-  triggerAnim('jump');
-  checkLevelUp();
-  save();
-}
-
-function sleep() {
-  state.energy = Math.min(100, state.energy + 30);
-  state.hunger -= 5;
-  say("Zzz... 💤");
-  save();
-}
-
-function triggerAnim(type) {
-  const cat = document.getElementById('cat-container');
-  cat.classList.remove('happy-mode', 'fat-mode', 'sad-mode');
-  void cat.offsetWidth; // Reflow
-  
-  if(type === 'jump') cat.classList.add('happy-mode');
-  setTimeout(() => cat.classList.remove('happy-mode'), 600);
-}
-
-function say(text) {
-  const b = document.getElementById('bubble');
-  b.textContent = text;
-  b.classList.add('show');
-  setTimeout(() => b.classList.remove('show'), 2000);
-}
-
-function getRandomComment() {
-  const comments = ["Мяу!", "Хочу гулять", "Здесь уютно", "Давай играть?", "Чуть не уснул"];
-  return comments[Math.floor(Math.random()*comments.length)];
-}
-
-function checkLevelUp() {
-  const needed = state.level * 100;
-  if(state.xp >= needed) {
-    state.level++;
-    state.xp -= needed;
-    state.coins += 50;
-    say("LEVEL UP! ⭐" + state.level);
   }
 }
 
-// --- MINIGAME LOGIC ---
-let mgInterval = null;
-let mgScore = 0;
-
-function startMinigame() {
-  if(state.energy < 10) { say("Нет сил играть!"); return; }
-  
-  document.getElementById('minigame-overlay').classList.add('active');
-  mgScore = 0;
-  document.getElementById('mg-score').textContent = mgScore;
-  
-  const area = document.getElementById('mg-area');
-  area.innerHTML = '';
-  
-  // Spawn targets
-  mgInterval = setInterval(() => {
-    spawnTarget(area);
-  }, 800);
-  
-  // End after 15 seconds
-  setTimeout(() => {
-    endMinigame();
-  }, 15000);
-}
-
-function spawnTarget(area) {
-  const target = document.createElement('div');
-  target.className = 'mg-target';
-  target.style.left = Math.random() * 260 + 'px';
-  target.style.top = Math.random() * 260 + 'px';
-  
-  target.onclick = () => {
-    mgScore++;
-    document.getElementById('mg-score').textContent = mgScore;
-    target.remove();
-    // Give reward
-    state.energy -= 2;
-    state.mood += 5;
-    if(mgScore % 5 === 0) {
-      state.coins += 10;
-      say("Бонус +10 🪙");
-    }
+function spawnDirtOnCat() {
+  if(state.dirtSpots.length < 5 && Math.random() < 0.005) {
+    // Random spot on body ellipse
+    const rx = (Math.random() - 0.5) * 60;
+    const ry = (Math.random() - 0.5) * 40;
+    state.dirtSpots.push({ rx, ry, size: 5 + Math.random()*5, type: 'dust' });
+    state.clean = Math.max(0, state.clean - 2);
     save();
-  };
-  
-  area.appendChild(target);
-  
-  // Remove after 1 second if not clicked
-  setTimeout(() => {
-    if(target.parentNode) target.remove();
-  }, 1000);
-}
-
-function endMinigame() {
-  clearInterval(mgInterval);
-  document.getElementById('minigame-overlay').classList.remove('active');
-  say("Игра окончена! Счёт: " + mgScore);
-  state.xp += mgScore * 2;
-  checkLevelUp();
-  save();
-}
-
-function closeMinigame() {
-  clearInterval(mgInterval);
-  document.getElementById('minigame-overlay').classList.remove('active');
-}
-
-// --- MODALS LOGIC ---
-function openCraft() {
-  const list = document.getElementById('craft-list');
-  list.innerHTML = '';
-  
-  RECIPES.forEach(r => {
-    const canAfford = Object.keys(r.cost).every(k => state.resources[k] >= r.cost[k]);
-    const isOwned = state.furniture[r.room]?.includes(r.id);
-    
-    const card = document.createElement('div');
-    card.className = 'craft-card' + (canAfford && !isOwned ? ' can-craft' : '');
-    card.innerHTML = `
-      <div class="craft-icon">${r.icon}</div>
-      <div class="craft-name">${r.name}</div>
-      <div class="craft-cost">
-        ${Object.entries(r.cost).map(([k,v]) => v > 0 ? `${v} ${k}` : '').join(', ') || 'Бесплатно'}
-      </div>
-      <button class="craft-btn" ${(!canAfford || isOwned) ? 'disabled' : ''}>
-        ${isOwned ? 'Есть' : (canAfford ? 'Создать' : 'Нет ресурсов')}
-      </button>
-    `;
-    
-    card.querySelector('button').onclick = () => craftItem(r);
-    list.appendChild(card);
-  });
-  
-  document.getElementById('craft-modal').classList.add('open');
-}
-
-function craftItem(recipe) {
-  // Deduct resources
-  Object.keys(recipe.cost).forEach(k => state.resources[k] -= recipe.cost[k]);
-  
-  // Add to furniture
-  if(!state.furniture[recipe.room]) state.furniture[recipe.room] = [];
-  state.furniture[recipe.room].push(recipe.id);
-  
-  say("Создано: " + recipe.name);
-  save();
-  closeCraft();
-  renderStage(); // Refresh view if in that room
-}
-
-function closeCraft() {
-  document.getElementById('craft-modal').classList.remove('open');
-}
-
-function openWardrobe() {
-  const list = document.getElementById('wardrobe-list');
-  list.innerHTML = '';
-  
-  CLOTHES.forEach(c => {
-    const isOwned = state.inventory.includes(c.id);
-    const isEquipped = state.equipped[c.slot] === c.id;
-    
-    const div = document.createElement('div');
-    div.className = 'cloth-item' + (isEquipped ? ' equipped' : '');
-    div.innerHTML = `
-      <div class="cloth-preview">${c.slot === 'hat' ? '🧢' : c.slot === 'scarf' ? '🧣' : '🕶'}</div>
-      <div class="cloth-name">${c.name}</div>
-      <div style="font-size:10px;color:var(--gold)">
-        ${isOwned ? (isEquipped ? 'Надето' : 'Надеть') : c.cost + ' 🪙'}
-      </div>
-    `;
-    
-    div.onclick = () => handleClothClick(c);
-    list.appendChild(div);
-  });
-  
-  document.getElementById('wardrobe-modal').classList.add('open');
-}
-
-function handleClothClick(item) {
-  if(state.inventory.includes(item.id)) {
-    // Toggle equip
-    if(state.equipped[item.slot] === item.id) {
-      state.equipped[item.slot] = null;
-      say("Снял " + item.name);
-    } else {
-      state.equipped[item.slot] = item.id;
-      say("Надел " + item.name);
-    }
-  } else {
-    // Buy
-    if(state.coins >= item.cost) {
-      state.coins -= item.cost;
-      state.inventory.push(item.id);
-      state.equipped[item.slot] = item.id;
-      say("Купил " + item.name);
-    } else {
-      say("Не хватает монет!");
-    }
   }
-  save();
-  renderAccessories();
-  openWardrobe(); // Refresh
-  closeModal('wardrobe-modal');
 }
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
+// --- MAIN LOOP ---
+function loop() {
+  // Clear
+  ctx.clearRect(0, 0, cw, ch);
+  
+  // Background Room
+  drawRoomBackground();
+
+  // Entities
+  updateMice();
+  drawMice(state.mice);
+  
+  drawPoop(state.poopPiles);
+  
+  // Cat
+  const catScale = 1.5;
+  const bellyFactor = state.belly / 100;
+  drawCat(cw/2, ch/2 + 20, catScale, bellyFactor, state.mood);
+  
+  // Dirt on Cat (Overlay)
+  drawDirtOnCat(cw/2, ch/2 + 20, catScale);
+
+  // Particles
+  updateParticles();
+  drawParticles();
+
+  // Logic Tick
+  spawnPoop();
+  spawnDirtOnCat();
+
+  requestAnimationFrame(loop);
 }
 
-// --- UI UPDATE ---
+function drawRoomBackground() {
+  // Simple floor/wall distinction
+  ctx.fillStyle = '#1e293b'; // Wall
+  ctx.fillRect(0, 0, cw, ch * 0.6);
+  
+  ctx.fillStyle = '#0f172a'; // Floor
+  ctx.fillRect(0, ch * 0.6, cw, ch * 0.4);
+  
+  // Rug
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.1)';
+  ctx.beginPath();
+  ctx.ellipse(cw/2, ch*0.7, 100, 40, 0, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function drawPoop(piles) {
+  piles.forEach(p => {
+    ctx.fillStyle = '#78350f';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 8, 0, Math.PI*2);
+    ctx.fill();
+    // Smell
+    ctx.fillStyle = 'rgba(100,100,100,0.2)';
+    ctx.font = '10px Arial';
+    ctx.fillText('~', p.x, p.y - 10);
+  });
+}
+
+function drawDirtOnCat(cx, cy, scale) {
+  state.dirtSpots.forEach(d => {
+    ctx.fillStyle = 'rgba(100, 116, 139, 0.6)';
+    ctx.beginPath();
+    ctx.arc(cx + d.rx*scale, cy + d.ry*scale, d.size*scale, 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+
+// --- UI UPDATES ---
 function updateUI() {
   document.getElementById('ui-coins').textContent = state.coins;
   document.getElementById('ui-level').textContent = state.level;
@@ -750,8 +723,6 @@ function updateUI() {
   setBar('clean', state.clean);
   setBar('health', state.health);
   setBar('belly', state.belly);
-  
-  updateCatVisuals();
 }
 
 function setBar(key, val) {
@@ -761,26 +732,123 @@ function setBar(key, val) {
   if(label) label.textContent = Math.round(val) + '%';
 }
 
-// --- TICKER ---
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function checkLevelUp(xpGain) {
+  state.xp += xpGain;
+  const needed = state.level * 100;
+  if(state.xp >= needed) {
+    state.level++;
+    state.xp -= needed;
+    state.coins += 50;
+    showToast("LEVEL UP! ⭐" + state.level);
+  }
+}
+
+// --- TOOL SELECTION ---
+document.querySelectorAll('.tool-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.currentTool = btn.dataset.tool;
+    showToast("Инструмент: " + btn.title);
+  };
+});
+
+// --- SHOP LOGIC ---
+const SHOP_ITEMS = [
+  { id: 'food_pack', name: 'Пачка корма', price: 20, type: 'consumable', itemKey: 'food', amount: 5, icon: '🍖' },
+  { id: 'soap_bar', name: 'Шампунь', price: 30, type: 'consumable', itemKey: 'soap', amount: 3, icon: '🧼' },
+  { id: 'toy_mouse', name: 'Игрушечная мышь', price: 50, type: 'permanent', icon: '🎾' }, // Just unlocks ability
+  { id: 'hat_cap', name: 'Кепка', price: 100, type: 'clothing', slot: 'hat', idCloth: 'cap', icon: '🧢' },
+  { id: 'glass_sun', name: 'Очки', price: 80, type: 'clothing', slot: 'glasses', idCloth: 'sun', icon: '🕶' },
+];
+
+function openShop() {
+  const list = document.getElementById('shop-list');
+  list.innerHTML = '';
+  
+  SHOP_ITEMS.forEach(item => {
+    const canBuy = state.coins >= item.price;
+    const div = document.createElement('div');
+    div.className = 'shop-item';
+    div.innerHTML = `
+      <div class="item-icon">${item.icon}</div>
+      <div class="item-name">${item.name}</div>
+      <div class="item-price">${item.price} 🪙</div>
+      <button class="buy-btn" ${canBuy ? '' : 'disabled'}>${canBuy ? 'Купить' : 'Дорого'}</button>
+    `;
+    div.querySelector('button').onclick = () => buyItem(item);
+    list.appendChild(div);
+  });
+  
+  document.getElementById('shop-modal').classList.add('open');
+}
+
+function buyItem(item) {
+  if(state.coins < item.price) return;
+  
+  state.coins -= item.price;
+  
+  if(item.type === 'consumable') {
+    state.inventory[item.itemKey] += item.amount;
+    showToast(`Куплено: ${item.name}`);
+  } else if(item.type === 'clothing') {
+    // Add to wardrobe logic simplified: just equip immediately for demo
+    state.equipped[item.slot] = item.idCloth;
+    showToast(`Надето: ${item.name}`);
+  }
+  
+  save();
+  updateUI();
+  closeModal('shop-modal');
+}
+
+function toggleWardrobe() {
+  // Simplified: In real app, show owned items to equip/unequip
+  showToast("Гардероб: Пока только покупка в магазине одевает вещи автоматически.");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function resetGame() {
+  if(confirm("Сбросить весь прогресс?")) {
+    localStorage.removeItem(KEY);
+    location.reload();
+  }
+}
+
+function sendToBot() {
+  if(tg && tg.sendData) {
+    tg.sendData(JSON.stringify({ game: 'tama_pro', state: state }));
+    showToast("Отправлено в бота!");
+  }
+}
+
+// --- START ---
+updateUI();
+loop();
+
+// Passive decay tick
 setInterval(() => {
-  // Passive decay every minute
   state.hunger = Math.max(0, state.hunger - 1);
   state.mood = Math.max(0, state.mood - 0.5);
   state.energy = Math.min(100, state.energy + 0.5);
-  state.clean = Math.max(0, state.clean - 0.5);
+  state.clean = Math.max(0, state.clean - 0.2);
   state.belly = Math.max(0, state.belly - 0.5);
   
   if(state.hunger < 10 || state.clean < 10) state.health = Math.max(0, state.health - 1);
   else if(state.health < 100 && state.hunger > 50) state.health = Math.min(100, state.health + 1);
   
   save();
-}, 60000);
-
-// Start
-initTabs();
-renderStage();
-updateUI();
-say("Добро пожаловать в Домик Барсика!");
+}, 10000); // Every 10 seconds for faster feel
 
 </script>
 </body>
