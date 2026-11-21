@@ -3,18 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Barsik Pet Universe Pro</title>
+<title>Barsik Life: Ultimate</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg: #0f172a;
-    --panel: #1e293b;
-    --accent: #38bdf8;
-    --gold: #fbbf24;
-    --danger: #ef4444;
-    --success: #22c55e;
-    --text: #f1f5f9;
-    --muted: #94a3b8;
+    --bg: #0f172a; --panel: #1e293b; --accent: #38bdf8; --gold: #fbbf24;
+    --danger: #ef4444; --success: #22c55e; --text: #f1f5f9; --muted: #94a3b8;
+    --fur-light: #e2e8f0; --fur-dark: #cbd5e1; --spot: #64748b;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; }
   body { margin:0; background:var(--bg); color:var(--text); font-family:'Segoe UI', sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
@@ -25,11 +20,29 @@
   .stats { display:flex; gap:10px; font-size:12px; font-weight:bold; }
   .stat-item { display:flex; align-items:center; gap:4px; }
 
-  /* Main Stage (Canvas) */
-  #stage-container { flex:1; position:relative; background:#000; overflow:hidden; cursor:crosshair; }
-  canvas#game-canvas { width:100%; height:100%; display:block; image-rendering:pixelated; }
+  /* Main Stage */
+  #stage-container { flex:1; position:relative; background:#000; overflow:hidden; cursor:pointer; }
+  canvas#game-canvas { width:100%; height:100%; display:block; image-rendering:auto; }
   
-  /* Tool Selection Bar (Floating) */
+  /* Chat Bubble (AI Speech) */
+  #ai-bubble {
+    position:absolute; top:20%; left:50%; transform:translateX(-50%);
+    background:rgba(255,255,255,.95); color:#000; padding:8px 12px; border-radius:15px;
+    font-size:13px; font-weight:bold; max-width:80%; text-align:center;
+    opacity:0; transition:opacity .5s; z-index:30; pointer-events:none;
+    box-shadow:0 4px 10px rgba(0,0,0,.3);
+  }
+  #ai-bubble.show { opacity:1; }
+  #ai-bubble::after { content:''; position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid rgba(255,255,255,.95); }
+
+  /* Room Indicator */
+  #room-indicator {
+    position:absolute; top:10px; right:10px;
+    background:rgba(0,0,0,.5); color:var(--accent); padding:5px 10px; border-radius:10px;
+    font-size:12px; font-weight:bold; z-index:20;
+  }
+
+  /* Tools Bar */
   .tools-bar {
     position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
     display:flex; gap:8px; background:rgba(15,23,42,.9); padding:8px; border-radius:20px;
@@ -43,7 +56,7 @@
   .tool-btn.active { border-color:var(--accent); background:#0c4a6e; box-shadow:0 0 10px rgba(56,189,248,.3); }
   .tool-label { font-size:9px; color:var(--muted); margin-top:2px; }
 
-  /* Bottom Stats Panel */
+  /* Bottom Panel */
   .bottom-panel { background:var(--panel); padding:10px; border-top:1px solid rgba(255,255,255,.1); }
   .bars-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-bottom:8px; }
   .bar-box { background:rgba(0,0,0,.2); padding:4px; border-radius:6px; }
@@ -51,7 +64,6 @@
   .bar-track { height:4px; background:#334155; border-radius:2px; overflow:hidden; }
   .bar-fill { height:100%; width:0%; transition:width .3s ease; }
 
-  /* Actions Row */
   .actions-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; }
   .act-btn { 
     background:var(--bg); border:1px solid rgba(255,255,255,.1); 
@@ -64,11 +76,11 @@
   /* Modals */
   .modal { position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:100; display:none; align-items:center; justify-content:center; }
   .modal.open { display:flex; }
-  .modal-content { background:var(--panel); width:90%; max-width:350px; max-height:80vh; border-radius:16px; padding:15px; overflow-y:auto; border:1px solid rgba(255,255,255,.1); }
+  .modal-content { background:var(--panel); width:90%; max-width:400px; max-height:80vh; border-radius:16px; padding:15px; overflow-y:auto; border:1px solid rgba(255,255,255,.1); }
   .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-weight:bold; }
   .close-btn { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; }
   
-  /* Shop Grid */
+  /* Shop/Grid Styles */
   .shop-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
   .shop-item { background:rgba(0,0,0,.3); padding:10px; border-radius:10px; text-align:center; border:1px solid transparent; }
   .shop-item.selected { border-color:var(--accent); background:#0c4a6e; }
@@ -78,7 +90,6 @@
   .buy-btn { width:100%; padding:5px; border:none; border-radius:5px; background:var(--accent); color:#fff; font-size:10px; cursor:pointer; margin-top:5px; }
   .buy-btn:disabled { background:#475569; }
 
-  /* Toast Notification */
   #toast {
     position:absolute; top:60px; left:50%; transform:translateX(-50%);
     background:rgba(0,0,0,.8); color:#fff; padding:8px 16px; border-radius:20px;
@@ -90,7 +101,7 @@
 <body>
 
 <div class="header">
-  <div class="logo">🐾 BARSIK PU PRO</div>
+  <div class="logo">🐾 BARSIK LIFE</div>
   <div class="stats">
     <div class="stat-item"><span style="color:var(--gold)">🪙</span> <span id="ui-coins">0</span></div>
     <div class="stat-item">⭐ Lv.<span id="ui-level">1</span></div>
@@ -99,16 +110,18 @@
 
 <div id="stage-container">
   <canvas id="game-canvas"></canvas>
+  <div id="room-indicator">🛋 Гостиная</div>
+  <div id="ai-bubble">Привет!</div>
   
   <!-- Floating Tools -->
   <div class="tools-bar" id="tools-bar">
-    <div class="tool-btn active" data-tool="hand" title="Рука/Интерактив">✋<span class="tool-label">Рука</span></div>
+    <div class="tool-btn active" data-tool="hand" title="Гладить">✋<span class="tool-label">Рука</span></div>
     <div class="tool-btn" data-tool="food" title="Еда">🍖<span class="tool-label">Еда</span></div>
     <div class="tool-btn" data-tool="water" title="Вода">💧<span class="tool-label">Вода</span></div>
     <div class="tool-btn" data-tool="soap" title="Шампунь">🧼<span class="tool-label">Мыло</span></div>
     <div class="tool-btn" data-tool="scrub" title="Мочалка">🧽<span class="tool-label">Тереть</span></div>
-    <div class="tool-btn" data-tool="shovel" title="Совок">🥄<span class="tool-label">Совок</span></div>
-    <div class="tool-btn" data-tool="toy" title="Игрушка">🎾<span class="tool-label">Игрушка</span></div>
+    <div class="tool-btn" data-tool="shovel" title="Совок">🥄<span class="tool-label">Убрать</span></div>
+    <div class="tool-btn" data-tool="toy" title="Игрушка">🎾<span class="tool-label">Игра</span></div>
   </div>
 
   <div id="toast">Сообщение</div>
@@ -145,7 +158,7 @@
   <div class="actions-row">
     <button class="act-btn shop" onclick="openShop()">🛒 Магазин</button>
     <button class="act-btn" onclick="toggleWardrobe()">👗 Шкаф</button>
-    <button class="act-btn" onclick="resetGame()">🔄 Сброс</button>
+    <button class="act-btn" onclick="switchRoom('next')">🚪 След. комната</button>
     <button class="act-btn" onclick="sendToBot()">📤 Бот</button>
   </div>
 </div>
@@ -154,10 +167,10 @@
 <div class="modal" id="shop-modal">
   <div class="modal-content">
     <div class="modal-header">
-      <span>🛒 Магазин</span>
+      <span>🛒 Магазин & Крафт</span>
       <button class="close-btn" onclick="closeModal('shop-modal')">×</button>
     </div>
-    <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">Покупай еду, шампуни и игрушки.</p>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">Покупай расходники, одежду и крафти мебель.</p>
     <div class="shop-grid" id="shop-list"></div>
   </div>
 </div>
@@ -179,17 +192,21 @@ var tg = window.Telegram && window.Telegram.WebApp ? Telegram.WebApp : null;
 if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 
 // --- CONFIG & STATE ---
-const KEY = 'barsik_pu_pro_v4';
+const KEY = 'barsik_life_v5';
 let state = {
   coins: 500, level: 1, xp: 0,
   hunger: 80, mood: 70, energy: 90, clean: 85, health: 100, belly: 0,
   currentTool: 'hand',
-  inventory: { food: 5, soap: 2, toy: 1 }, // Counts of consumables/items owned
-  equipped: { hat: null, scarf: null, glasses: null },
-  dirtSpots: [], // Array of {x, y, size, type} on the cat
-  poopPiles: [], // Array of {x, y, type} in the room
-  mice: [], // Active mice entities
-  lastTick: Date.now()
+  currentRoom: 'living', // kitchen, living, bedroom, bath, yard
+  inventory: { food: 5, soap: 2, toy: 1 },
+  equipped: { hat: null, scarf: null, glasses: null, collar: null },
+  dirtSpots: [], // On cat
+  poopPiles: [], // In room
+  flies: [], // Around poop
+  particles: [], // Effects
+  lastTick: Date.now(),
+  aiState: 'idle', // idle, eating, sleeping, playing, cleaning
+  aiTimer: 0
 };
 
 // Load State
@@ -216,193 +233,42 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// --- ASSETS / DRAWING HELPERS ---
+// --- ROOMS DATA ---
+const ROOMS = {
+  kitchen: { name: 'Кухня', icon: '🍽', bg: '#fefce8', floor: '#d9f99d', objects: ['🥣', '🍞'] },
+  living: { name: 'Гостиная', icon: '🛋', bg: '#1e293b', floor: '#334155', objects: ['📺', '🪴'] },
+  bedroom: { name: 'Спальня', icon: '🛏', bg: '#312e81', floor: '#4c1d95', objects: ['🛌', '🌙'] },
+  bath: { name: 'Ванная', icon: '🚿', bg: '#cffafe', floor: '#a5f3fc', objects: ['🛁', '🧴'] },
+  yard: { name: 'Двор', icon: '🌳', bg: '#86efac', floor: '#4ade80', objects: ['🌻', '🦋'] }
+};
 
-// Draw Snow Leopard Body
-function drawCat(x, y, scale, bellyFactor, mood) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(scale, scale);
+// --- WARDROBE & SHOP ITEMS ---
+const CLOTHES = [
+  { id: 'hat_cap', slot: 'hat', name: 'Кепка', cost: 50, svgDraw: (ctx, x, y) => { ctx.fillStyle='#333'; ctx.fillRect(x-10,y-25,20,5); ctx.beginPath(); ctx.arc(x,y-20,10,Math.PI,0); ctx.fill(); } },
+  { id: 'hat_crown', slot: 'hat', name: 'Корона', cost: 200, svgDraw: (ctx, x, y) => { ctx.fillStyle='gold'; ctx.beginPath(); ctx.moveTo(x-10,y-20); ctx.lineTo(x-5,y-30); ctx.lineTo(x,y-20); ctx.lineTo(x+5,y-30); ctx.lineTo(x+10,y-20); ctx.fill(); } },
+  { id: 'glass_sun', slot: 'glasses', name: 'Очки', cost: 80, svgDraw: (ctx, x, y) => { ctx.fillStyle='rgba(0,0,0,0.8)'; ctx.fillRect(x-12,y-5,8,6); ctx.fillRect(x+4,y-5,8,6); ctx.strokeStyle='#333'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x-4,y-2); ctx.lineTo(x+4,y-2); ctx.stroke(); } },
+  { id: 'scarf_red', slot: 'scarf', name: 'Шарф', cost: 60, svgDraw: (ctx, x, y) => { ctx.strokeStyle='red'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(x-15,y+10); ctx.quadraticCurveTo(x,y+20,x+15,y+10); ctx.stroke(); } },
+  { id: 'collar_gold', slot: 'collar', name: 'Золотой ошейник', cost: 150, svgDraw: (ctx, x, y) => { ctx.strokeStyle='gold'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y+15,12,0,Math.PI*2); ctx.stroke(); } }
+];
 
-  // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.2)';
-  ctx.beginPath();
-  ctx.ellipse(0, 40, 50, 10, 0, 0, Math.PI*2);
-  ctx.fill();
+const SHOP_ITEMS = [
+  { id: 'food_pack', name: 'Пачка корма', price: 20, type: 'consumable', itemKey: 'food', amount: 5, icon: '🍖' },
+  { id: 'soap_bar', name: 'Шампунь', price: 30, type: 'consumable', itemKey: 'soap', amount: 3, icon: '🧼' },
+  { id: 'toy_mouse', name: 'Игрушечная мышь', price: 50, type: 'permanent', icon: '🎾' },
+  ...CLOTHES.map(c => ({ id: c.id, name: c.name, price: c.cost, type: 'clothing', slot: c.slot, icon: '👕' }))
+];
 
-  // Tail
-  ctx.strokeStyle = '#cbd5e1';
-  ctx.lineWidth = 12;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(40, 20);
-  ctx.quadraticCurveTo(80, 0, 70, -30);
-  ctx.stroke();
-
-  // Body (Egg shape, expands with belly)
-  const bodyRx = 45 + (bellyFactor * 10);
-  const bodyRy = 35 + (bellyFactor * 5);
-  
-  ctx.fillStyle = '#e2e8f0';
-  ctx.beginPath();
-  ctx.ellipse(0, 0, bodyRx, bodyRy, 0, 0, Math.PI*2);
-  ctx.fill();
-  ctx.strokeStyle = '#94a3b8';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Spots (Snow Leopard rosettes)
-  ctx.fillStyle = 'rgba(100, 116, 139, 0.4)';
-  const spots = [
-    [-20, -10, 4], [10, -15, 3], [-10, 10, 5], [20, 5, 4],
-    [-30, 0, 3], [30, -5, 3], [0, 20, 4]
-  ];
-  spots.forEach(s => {
-    ctx.beginPath();
-    ctx.arc(s[0], s[1], s[2], 0, Math.PI*2);
-    ctx.fill();
-  });
-
-  // Head
-  ctx.fillStyle = '#f1f5f9';
-  ctx.beginPath();
-  ctx.arc(0, -35, 25, 0, Math.PI*2);
-  ctx.fill();
-  ctx.stroke();
-
-  // Ears
-  ctx.fillStyle = '#cbd5e1';
-  ctx.beginPath(); ctx.moveTo(-15, -50); ctx.lineTo(-25, -65); ctx.lineTo(-5, -55); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(15, -50); ctx.lineTo(25, -65); ctx.lineTo(5, -55); ctx.fill();
-  
-  // Inner ears
-  ctx.fillStyle = '#fda4af';
-  ctx.beginPath(); ctx.moveTo(-15, -52); ctx.lineTo(-20, -60); ctx.lineTo(-8, -55); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(15, -52); ctx.lineTo(20, -60); ctx.lineTo(8, -55); ctx.fill();
-
-  // Eyes
-  ctx.fillStyle = '#1e293b';
-  const eyeOpenness = mood > 30 ? 1 : 0.5; // Squint if sad
-  ctx.beginPath(); ctx.ellipse(-8, -35, 3, 4 * eyeOpenness, 0, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(8, -35, 3, 4 * eyeOpenness, 0, 0, Math.PI*2); ctx.fill();
-  
-  // Highlights
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(-7, -36, 1, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(9, -36, 1, 0, Math.PI*2); ctx.fill();
-
-  // Nose
-  ctx.fillStyle = '#fda4af';
-  ctx.beginPath(); ctx.moveTo(0, -28); ctx.lineTo(-3, -25); ctx.lineTo(3, -25); ctx.fill();
-
-  // Mouth
-  ctx.strokeStyle = '#1e293b';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  if(mood > 50) {
-    ctx.moveTo(0, -25); ctx.quadraticCurveTo(-5, -20, -10, -22); // Smile L
-    ctx.moveTo(0, -25); ctx.quadraticCurveTo(5, -20, 10, -22);   // Smile R
-  } else {
-    ctx.moveTo(0, -25); ctx.quadraticCurveTo(-5, -28, -10, -26); // Frown L
-    ctx.moveTo(0, -25); ctx.quadraticCurveTo(5, -28, 10, -26);   // Frown R
-  }
-  ctx.stroke();
-
-  // Whiskers
-  ctx.strokeStyle = '#94a3b8';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(-15, -28); ctx.lineTo(-35, -30); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-15, -25); ctx.lineTo(-35, -22); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(15, -28); ctx.lineTo(35, -30); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(15, -25); ctx.lineTo(35, -22); ctx.stroke();
-
-  // Accessories
-  drawAccessories(ctx, 0, -35); // Head pos relative to center
-
-  ctx.restore();
-}
-
-function drawAccessories(ctx, hx, hy) {
-  // Hat
-  if(state.equipped.hat === 'cap') {
-    ctx.fillStyle = '#333';
-    ctx.fillRect(hx-10, hy-25, 20, 5);
-    ctx.beginPath(); ctx.arc(hx, hy-20, 10, Math.PI, 0); ctx.fill();
-  } else if(state.equipped.hat === 'crown') {
-    ctx.fillStyle = 'gold';
-    ctx.beginPath();
-    ctx.moveTo(hx-10, hy-20); ctx.lineTo(hx-5, hy-30); ctx.lineTo(hx, hy-20);
-    ctx.lineTo(hx+5, hy-30); ctx.lineTo(hx+10, hy-20);
-    ctx.fill();
-  }
-
-  // Glasses
-  if(state.equipped.glasses === 'sun') {
-    ctx.fillStyle = 'rgba(0,0,0,0.8)';
-    ctx.fillRect(hx-12, hy-5, 8, 6);
-    ctx.fillRect(hx+4, hy-5, 8, 6);
-    ctx.strokeStyle = '#333'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(hx-4, hy-2); ctx.lineTo(hx+4, hy-2); ctx.stroke();
-  }
-
-  // Scarf
-  if(state.equipped.scarf === 'red') {
-    ctx.strokeStyle = 'red'; ctx.lineWidth=4;
-    ctx.beginPath(); ctx.moveTo(hx-15, hy+10); ctx.quadraticCurveTo(hx, hy+20, hx+15, hy+10); ctx.stroke();
-  }
-}
-
-// Draw Dirt/Poop
-function drawDirt(spots) {
-  spots.forEach(d => {
-    ctx.fillStyle = d.type === 'poop' ? '#78350f' : '#475569';
-    ctx.globalAlpha = 0.7;
-    ctx.beginPath();
-    ctx.arc(d.x, d.y, d.size, 0, Math.PI*2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    
-    // Poop smell waves
-    if(d.type === 'poop') {
-      ctx.strokeStyle = 'rgba(100,100,100,0.3)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(d.x, d.y-d.size);
-      ctx.quadraticCurveTo(d.x+5, d.y-d.size-10, d.x, d.y-d.size-20);
-      ctx.stroke();
-    }
-  });
-}
-
-// Draw Mice
-function drawMice(mices) {
-  mices.forEach(m => {
-    ctx.save();
-    ctx.translate(m.x, m.y);
-    ctx.rotate(m.angle);
-    
-    // Body
-    ctx.fillStyle = '#94a3b8';
-    ctx.beginPath(); ctx.ellipse(0, 0, 8, 5, 0, 0, Math.PI*2); ctx.fill();
-    // Ears
-    ctx.fillStyle = '#cbd5e1';
-    ctx.beginPath(); ctx.arc(-4, -3, 3, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(4, -3, 3, 0, Math.PI*2); ctx.fill();
-    // Tail
-    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(8, 0); ctx.quadraticCurveTo(15, 5, 12, 10); ctx.stroke();
-    
-    ctx.restore();
-  });
-}
-
-// --- GAME LOGIC ---
-
-let gameLoopId;
+// --- GAME LOOP VARIABLES ---
+let frameCount = 0;
 let mouseX = 0, mouseY = 0;
 let isDragging = false;
+let catPos = { x: 0, y: 0 }; // Calculated in draw
+let breathOffset = 0;
+let tailAngle = 0;
+let blinkTimer = 0;
+let isBlinking = false;
 
-// Mouse Interaction
+// --- INPUT HANDLING ---
 canvas.addEventListener('mousedown', handleInputStart);
 canvas.addEventListener('mousemove', handleInputMove);
 canvas.addEventListener('mouseup', handleInputEnd);
@@ -427,8 +293,7 @@ function handleInputMove(e) {
   const pos = getPos(e);
   mouseX = pos.x; mouseY = pos.y;
   
-  // Continuous actions like scrubbing or feeding drag
-  if(state.currentTool === 'scrub' || state.currentTool === 'soap' || state.currentTool === 'water') {
+  if(['scrub', 'soap', 'water'].includes(state.currentTool)) {
     performContinuousAction(pos.x, pos.y);
   }
 }
@@ -437,162 +302,93 @@ function handleInputEnd() {
   isDragging = false;
 }
 
+// --- ACTIONS ---
 function performAction(x, y) {
   const tool = state.currentTool;
-  const catCenter = { x: cw/2, y: ch/2 + 20 };
-  const distToCat = Math.hypot(x - catCenter.x, y - catCenter.y);
+  const distToCat = Math.hypot(x - catPos.x, y - catPos.y);
   const isOnCat = distToCat < 60;
 
+  // Check Mouse Catch first
+  if(checkMouseCatch(x, y)) return;
+
   if(tool === 'hand') {
-    // Petting
     if(isOnCat) {
       state.mood = Math.min(100, state.mood + 2);
       spawnParticle(x, y, '❤️', '#f472b6');
-      showToast("Барсику приятно!");
+      speak("Мур-мур!");
       save();
     }
   } 
   else if(tool === 'food') {
-    if(state.inventory.food > 0) {
-      // Drop food near cat
-      if(distToCat < 100) {
-        state.inventory.food--;
-        state.hunger = Math.min(100, state.hunger + 15);
-        state.belly += 5;
-        spawnParticle(catCenter.x, catCenter.y - 40, '🍖', '#f97316');
-        showToast("Ням! +15 сытости");
-        checkLevelUp(5);
-        save();
-      } else {
-        showToast("Поднеси ближе к миске/барсу");
-      }
+    if(state.inventory.food > 0 && isOnCat) {
+      state.inventory.food--;
+      state.hunger = Math.min(100, state.hunger + 15);
+      state.belly += 5;
+      spawnParticle(catPos.x, catPos.y - 40, '🍖', '#f97316');
+      speak("Ням!");
+      checkLevelUp(5);
+      save();
+    } else if (!isOnCat) {
+      showToast("Поднеси еду к барсику");
     } else {
       showToast("Нет еды! Купи в магазине.");
     }
   }
   else if(tool === 'shovel') {
-    // Clean poop
     for(let i=state.poopPiles.length-1; i>=0; i--) {
       const p = state.poopPiles[i];
       if(Math.hypot(x-p.x, y-p.y) < 30) {
         state.poopPiles.splice(i, 1);
+        // Remove associated flies
+        state.flies = state.flies.filter(f => f.parentId !== p.id);
         state.clean = Math.min(100, state.clean + 10);
         spawnParticle(p.x, p.y, '✨', '#22c55e');
-        showToast("Чисто!");
+        speak("Чисто!");
         save();
         break;
       }
     }
   }
   else if(tool === 'toy') {
-    // Spawn mouse
-    if(state.inventory.toy > 0 || true) { // Free toys for now
-       state.mice.push({
-         x: x, y: y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, angle: 0, life: 300
-       });
-       showToast("Мышь появилась! Лови её!");
-    }
+    // Spawn mouse entity
+    state.mice = state.mice || [];
+    state.mice.push({
+      x: x, y: y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, angle: 0, life: 300, id: Date.now()
+    });
+    speak("Лови мышь!");
   }
 }
 
 function performContinuousAction(x, y) {
   const tool = state.currentTool;
-  const catCenter = { x: cw/2, y: ch/2 + 20 };
-  const distToCat = Math.hypot(x - catCenter.x, y - catCenter.y);
+  const distToCat = Math.hypot(x - catPos.x, y - catPos.y);
 
-  if(tool === 'soap' || tool === 'water' || tool === 'scrub') {
-    if(distToCat < 60) {
-      // Cleaning logic
-      let cleanedSomething = false;
+  if(distToCat < 60) {
+    let cleanedSomething = false;
+    
+    // Clean dirt spots on cat
+    for(let i=state.dirtSpots.length-1; i>=0; i--) {
+      const d = state.dirtSpots[i];
+      const dx = catPos.x + d.rx;
+      const dy = catPos.y + d.ry;
       
-      // Check dirt spots on cat
-      for(let i=state.dirtSpots.length-1; i>=0; i--) {
-        const d = state.dirtSpots[i];
-        // Transform dirt coords to screen approx
-        const dx = catCenter.x + d.rx;
-        const dy = catCenter.y + d.ry;
-        
-        if(Math.hypot(x-dx, y-dy) < 20) {
-          state.dirtSpots.splice(i, 1);
-          state.clean = Math.min(100, state.clean + 5);
-          spawnParticle(dx, dy, '🫧', '#bae6fd');
-          cleanedSomething = true;
-        }
+      if(Math.hypot(x-dx, y-dy) < 20) {
+        state.dirtSpots.splice(i, 1);
+        state.clean = Math.min(100, state.clean + 5);
+        spawnParticle(dx, dy, '🫧', '#bae6fd');
+        cleanedSomething = true;
       }
-      
-      if(cleanedSomething) {
-        showToast("Чище!");
-        save();
-      }
+    }
+    
+    if(cleanedSomething) {
+      speak("Пушистый!");
+      save();
     }
   }
 }
 
-function spawnParticle(x, y, char, color) {
-  // Simple particle system could be added here, using temporary array
-  // For brevity, we just flash text via toast or simple visual cue in draw loop
-  particles.push({x, y, char, color, life: 30, vy: -2});
-}
-let particles = [];
-
-function updateParticles() {
-  for(let i=particles.length-1; i>=0; i--) {
-    let p = particles[i];
-    p.y += p.vy;
-    p.life--;
-    if(p.life <= 0) particles.splice(i, 1);
-  }
-}
-
-function drawParticles() {
-  particles.forEach(p => {
-    ctx.font = '16px Arial';
-    ctx.fillStyle = p.color;
-    ctx.globalAlpha = p.life / 30;
-    ctx.fillText(p.char, p.x, p.y);
-    ctx.globalAlpha = 1;
-  });
-}
-
-// --- MOUSE AI ---
-function updateMice() {
-  const catPos = { x: cw/2, y: ch/2 + 20 };
-  
-  for(let i=state.mice.length-1; i>=0; i--) {
-    let m = state.mice[i];
-    m.life--;
-    
-    // Move randomly
-    m.x += m.vx;
-    m.y += m.vy;
-    
-    // Bounce off walls
-    if(m.x < 10 || m.x > cw-10) m.vx *= -1;
-    if(m.y < 10 || m.y > ch-10) m.vy *= -1;
-    
-    // Attract to player cursor slightly if close? No, run away from cat
-    const distToCat = Math.hypot(m.x - catPos.x, m.y - catPos.y);
-    if(distToCat < 80) {
-      // Run away
-      const angle = Math.atan2(m.y - catPos.y, m.x - catPos.x);
-      m.vx += Math.cos(angle) * 0.5;
-      m.vy += Math.sin(angle) * 0.5;
-    }
-    
-    // Friction
-    m.vx *= 0.98;
-    m.vy *= 0.98;
-    m.angle = Math.atan2(m.vy, m.vx);
-
-    // Catch condition (Player clicks mouse)
-    // Handled in performAction if tool is hand and click is on mouse
-    
-    if(m.life <= 0) state.mice.splice(i, 1);
-  }
-}
-
-// Check if player caught a mouse manually
 function checkMouseCatch(x, y) {
+  if(!state.mice) return false;
   for(let i=state.mice.length-1; i>=0; i--) {
     let m = state.mice[i];
     if(Math.hypot(x-m.x, y-m.y) < 15) {
@@ -600,7 +396,7 @@ function checkMouseCatch(x, y) {
       state.mood = Math.min(100, state.mood + 10);
       state.energy -= 5;
       spawnParticle(x, y, '🎉', '#fbbf24');
-      showToast("Поймал мышь! +Настроение");
+      speak("Поймал!");
       checkLevelUp(10);
       save();
       return true;
@@ -609,31 +405,104 @@ function checkMouseCatch(x, y) {
   return false;
 }
 
-// Modify performAction to include mouse catching
-const originalPerformAction = performAction;
-performAction = function(x, y) {
-  if(checkMouseCatch(x, y)) return; // If caught mouse, stop other actions
-  originalPerformAction(x, y);
-};
+// --- PARTICLES & EFFECTS ---
+function spawnParticle(x, y, char, color) {
+  state.particles.push({x, y, char, color, life: 30, vy: -2, vx: (Math.random()-0.5)*2});
+}
 
-
-// --- SPAWNERS ---
-function spawnPoop() {
-  if(state.poopPiles.length < 3 && Math.random() < 0.01) {
-    state.poopPiles.push({
-      x: Math.random() * (cw - 40) + 20,
-      y: Math.random() * (ch - 100) + 50,
-      type: 'poop'
-    });
-    state.clean = Math.max(0, state.clean - 5);
-    showToast("Ой... Барсик сделал дела.");
-    save();
+function updateParticles() {
+  for(let i=state.particles.length-1; i>=0; i--) {
+    let p = state.particles[i];
+    p.y += p.vy;
+    p.x += p.vx;
+    p.life--;
+    if(p.life <= 0) state.particles.splice(i, 1);
   }
 }
 
+function drawParticles() {
+  state.particles.forEach(p => {
+    ctx.font = '16px Arial';
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.life / 30;
+    ctx.fillText(p.char, p.x, p.y);
+    ctx.globalAlpha = 1;
+  });
+}
+
+// --- AI BRAIN ---
+function updateAI() {
+  state.aiTimer++;
+  
+  // Priority Logic
+  if(state.hunger < 20 && state.aiState !== 'eating') {
+    setState('hungry');
+    if(frameCount % 100 === 0) speak("Хочу кушать... 🍖");
+  } else if(state.energy < 20 && state.aiState !== 'sleeping') {
+    setState('tired');
+    if(frameCount % 100 === 0) speak("Устал... 😴");
+  } else if(state.mood < 30 && state.aiState !== 'playing') {
+    setState('sad');
+    if(frameCount % 100 === 0) speak("Скучно... 💔");
+  } else if(state.clean < 30 && state.aiState !== 'dirty') {
+    setState('dirty');
+    if(frameCount % 100 === 0) speak("Грязный... 🧼");
+  } else {
+    // Idle behaviors
+    if(state.aiState === 'idle' && Math.random() < 0.01) {
+      // Random wander or look around
+      catPos.x = cw/2 + (Math.random()-0.5)*100;
+      catPos.y = ch/2 + 20 + (Math.random()-0.5)*50;
+    }
+  }
+}
+
+function setState(s) {
+  state.aiState = s;
+}
+
+function speak(text) {
+  const bubble = document.getElementById('ai-bubble');
+  bubble.textContent = text;
+  bubble.classList.add('show');
+  setTimeout(() => bubble.classList.remove('show'), 3000);
+}
+
+// --- SPAWNERS ---
+function spawnPoop() {
+  if(state.poopPiles.length < 3 && Math.random() < 0.005) {
+    const id = Date.now();
+    state.poopPiles.push({
+      id: id,
+      x: Math.random() * (cw - 40) + 20,
+      y: Math.random() * (ch - 100) + 50,
+      age: 0
+    });
+    state.clean = Math.max(0, state.clean - 5);
+    showToast("Барсик сделал дела.");
+    save();
+  }
+  
+  // Age poop and spawn flies
+  state.poopPiles.forEach(p => {
+    p.age++;
+    if(p.age > 300 && !state.flies.some(f => f.parentId === p.id)) {
+      // Spawn flies
+      for(let i=0; i<3; i++) {
+        state.flies.push({
+          parentId: p.id,
+          x: p.x + (Math.random()-0.5)*20,
+          y: p.y + (Math.random()-0.5)*20,
+          vx: (Math.random()-0.5)*2,
+          vy: (Math.random()-0.5)*2
+        });
+      }
+    }
+  });
+}
+
 function spawnDirtOnCat() {
-  if(state.dirtSpots.length < 5 && Math.random() < 0.005) {
-    // Random spot on body ellipse
+  if(state.dirtSpots.length < 5 && Math.random() < 0.002) {
     const rx = (Math.random() - 0.5) * 60;
     const ry = (Math.random() - 0.5) * 40;
     state.dirtSpots.push({ rx, ry, size: 5 + Math.random()*5, type: 'dust' });
@@ -642,74 +511,238 @@ function spawnDirtOnCat() {
   }
 }
 
-// --- MAIN LOOP ---
-function loop() {
-  // Clear
-  ctx.clearRect(0, 0, cw, ch);
-  
-  // Background Room
-  drawRoomBackground();
-
-  // Entities
-  updateMice();
-  drawMice(state.mice);
-  
-  drawPoop(state.poopPiles);
-  
-  // Cat
-  const catScale = 1.5;
-  const bellyFactor = state.belly / 100;
-  drawCat(cw/2, ch/2 + 20, catScale, bellyFactor, state.mood);
-  
-  // Dirt on Cat (Overlay)
-  drawDirtOnCat(cw/2, ch/2 + 20, catScale);
-
-  // Particles
-  updateParticles();
-  drawParticles();
-
-  // Logic Tick
-  spawnPoop();
-  spawnDirtOnCat();
-
-  requestAnimationFrame(loop);
+function updateFlies() {
+  state.flies.forEach(f => {
+    f.x += f.vx;
+    f.y += f.vy;
+    // Jitter
+    f.vx += (Math.random()-0.5)*0.5;
+    f.vy += (Math.random()-0.5)*0.5;
+    // Dampen speed
+    f.vx *= 0.95;
+    f.vy *= 0.95;
+  });
 }
+
+// --- DRAWING FUNCTIONS ---
 
 function drawRoomBackground() {
-  // Simple floor/wall distinction
-  ctx.fillStyle = '#1e293b'; // Wall
+  const room = ROOMS[state.currentRoom];
+  
+  // Wall
+  ctx.fillStyle = room.bg;
   ctx.fillRect(0, 0, cw, ch * 0.6);
   
-  ctx.fillStyle = '#0f172a'; // Floor
+  // Floor
+  ctx.fillStyle = room.floor;
   ctx.fillRect(0, ch * 0.6, cw, ch * 0.4);
   
-  // Rug
-  ctx.fillStyle = 'rgba(56, 189, 248, 0.1)';
-  ctx.beginPath();
-  ctx.ellipse(cw/2, ch*0.7, 100, 40, 0, 0, Math.PI*2);
-  ctx.fill();
+  // Objects (Static decoration)
+  ctx.font = '40px Arial';
+  room.objects.forEach((obj, i) => {
+    ctx.fillText(obj, 50 + i*100, ch * 0.5);
+  });
 }
 
-function drawPoop(piles) {
-  piles.forEach(p => {
+function drawCat() {
+  const scale = 1.5;
+  const bellyFactor = state.belly / 100;
+  
+  // Calculate dynamic position based on AI state
+  if(state.aiState === 'sleeping') {
+    catPos.y = ch/2 + 50; // Lower down
+  } else {
+    catPos.y = ch/2 + 20;
+  }
+  
+  ctx.save();
+  ctx.translate(catPos.x, catPos.y);
+  ctx.scale(scale, scale);
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.beginPath();
+  ctx.ellipse(0, 40, 50, 10, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // Tail Animation
+  tailAngle = Math.sin(frameCount * 0.05) * 0.5;
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 12;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(40, 20);
+  ctx.quadraticCurveTo(80 + tailAngle*20, 0, 70 + tailAngle*30, -30);
+  ctx.stroke();
+
+  // Body Breathing
+  breathOffset = Math.sin(frameCount * 0.03) * 2;
+  const bodyRx = 45 + (bellyFactor * 10);
+  const bodyRy = 35 + (breathOffset);
+  
+  ctx.fillStyle = '#e2e8f0';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, bodyRx, bodyRy, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Spots
+  ctx.fillStyle = 'rgba(100, 116, 139, 0.4)';
+  const spots = [
+    [-20, -10, 4], [10, -15, 3], [-10, 10, 5], [20, 5, 4],
+    [-30, 0, 3], [30, -5, 3], [0, 20, 4]
+  ];
+  spots.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s[0], s[1], s[2], 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  // Head
+  ctx.fillStyle = '#f1f5f9';
+  ctx.beginPath();
+  ctx.arc(0, -35, 25, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Ears
+  ctx.fillStyle = '#cbd5e1';
+  ctx.beginPath(); ctx.moveTo(-15, -50); ctx.lineTo(-25, -65); ctx.lineTo(-5, -55); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(15, -50); ctx.lineTo(25, -65); ctx.lineTo(5, -55); ctx.fill();
+  
+  ctx.fillStyle = '#fda4af';
+  ctx.beginPath(); ctx.moveTo(-15, -52); ctx.lineTo(-20, -60); ctx.lineTo(-8, -55); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(15, -52); ctx.lineTo(20, -60); ctx.lineTo(8, -55); ctx.fill();
+
+  // Eyes Blinking
+  blinkTimer++;
+  if(blinkTimer > 200 && !isBlinking) {
+    isBlinking = true;
+    blinkTimer = 0;
+  }
+  if(isBlinking && blinkTimer > 10) {
+    isBlinking = false;
+  }
+  
+  const eyeH = isBlinking ? 1 : 4;
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath(); ctx.ellipse(-8, -35, 3, eyeH, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(8, -35, 3, eyeH, 0, 0, Math.PI*2); ctx.fill();
+  
+  if(!isBlinking) {
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-7, -36, 1, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(9, -36, 1, 0, Math.PI*2); ctx.fill();
+  }
+
+  // Nose & Mouth
+  ctx.fillStyle = '#fda4af';
+  ctx.beginPath(); ctx.moveTo(0, -28); ctx.lineTo(-3, -25); ctx.lineTo(3, -25); ctx.fill();
+
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if(state.mood > 50) {
+    ctx.moveTo(0, -25); ctx.quadraticCurveTo(-5, -20, -10, -22);
+    ctx.moveTo(0, -25); ctx.quadraticCurveTo(5, -20, 10, -22);
+  } else {
+    ctx.moveTo(0, -25); ctx.quadraticCurveTo(-5, -28, -10, -26);
+    ctx.moveTo(0, -25); ctx.quadraticCurveTo(5, -28, 10, -26);
+  }
+  ctx.stroke();
+
+  // Whiskers
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-15, -28); ctx.lineTo(-35, -30); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-15, -25); ctx.lineTo(-35, -22); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(15, -28); ctx.lineTo(35, -30); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(15, -25); ctx.lineTo(35, -22); ctx.stroke();
+
+  // Draw Accessories
+  CLOTHES.forEach(c => {
+    if(state.equipped[c.slot] === c.id) {
+      c.svgDraw(ctx, 0, -35);
+    }
+  });
+
+  ctx.restore();
+}
+
+function drawDirtOnCat() {
+  state.dirtSpots.forEach(d => {
+    ctx.fillStyle = 'rgba(100, 116, 139, 0.6)';
+    ctx.beginPath();
+    ctx.arc(catPos.x + d.rx*1.5, catPos.y + d.ry*1.5, d.size*1.5, 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+
+function drawPoopAndFlies() {
+  state.poopPiles.forEach(p => {
     ctx.fillStyle = '#78350f';
     ctx.beginPath();
     ctx.arc(p.x, p.y, 8, 0, Math.PI*2);
     ctx.fill();
-    // Smell
-    ctx.fillStyle = 'rgba(100,100,100,0.2)';
+    
+    // Smell lines
+    ctx.strokeStyle = 'rgba(100,100,100,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y-8);
+    ctx.quadraticCurveTo(p.x+5, p.y-15, p.x, p.y-20);
+    ctx.stroke();
+  });
+  
+  state.flies.forEach(f => {
+    ctx.fillStyle = '#000';
     ctx.font = '10px Arial';
-    ctx.fillText('~', p.x, p.y - 10);
+    ctx.fillText('🪰', f.x, f.y);
   });
 }
 
-function drawDirtOnCat(cx, cy, scale) {
-  state.dirtSpots.forEach(d => {
-    ctx.fillStyle = 'rgba(100, 116, 139, 0.6)';
-    ctx.beginPath();
-    ctx.arc(cx + d.rx*scale, cy + d.ry*scale, d.size*scale, 0, Math.PI*2);
-    ctx.fill();
+function drawMice() {
+  if(!state.mice) return;
+  state.mice.forEach(m => {
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    ctx.rotate(m.angle);
+    
+    ctx.fillStyle = '#94a3b8';
+    ctx.beginPath(); ctx.ellipse(0, 0, 8, 5, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#cbd5e1';
+    ctx.beginPath(); ctx.arc(-4, -3, 3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4, -3, 3, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(8, 0); ctx.quadraticCurveTo(15, 5, 12, 10); ctx.stroke();
+    
+    ctx.restore();
   });
+}
+
+// --- MAIN LOOP ---
+function loop() {
+  ctx.clearRect(0, 0, cw, ch);
+  
+  frameCount++;
+  
+  drawRoomBackground();
+  drawPoopAndFlies();
+  drawMice();
+  drawCat();
+  drawDirtOnCat();
+  
+  updateParticles();
+  drawParticles();
+  
+  updateAI();
+  updateFlies();
+  spawnPoop();
+  spawnDirtOnCat();
+  
+  requestAnimationFrame(loop);
 }
 
 // --- UI UPDATES ---
@@ -723,6 +756,9 @@ function updateUI() {
   setBar('clean', state.clean);
   setBar('health', state.health);
   setBar('belly', state.belly);
+  
+  const room = ROOMS[state.currentRoom];
+  document.getElementById('room-indicator').textContent = room.icon + ' ' + room.name;
 }
 
 function setBar(key, val) {
@@ -760,15 +796,22 @@ document.querySelectorAll('.tool-btn').forEach(btn => {
   };
 });
 
-// --- SHOP LOGIC ---
-const SHOP_ITEMS = [
-  { id: 'food_pack', name: 'Пачка корма', price: 20, type: 'consumable', itemKey: 'food', amount: 5, icon: '🍖' },
-  { id: 'soap_bar', name: 'Шампунь', price: 30, type: 'consumable', itemKey: 'soap', amount: 3, icon: '🧼' },
-  { id: 'toy_mouse', name: 'Игрушечная мышь', price: 50, type: 'permanent', icon: '🎾' }, // Just unlocks ability
-  { id: 'hat_cap', name: 'Кепка', price: 100, type: 'clothing', slot: 'hat', idCloth: 'cap', icon: '🧢' },
-  { id: 'glass_sun', name: 'Очки', price: 80, type: 'clothing', slot: 'glasses', idCloth: 'sun', icon: '🕶' },
-];
+// --- ROOM SWITCHING ---
+window.switchRoom = function(direction) {
+  const rooms = Object.keys(ROOMS);
+  let idx = rooms.indexOf(state.currentRoom);
+  if(direction === 'next') {
+    idx = (idx + 1) % rooms.length;
+  } else {
+    idx = (idx - 1 + rooms.length) % rooms.length;
+  }
+  state.currentRoom = rooms[idx];
+  save();
+  updateUI();
+  speak("Переход в " + ROOMS[state.currentRoom].name);
+};
 
+// --- SHOP LOGIC ---
 function openShop() {
   const list = document.getElementById('shop-list');
   list.innerHTML = '';
@@ -799,8 +842,7 @@ function buyItem(item) {
     state.inventory[item.itemKey] += item.amount;
     showToast(`Куплено: ${item.name}`);
   } else if(item.type === 'clothing') {
-    // Add to wardrobe logic simplified: just equip immediately for demo
-    state.equipped[item.slot] = item.idCloth;
+    state.equipped[item.slot] = item.id;
     showToast(`Надето: ${item.name}`);
   }
   
@@ -810,24 +852,42 @@ function buyItem(item) {
 }
 
 function toggleWardrobe() {
-  // Simplified: In real app, show owned items to equip/unequip
-  showToast("Гардероб: Пока только покупка в магазине одевает вещи автоматически.");
+  const list = document.getElementById('wardrobe-list');
+  list.innerHTML = '';
+  
+  CLOTHES.forEach(c => {
+    const isEquipped = state.equipped[c.slot] === c.id;
+    const div = document.createElement('div');
+    div.className = 'shop-item' + (isEquipped ? ' selected' : '');
+    div.innerHTML = `
+      <div class="item-icon">👕</div>
+      <div class="item-name">${c.name}</div>
+      <div class="item-price">${isEquipped ? 'Надето' : 'Надеть'}</div>
+      <button class="buy-btn">${isEquipped ? 'Снять' : 'Надеть'}</button>
+    `;
+    div.querySelector('button').onclick = () => {
+      if(isEquipped) {
+        state.equipped[c.slot] = null;
+      } else {
+        state.equipped[c.slot] = c.id;
+      }
+      save();
+      toggleWardrobe(); // Refresh
+      closeModal('wardrobe-modal');
+    };
+    list.appendChild(div);
+  });
+  
+  document.getElementById('wardrobe-modal').classList.add('open');
 }
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-function resetGame() {
-  if(confirm("Сбросить весь прогресс?")) {
-    localStorage.removeItem(KEY);
-    location.reload();
-  }
-}
-
 function sendToBot() {
   if(tg && tg.sendData) {
-    tg.sendData(JSON.stringify({ game: 'tama_pro', state: state }));
+    tg.sendData(JSON.stringify({ game: 'barsik_life', state: state }));
     showToast("Отправлено в бота!");
   }
 }
@@ -848,7 +908,7 @@ setInterval(() => {
   else if(state.health < 100 && state.hunger > 50) state.health = Math.min(100, state.health + 1);
   
   save();
-}, 10000); // Every 10 seconds for faster feel
+}, 10000);
 
 </script>
 </body>
