@@ -3,707 +3,375 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#000000">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Barsik Amp</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root {
-  --bg: #000;
-  --panel: #1a1a1a;
-  --border: #333;
-  --text: #0f0;
-  --accent: #ffcc00;
-  --highlight: #00ffff;
-}
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: 'Courier New', Courier, monospace; overflow: hidden; touch-action: manipulation; overscroll-behavior: none; user-select: none; }
-.fatal { display: none; position: fixed; inset: 0; z-index: 999; background: #111; color: #fff; padding: 16px; white-space: pre-wrap; font: 13px/1.45 ui-monospace,Menlo,Consolas,monospace; overflow: auto; }
-
-.app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
-  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
-  gap: 8px;
-}
-
-.header {
-  background: linear-gradient(to bottom, #2a2a2a, #1a1a1a);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 4px 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  font-weight: bold;
-  color: #ccc;
-}
-.title-text { color: var(--highlight); text-shadow: 0 0 5px rgba(0,255,255,.5); }
-
-.display {
-  background: #000;
-  border: 2px solid #333;
-  border-radius: 4px;
-  padding: 8px;
-  min-height: 120px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  position: relative;
-  overflow: hidden;
-}
-
-.viz-container {
-  height: 60px;
-  background: #050505;
-  border: 1px solid #222;
-  border-radius: 2px;
-  position: relative;
-  flex-shrink: 0;
-}
-canvas#viz { width: 100%; height: 100%; display: block; }
-
-.info-panel {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-  color: var(--accent);
-  padding-top: 4px;
-  border-top: 1px dashed #333;
-}
-.track-name {
-  flex: 1;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  animation: marquee 10s linear infinite;
-  padding-right: 20px;
-  color: #fff;
-  font-weight: bold;
-}
-@keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-.time-info { font-weight: bold; color: #fff; font-size: 12px; }
-
-.controls {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
-  padding: 8px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-}
-.btn {
-  background: linear-gradient(to bottom, #444, #222);
-  border: 1px solid #555;
-  border-radius: 2px;
-  color: #ddd;
-  font-size: 14px;
-  font-weight: bold;
-  padding: 10px 0;
-  cursor: pointer;
-  transition: all .1s;
-  text-align: center;
-}
-.btn:active, .btn.active {
-  background: linear-gradient(to bottom, #222, #444);
-  color: var(--highlight);
-  border-color: var(--highlight);
-  box-shadow: inset 0 0 5px rgba(0,255,255,.3);
-}
-.btn-play { color: #0f0; }
-.btn-pause { color: #ff0; }
-.btn-stop { color: #f00; }
-
-.sliders {
-  padding: 8px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.slider-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 10px;
-  color: #aaa;
-}
-input[type=range] {
-  flex: 1;
-  -webkit-appearance: none;
-  background: transparent;
-}
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  height: 14px;
-  width: 14px;
-  border-radius: 50%;
-  background: var(--highlight);
-  cursor: pointer;
-  margin-top: -5px;
-}
-input[type=range]::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 4px;
-  cursor: pointer;
-  background: #333;
-  border-radius: 2px;
-}
-
-.playlist-container {
-  flex: 1;
-  background: #000;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 100px;
-}
-.playlist-header {
-  background: #222;
-  padding: 4px 8px;
-  font-size: 10px;
-  color: #888;
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid #333;
-  cursor: pointer;
-}
-.playlist-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 4px;
-  font-size: 11px;
-  color: #ccc;
-}
-.pl-item {
-  padding: 6px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px dotted #222;
-}
-.pl-item:hover { background: #111; color: #fff; }
-.pl-item.current { background: #003300; color: #0f0; font-weight: bold; }
-.pl-num { color: #666; width: 20px; }
-.pl-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 8px; }
-.pl-time { color: #888; font-size: 10px; }
-
-.actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding-top: 4px;
-}
-.action-btn {
-  background: #222;
-  border: 1px solid #444;
-  color: #aaa;
-  padding: 10px;
-  font-size: 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  text-align: center;
-}
-.action-btn:active { background: #333; color: #fff; }
-
-#fileInput { display: none; }
-
-/* Overlay for unlock */
-.unlock-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.9);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 18px;
-  text-align: center;
-  padding: 20px;
-}
-.unlock-overlay.hidden { display: none; }
+:root{--bg:#05070f;--panel:#10162a;--line:#26315a;--text:#eef2ff;--muted:#8b98c2;--grn:#39ff8e;--amb:#ffc94d;--ice:#7fd8ff;--red:#ff5d5d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:"Courier New",ui-monospace,Menlo,monospace;overflow:hidden}
+body{display:flex;flex-direction:column;height:100vh;height:100dvh;user-select:none;touch-action:manipulation}
+.app{display:flex;flex-direction:column;height:100%;max-width:640px;margin:0 auto;width:100%;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);gap:6px}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#0a0f1e}::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--grn),var(--ice));border-radius:6px}
+.topbar{display:flex;align-items:center;gap:8px;padding:8px 10px;background:linear-gradient(180deg,#141b33,#0d1226);border:1px solid var(--line);border-radius:12px}
+.logo{font-weight:900;font-size:15px;color:var(--grn);text-shadow:0 0 12px rgba(57,255,142,.4);letter-spacing:1px}
+.sp{flex:1}
+.ibtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#0d1226;color:var(--text);font-size:15px;cursor:pointer}
+.ibtn:active{transform:scale(.92)}
+.display{position:relative;height:34vh;min-height:150px;background:#04060c;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+#viz{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer}
+#vizLabel{position:absolute;top:8px;left:10px;font-size:11px;font-weight:900;color:var(--grn);letter-spacing:2px;opacity:0;transition:opacity .4s;pointer-events:none;text-shadow:0 0 10px rgba(57,255,142,.6)}
+#vizLabel.show{opacity:1}
+.trackline{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:6px 10px;background:linear-gradient(180deg,rgba(4,6,12,0),rgba(4,6,12,.92) 40%);pointer-events:none}
+.marquee{flex:1;overflow:hidden;white-space:nowrap;font-size:12px;font-weight:800;color:var(--amb)}
+.marquee span{display:inline-block;padding-left:100%;animation:mq 12s linear infinite}
+@keyframes mq{to{transform:translateX(-100%)}}
+.time{font-size:12px;font-weight:900;color:var(--grn);white-space:nowrap}
+.sliders{display:flex;flex-direction:column;gap:6px;padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.srow{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted);font-weight:900}
+.srow input{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#1b2444;outline:none}
+.srow input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--grn);border:2px solid #06110a;cursor:pointer;box-shadow:0 0 8px rgba(57,255,142,.5)}
+.srow b{min-width:34px;text-align:right;color:var(--text)}
+.controls{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cbtn{height:46px;border-radius:11px;border:1px solid var(--line);background:linear-gradient(180deg,#1a2242,#10162a);color:var(--text);font-size:17px;cursor:pointer}
+.cbtn:active{transform:scale(.93)}
+.cbtn.on{border-color:var(--grn);color:var(--grn);box-shadow:0 0 10px rgba(57,255,142,.25) inset}
+.cbtn.play{font-size:20px;color:var(--grn)}
+.plhead{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;font-size:11px;font-weight:900;color:var(--muted)}
+.plhead b{color:var(--grn)}
+.plbtns{margin-left:auto;display:flex;gap:6px}
+.pbtn{border:1px solid var(--line);background:#0d1226;color:var(--text);border-radius:9px;padding:6px 9px;font-size:11px;font-weight:900;cursor:pointer;font-family:inherit}
+.pbtn:active{transform:scale(.93);border-color:var(--grn)}
+.playlist{flex:1;overflow-y:auto;background:#070b18;border:1px solid var(--line);border-radius:12px;padding:6px}
+.plitem{display:flex;align-items:center;gap:8px;padding:9px 8px;border-radius:9px;cursor:pointer;border:1px solid transparent}
+.plitem:active{background:#101a36}
+.plitem.cur{background:#0d2418;border-color:var(--grn)}
+.pn{width:22px;text-align:right;font-size:10px;color:var(--muted);font-weight:900}
+.plitem.cur .pn{color:var(--grn)}
+.pt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700}
+.pd{font-size:10px;color:var(--muted);font-weight:900}
+.px{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:#10162a;color:var(--red);font-size:11px;cursor:pointer}
+.empty{padding:26px 14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6}
+#fatal{display:none;position:fixed;inset:0;z-index:99;background:#101018;color:#ffd7d7;padding:16px;font:12px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;overflow:auto}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:rgba(10,16,32,.95);border:1px solid var(--grn);color:var(--text);padding:8px 16px;border-radius:11px;font-size:12px;font-weight:800;opacity:0;transition:.25s;pointer-events:none;z-index:90;max-width:86vw;text-align:center}
+#toast.show{opacity:1}
+@media(max-width:400px){.controls{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
-<div id="fatal" class="fatal"></div>
-
-<!-- Unlock Screen -->
-<div id="unlockOverlay" class="unlock-overlay">
-  <div>
-    🎵 BARSIK AMP<br><br>
-    Нажмите везде,<br>чтобы включить звук.<br><br>
-    <small>(Требуется для работы плеера)</small>
-  </div>
-</div>
-
+<div id="fatal"></div>
 <div class="app">
-  <div class="header">
-    <span>BARSIK AMP v1.1</span>
-    <span class="title-text">WINAMP STYLE</span>
+  <div class="topbar">
+    <div class="logo">🎵 BARSIK AMP</div>
+    <div class="sp"></div>
+    <button class="ibtn" id="btnSend" title="Отправить статус в бота">📤</button>
+    <button class="ibtn" id="btnClose" title="Закрыть">✖</button>
   </div>
-
   <div class="display">
-    <div class="viz-container">
-      <canvas id="viz"></canvas>
-    </div>
-    <div class="info-panel">
-      <div class="track-name" id="trackName">No Track Loaded</div>
-      <div class="time-info"><span id="currentTime">00:00</span> / <span id="duration">00:00</span></div>
+    <canvas id="viz"></canvas>
+    <div id="vizLabel">BARS</div>
+    <div class="trackline">
+      <div class="marquee"><span id="trackName">Плейлист пуст — нажми 📁 или 🎵</span></div>
+      <div class="time"><span id="tCur">00:00</span>/<span id="tDur">00:00</span></div>
     </div>
   </div>
-
   <div class="sliders">
-    <div class="slider-row">
-      <span>VOL</span>
-      <input type="range" id="volSlider" min="0" max="100" value="80">
-      <span id="volVal">80%</span>
-    </div>
-    <div class="slider-row">
-      <span>POS</span>
-      <input type="range" id="posSlider" min="0" max="100" value="0">
-      <span id="posVal">0%</span>
-    </div>
+    <div class="srow"><span>VOL</span><input id="vol" type="range" min="0" max="100" value="80"><b id="volVal">80</b></div>
+    <div class="srow"><span>POS</span><input id="pos" type="range" min="0" max="1000" value="0"><b id="posVal">0%</b></div>
   </div>
-
   <div class="controls">
-    <button class="btn btn-prev" id="btnPrev">⏮</button>
-    <button class="btn btn-play" id="btnPlay">▶</button>
-    <button class="btn btn-pause" id="btnPause">⏸</button>
-    <button class="btn btn-stop" id="btnStop">⏹</button>
-    <button class="btn btn-next" id="btnNext">⏭</button>
-    
-    <button class="btn" id="btnShuffle">🔀</button>
-    <button class="btn" id="btnRepeatOne">🔂</button>
-    <button class="btn" id="btnRepeatList">🔁</button>
-    <button class="btn" id="btnLoad">📂 LOAD</button>
-    <button class="btn" id="btnClear">🗑 CLEAR</button>
+    <button class="cbtn" id="bPrev">⏮</button>
+    <button class="cbtn play" id="bPlay">▶</button>
+    <button class="cbtn" id="bStop">⏹</button>
+    <button class="cbtn" id="bNext">⏭</button>
+    <button class="cbtn" id="bShuf">🔀</button>
+    <button class="cbtn" id="bRep">🔁</button>
+    <button class="cbtn" id="bViz">🌈</button>
   </div>
-
-  <div class="playlist-container">
-    <div class="playlist-header">
-      <span>PLAYLIST (<span id="plCount">0</span>)</span>
-      <span>TAP TO SELECT</span>
-    </div>
-    <div class="playlist-list" id="playlistList">
-      <div style="padding:10px;color:#555;text-align:center;">Playlist empty.<br>Tap LOAD to add music.</div>
-    </div>
+  <div class="plhead">
+    <span>PLAYLIST (<b id="plCount">0</b>)</span>
+    <span class="plbtns">
+      <button class="pbtn" id="bFolder">📁 Папка</button>
+      <button class="pbtn" id="bFiles">🎵 Файлы</button>
+      <button class="pbtn" id="bClear">🗑</button>
+    </span>
   </div>
-
-  <div class="actions">
-    <button class="action-btn" id="btnSendBot">📤 Send Status to Bot</button>
-    <button class="action-btn" id="btnClose">✖ Close App</button>
-  </div>
+  <div class="playlist" id="playlist"></div>
 </div>
-
-<input type="file" id="fileInput" accept="audio/*" multiple>
-<audio id="audioPlayer" preload="auto"></audio>
-
+<input type="file" id="inFolder" multiple accept="audio/*" style="display:none">
+<input type="file" id="inFiles" multiple accept="audio/*" style="display:none">
+<audio id="audio" preload="metadata"></audio>
+<div id="toast"></div>
 <script>
-function showFatal(e){
-  var el=document.getElementById('fatal');
-  el.style.display='block';
-  el.textContent='Error:\n\n'+(e&&e.stack?e.stack:String(e));
+(function(){'use strict';
+function showFatal(e){var el=document.getElementById('fatal');el.style.display='block';el.textContent='⚠ Barsik Amp error:\n\n'+(e&&e.stack?e.stack:String(e));}
+window.onerror=function(m,s,l,c,e){showFatal(e||(m+' @ '+l+':'+c));return true;};
+try{main();}catch(e){showFatal(e);}
+function main(){
+var TG=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null;
+if(TG){try{TG.ready();TG.expand();if(TG.setHeaderColor)TG.setHeaderColor('#000000');if(TG.setBackgroundColor)TG.setBackgroundColor('#000000');if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();}catch(e){}}
+function $(id){return document.getElementById(id);}
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+function fmtT(s){if(!isFinite(s)||s<0)s=0;var m=Math.floor(s/60),q=Math.floor(s%60);return(m<10?'0':'')+m+':'+(q<10?'0':'')+q;}
+var toastT=null;
+function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2200);}
+/* ---------- STATE ---------- */
+var audio=$('audio');
+var tracks=[],cur=-1,shuffle=false,repeat=0;
+var playing=false;
+/* ---------- AUDIO CONTEXT / ANALYSER ---------- */
+var AC=null,analyser=null,freq=null,tdata=null;
+function ensureAC(){
+ if(AC)return true;
+ try{
+  var C=window.AudioContext||window.webkitAudioContext;
+  AC=new C();
+  analyser=AC.createAnalyser();
+  analyser.fftSize=256;
+  analyser.smoothingTimeConstant=0.82;
+  var src=AC.createMediaElementSource(audio);
+  src.connect(analyser);
+  analyser.connect(AC.destination);
+  freq=new Uint8Array(analyser.frequencyBinCount);
+  tdata=new Uint8Array(analyser.fftSize);
+ }catch(e){freq=new Uint8Array(128);tdata=new Uint8Array(256);}
+ return true;
 }
-window.onerror=function(m,s,l,c,e){showFatal(e||(m+' @ '+l+':'+c));};
-
-(function(){
-try{
-  // --- Telegram Init ---
-  var tg = window.Telegram && window.Telegram.WebApp ? Telegram.WebApp : null;
-  if(tg){
-    try{
-      tg.ready();
-      tg.expand();
-      if(tg.setHeaderColor) tg.setHeaderColor('#000000');
-      if(tg.setBackgroundColor) tg.setBackgroundColor('#000000');
-      if(tg.disableVerticalSwipes) tg.disableVerticalSwipes();
-    }catch(e){}
-    setTimeout(function(){try{tg.expand();}catch(e){}},300);
+function resumeAC(){if(AC&&AC.state==='suspended')AC.resume();}
+/* ---------- INDEXEDDB (память плейлиста) ---------- */
+function idbOpen(){return new Promise(function(res,rej){try{var rq=indexedDB.open('barsikAmp',1);rq.onupgradeneeded=function(){var db=rq.result;if(!db.objectStoreNames.contains('tracks'))db.createObjectStore('tracks',{keyPath:'id'});};rq.onsuccess=function(){res(rq.result);};rq.onerror=function(){rej(rq.error);};}catch(e){rej(e);}});}
+function idbPut(t){idbOpen().then(function(db){try{db.transaction('tracks','readwrite').objectStore('tracks').put({id:t.id,name:t.name,blob:t.blob});}catch(e){}}).catch(function(){});}
+function idbDel(id){idbOpen().then(function(db){try{db.transaction('tracks','readwrite').objectStore('tracks').delete(id);}catch(e){}}).catch(function(){});}
+function idbClear(){idbOpen().then(function(db){try{db.transaction('tracks','readwrite').objectStore('tracks').clear();}catch(e){}}).catch(function(){});}
+function idbAll(cb){idbOpen().then(function(db){try{var rq=db.transaction('tracks').objectStore('tracks').getAll();rq.onsuccess=function(){cb(rq.result||[]);};rq.onerror=function(){cb([]);};}catch(e){cb([]);}}).catch(function(){cb([]);});}
+/* ---------- PLAYLIST ---------- */
+function isAudio(f){return /audio\/|\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|webm)$/i.test(f.type||f.name);}
+function addFiles(list){
+ var arr=Array.prototype.slice.call(list),added=0;
+ arr.forEach(function(f){
+  if(!isAudio(f))return;
+  var id='t'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);
+  var t={id:id,name:String(f.name).replace(/\.[^/.]+$/,''),url:URL.createObjectURL(f),blob:f,dur:0};
+  tracks.push(t);added++;
+  idbPut(t);
+ });
+ if(added){renderPL();toast('Добавлено треков: '+added);}
+ if(cur<0&&tracks.length)playTrack(0);
+}
+function renderPL(){
+ var el=$('playlist');
+ $('plCount').textContent=tracks.length;
+ if(!tracks.length){el.innerHTML='<div class="empty">Плейлист пуст.<br>📁 Папка — выбрать всю папку с музыкой<br>🎵 Файлы — выбрать списком на телефоне<br>Треки запоминаются между запусками.</div>';return;}
+ var html='';
+ for(var i=0;i<tracks.length;i++){
+  html+='<div class="plitem'+(i===cur?' cur':'')+'" data-i="'+i+'">'+
+   '<span class="pn">'+(i===cur?'▶':(i+1))+'</span>'+
+   '<span class="pt">'+tracks[i].name.replace(/</g,'&lt;')+'</span>'+
+   '<span class="pd">'+(tracks[i].dur?fmtT(tracks[i].dur):'--:--')+'</span>'+
+   '<button class="px" data-del="'+i+'">✕</button></div>';
+ }
+ el.innerHTML=html;
+}
+function updateMeta(){
+ var nm=$('trackName');
+ nm.textContent=(cur>=0&&tracks[cur])?tracks[cur].name:'Плейлист пуст — нажми 📁 или 🎵';
+ nm.parentNode.style.animation='none';void nm.parentNode.offsetWidth;nm.parentNode.style.animation='';
+}
+function playTrack(i){
+ if(i<0||i>=tracks.length)return;
+ cur=i;
+ ensureAC();resumeAC();
+ audio.src=tracks[i].url;
+ audio.play().then(function(){playing=true;updButtons();}).catch(function(){toast('Не удалось воспроизвести');});
+ renderPL();updateMeta();
+}
+function nextTrack(auto){
+ if(!tracks.length)return;
+ var n;
+ if(shuffle){n=Math.floor(Math.random()*tracks.length);if(n===cur&&tracks.length>1)n=(n+1)%tracks.length;}
+ else{n=cur+1;if(n>=tracks.length){if(repeat===2)n=0;else{if(auto){stopAll();return;}n=0;}}}
+ playTrack(n);
+}
+function prevTrack(){
+ if(!tracks.length)return;
+ if(audio.currentTime>3){audio.currentTime=0;return;}
+ var n=cur-1;if(n<0)n=tracks.length-1;
+ playTrack(n);
+}
+function stopAll(){audio.pause();audio.currentTime=0;playing=false;updButtons();}
+function updButtons(){
+ $('bPlay').textContent=playing?'⏸':'▶';
+ $('bShuf').classList.toggle('on',shuffle);
+ $('bRep').classList.toggle('on',repeat>0);
+ $('bRep').textContent=repeat===1?'🔂':'🔁';
+}
+/* ---------- EVENTS AUDIO ---------- */
+audio.addEventListener('play',function(){playing=true;updButtons();});
+audio.addEventListener('pause',function(){playing=false;updButtons();});
+audio.addEventListener('ended',function(){if(repeat===1){audio.currentTime=0;audio.play();}else nextTrack(true);});
+audio.addEventListener('loadedmetadata',function(){if(cur>=0&&tracks[cur]){tracks[cur].dur=audio.duration;$('tDur').textContent=fmtT(audio.duration);renderPL();}});
+audio.addEventListener('timeupdate',function(){
+ $('tCur').textContent=fmtT(audio.currentTime);
+ if(!posDrag&&isFinite(audio.duration)&&audio.duration>0){
+  var p=audio.currentTime/audio.duration;
+  $('pos').value=Math.round(p*1000);
+  $('posVal').textContent=Math.round(p*100)+'%';
+ }
+});
+/* ---------- CONTROLS ---------- */
+$('bPlay').onclick=function(){ensureAC();resumeAC();if(!tracks.length){toast('Сначала добавь музыку 📁/🎵');return;}if(cur<0){playTrack(0);return;}if(audio.paused){audio.play();}else{audio.pause();}};
+$('bStop').onclick=function(){stopAll();};
+$('bNext').onclick=function(){nextTrack(false);};
+$('bPrev').onclick=function(){prevTrack();};
+$('bShuf').onclick=function(){shuffle=!shuffle;updButtons();toast(shuffle?'Shuffle вкл':'Shuffle выкл');};
+$('bRep').onclick=function(){repeat=(repeat+1)%3;updButtons();toast(repeat===0?'Repeat выкл':(repeat===1?'Repeat: один трек':'Repeat: весь список'));};
+$('bViz').onclick=function(){cycleViz();};
+var vol=$('vol');
+vol.oninput=function(){audio.volume=vol.value/100;$('volVal').textContent=vol.value;};
+audio.volume=0.8;
+var pos=$('pos'),posDrag=false;
+pos.addEventListener('pointerdown',function(){posDrag=true;});
+window.addEventListener('pointerup',function(){posDrag=false;});
+pos.oninput=function(){
+ var p=pos.value/1000;
+ $('posVal').textContent=Math.round(p*100)+'%';
+ if(isFinite(audio.duration)&&audio.duration>0)audio.currentTime=p*audio.duration;
+};
+/* ---------- FILE PICKERS ---------- */
+var folderSupported=('webkitdirectory' in $('inFolder'));
+if(folderSupported)$('inFolder').setAttribute('webkitdirectory','');
+$('bFolder').onclick=function(){
+ if(folderSupported)$('inFolder').click();
+ else{toast('Папки не поддерживаются — выбери файлы списком');$('inFiles').click();}
+};
+$('bFiles').onclick=function(){$('inFiles').click();};
+$('inFolder').onchange=function(e){addFiles(e.target.files);e.target.value='';};
+$('inFiles').onchange=function(e){addFiles(e.target.files);e.target.value='';};
+$('bClear').onclick=function(){
+ if(!tracks.length){toast('Плейлист и так пуст');return;}
+ if(!confirm('Удалить все треки из плеера и из памяти?'))return;
+ stopAll();
+ tracks.forEach(function(t){try{URL.revokeObjectURL(t.url);}catch(e){}});
+ tracks=[];cur=-1;idbClear();renderPL();updateMeta();toast('Плейлист очищен');
+};
+$('playlist').addEventListener('click',function(e){
+ var del=e.target.closest('[data-del]');
+ if(del){
+  var di=+del.getAttribute('data-del');
+  var t=tracks[di];
+  if(di===cur)stopAll();
+  try{URL.revokeObjectURL(t.url);}catch(e2){}
+  idbDel(t.id);
+  tracks.splice(di,1);
+  if(cur>di)cur--;else if(cur===di)cur=-1;
+  renderPL();updateMeta();
+  toast('Удалено: '+t.name);
+  return;
+ }
+ var row=e.target.closest('[data-i]');
+ if(row){playTrack(+row.getAttribute('data-i'));}
+});
+/* ---------- TOP BUTTONS ---------- */
+$('btnSend').onclick=function(){
+ var payload={game:'winamp',action:'status',currentTrack:cur>=0?tracks[cur].name:'None',isPlaying:playing,volume:vol.value,playlistLength:tracks.length};
+ if(TG&&TG.sendData){TG.sendData(JSON.stringify(payload));toast('Статус отправлен в бота 📤');}
+ else toast('Работает только внутри Telegram');
+};
+$('btnClose').onclick=function(){if(TG&&TG.close){try{TG.close();}catch(e){}}};
+/* ---------- VISUALIZERS (10 режимов) ---------- */
+var VIZ=[{id:'bars',n:'BARS'},{id:'mirror',n:'MIRROR'},{id:'wave',n:'WAVE'},{id:'area',n:'AREA'},{id:'radial',n:'RADIAL'},{id:'ring',n:'RING'},{id:'tunnel',n:'TUNNEL'},{id:'stars',n:'STARS'},{id:'fire',n:'FIRE'},{id:'matrix',n:'MATRIX'}];
+var vizIdx=0;
+var cv=$('viz'),ctx=cv.getContext('2d'),dpr=1,vw=0,vh=0;
+function sizeViz(){dpr=Math.min(window.devicePixelRatio||1,2);var r=cv.parentElement.getBoundingClientRect();vw=r.width;vh=r.height;cv.width=Math.max(1,Math.round(vw*dpr));cv.height=Math.max(1,Math.round(vh*dpr));}
+window.addEventListener('resize',sizeViz);
+sizeViz();
+var peaks=[],fireH=[],stars=[];
+for(var pi=0;pi<128;pi++)peaks.push(0);
+for(var fi=0;fi<48;fi++)fireH.push(0);
+for(var si=0;si<110;si++)stars.push({x:Math.random()*2-1,y:Math.random()*2-1,z:Math.random()*0.9+0.1});
+function showVizLabel(){$('vizLabel').textContent=VIZ[vizIdx].n;var l=$('vizLabel');l.classList.add('show');clearTimeout(l._t);l._t=setTimeout(function(){l.classList.remove('show');},1300);}
+function cycleViz(){vizIdx=(vizIdx+1)%VIZ.length;showVizLabel();}
+cv.addEventListener('pointerdown',function(e){e.preventDefault();cycleViz();});
+function getData(){
+ if(analyser&&playing){analyser.getByteFrequencyData(freq);analyser.getByteTimeDomainData(tdata);return;}
+ var t=performance.now()/1000;
+ for(var i=0;i<freq.length;i++){freq[i]=clamp(Math.sin(t*1.8+i*0.32)*26+Math.sin(t*0.6+i*0.11)*18+30,0,90);}
+ for(var j=0;j<tdata.length;j++){tdata[j]=128+Math.sin(t*2.4+j*0.06)*16;}
+}
+function drawViz(){
+ requestAnimationFrame(drawViz);
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ ctx.fillStyle='rgba(4,6,12,0.34)';
+ ctx.fillRect(0,0,vw,vh);
+ getData();
+ var bins=freq.length,mode=VIZ[vizIdx].id;
+ var bass=0;for(var b=0;b<8;b++)bass+=freq[b];bass/=8*255;
+ var cx=vw/2,cy=vh/2,i,v,x,y;
+ if(mode==='bars'||mode==='mirror'||mode==='fire'){
+  var n=48,bw=vw/n;
+  if(mode==='fire'){
+   for(i=0;i<n;i++){v=freq[Math.floor(i*bins/n)]/255;var tg=v*vh*0.85;fireH[i]=Math.max(tg,fireH[i]-2.2);
+    var g=ctx.createLinearGradient(0,vh,0,vh-fireH[i]);g.addColorStop(0,'#ff3b00');g.addColorStop(0.5,'#ff9a00');g.addColorStop(1,'#ffe45e');
+    ctx.fillStyle=g;ctx.fillRect(i*bw+1,vh-fireH[i],bw-2,fireH[i]);}
+  }else if(mode==='mirror'){
+   for(i=0;i<n;i++){v=freq[Math.floor(i*bins/n)]/255;var hh=v*vh*0.45;
+    ctx.fillStyle='hsl('+(140-v*120)+',95%,'+(45+v*20)+'%)';
+    ctx.fillRect(i*bw+1,cy-hh,bw-2,hh*2);}
+  }else{
+   var grad=ctx.createLinearGradient(0,vh,0,0);grad.addColorStop(0,'#19ff8c');grad.addColorStop(0.55,'#ffe45e');grad.addColorStop(1,'#ff4d4d');
+   for(i=0;i<n;i++){v=freq[Math.floor(i*bins/n)]/255;var bh=v*vh*0.92;
+    ctx.fillStyle=grad;ctx.fillRect(i*bw+1,vh-bh,bw-2,bh);
+    peaks[i]=Math.max(peaks[i]-1.6,bh);
+    ctx.fillStyle='#eafff4';ctx.fillRect(i*bw+1,vh-peaks[i]-2,bw-2,2);}
   }
-
-  // --- DOM Elements ---
-  const audio = document.getElementById('audioPlayer');
-  const vizCanvas = document.getElementById('viz');
-  const ctx = vizCanvas.getContext('2d');
-  
-  const trackNameEl = document.getElementById('trackName');
-  const currentTimeEl = document.getElementById('currentTime');
-  const durationEl = document.getElementById('duration');
-  const volSlider = document.getElementById('volSlider');
-  const volVal = document.getElementById('volVal');
-  const posSlider = document.getElementById('posSlider');
-  const posVal = document.getElementById('posVal');
-  
-  const playlistList = document.getElementById('playlistList');
-  const plCount = document.getElementById('plCount');
-  const fileInput = document.getElementById('fileInput');
-  const unlockOverlay = document.getElementById('unlockOverlay');
-  
-  const btnPlay = document.getElementById('btnPlay');
-  const btnPause = document.getElementById('btnPause');
-  const btnStop = document.getElementById('btnStop');
-  const btnPrev = document.getElementById('btnPrev');
-  const btnNext = document.getElementById('btnNext');
-  const btnShuffle = document.getElementById('btnShuffle');
-  const btnRepeatOne = document.getElementById('btnRepeatOne');
-  const btnRepeatList = document.getElementById('btnRepeatList');
-  const btnLoad = document.getElementById('btnLoad');
-  const btnClear = document.getElementById('btnClear');
-  const btnSendBot = document.getElementById('btnSendBot');
-  const btnClose = document.getElementById('btnClose');
-
-  // --- Audio Context ---
-  let audioCtx, analyser, sourceNode;
-  let isUnlocked = false;
-
-  function initAudioContext() {
-    if (isUnlocked) return;
-    try {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AC();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      
-      sourceNode = audioCtx.createMediaElementSource(audio);
-      sourceNode.connect(analyser);
-      analyser.connect(audioCtx.destination);
-      
-      isUnlocked = true;
-      unlockOverlay.classList.add('hidden');
-      drawVisualizer();
-      console.log("AudioContext unlocked");
-    } catch (e) {
-      console.error("Failed to init AudioContext", e);
-    }
+ }else if(mode==='wave'||mode==='area'){
+  ctx.beginPath();
+  for(i=0;i<tdata.length;i++){x=i/(tdata.length-1)*vw;y=(tdata[i]/255)*vh;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+  if(mode==='wave'){ctx.strokeStyle='#39ff8e';ctx.lineWidth=2;ctx.shadowColor='#39ff8e';ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;}
+  else{ctx.lineTo(vw,vh);ctx.lineTo(0,vh);ctx.closePath();var g2=ctx.createLinearGradient(0,0,0,vh);g2.addColorStop(0,'rgba(127,216,255,.75)');g2.addColorStop(1,'rgba(57,255,142,.12)');ctx.fillStyle=g2;ctx.fill();ctx.strokeStyle='#7fd8ff';ctx.lineWidth=1.5;ctx.stroke();}
+ }else if(mode==='radial'||mode==='ring'){
+  var R0=Math.min(vw,vh)*0.16;
+  if(mode==='radial'){
+   for(i=0;i<64;i++){var a=i/64*Math.PI*2;v=freq[i*2]/255;var L=v*Math.min(vw,vh)*0.34;
+    ctx.strokeStyle='hsl('+(i*5)+',90%,'+(50+v*25)+'%)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*R0,cy+Math.sin(a)*R0);ctx.lineTo(cx+Math.cos(a)*(R0+L),cy+Math.sin(a)*(R0+L));ctx.stroke();}
+  }else{
+   ctx.beginPath();
+   for(i=0;i<tdata.length;i+=2){var a2=i/tdata.length*Math.PI*2;var rr2=R0+(tdata[i]-128)/128*Math.min(vw,vh)*0.22;
+    var px=cx+Math.cos(a2)*rr2,py=cy+Math.sin(a2)*rr2;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
+   ctx.closePath();ctx.strokeStyle='#ffc94d';ctx.lineWidth=2;ctx.shadowColor='#ffc94d';ctx.shadowBlur=10;ctx.stroke();ctx.shadowBlur=0;
   }
-
-  // Global click listener to unlock
-  document.body.addEventListener('click', function() {
-    if (!isUnlocked) {
-      initAudioContext();
-    }
-  }, { once: true }); // Only needs to happen once initially, but we keep logic safe
-
-  // Also trigger on touchstart for mobile reliability
-  document.body.addEventListener('touchstart', function() {
-    if (!isUnlocked) {
-      initAudioContext();
-    }
-  }, { passive: true });
-
-  // --- Visualizer Loop ---
-  function drawVisualizer() {
-    if (!analyser || !isUnlocked) return;
-    
-    requestAnimationFrame(drawVisualizer);
-    
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    analyser.getByteFrequencyData(dataArray);
-    
-    const width = vizCanvas.width;
-    const height = vizCanvas.height;
-    
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, width, height);
-    
-    const barWidth = (width / bufferLength) * 2.5;
-    let x = 0;
-    
-    for (let i = 0; i < bufferLength; i++) {
-      const barHeight = (dataArray[i] / 255) * height;
-      const hue = 120 + (i / bufferLength) * 120;
-      ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
-      ctx.fillRect(x, height - barHeight, barWidth, barHeight);
-      x += barWidth + 1;
-    }
-  }
-
-  function resizeCanvas() {
-    vizCanvas.width = vizCanvas.parentElement.clientWidth;
-    vizCanvas.height = vizCanvas.parentElement.clientHeight;
-  }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
-
-  // --- State Management ---
-  let tracks = []; 
-  let currentIndex = -1;
-  let isPlaying = false;
-  let shuffleMode = false;
-  let repeatMode = 0; 
-
-  function formatTime(sec) {
-    if (isNaN(sec)) return "00:00";
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-  }
-
-  function updateUI() {
-    plCount.textContent = tracks.length;
-    renderPlaylist();
-    
-    if (currentIndex >= 0 && tracks[currentIndex]) {
-      const t = tracks[currentIndex];
-      trackNameEl.textContent = t.name;
-      durationEl.textContent = formatTime(t.duration || 0);
-    } else {
-      trackNameEl.textContent = "No Track Selected";
-      durationEl.textContent = "00:00";
-      currentTimeEl.textContent = "00:00";
-    }
-    
-    btnPlay.classList.toggle('active', isPlaying);
-    btnPause.classList.toggle('active', !isPlaying && audio.src !== "");
-    btnShuffle.classList.toggle('active', shuffleMode);
-    btnRepeatOne.classList.toggle('active', repeatMode === 1);
-    btnRepeatList.classList.toggle('active', repeatMode === 2);
-  }
-
-  function renderPlaylist() {
-    playlistList.innerHTML = '';
-    if (tracks.length === 0) {
-      playlistList.innerHTML = '<div style="padding:10px;color:#555;text-align:center;">Playlist empty.<br>Tap LOAD to add music.</div>';
-      return;
-    }
-    
-    tracks.forEach((t, idx) => {
-      const div = document.createElement('div');
-      div.className = 'pl-item' + (idx === currentIndex ? ' current' : '');
-      div.innerHTML = `
-        <span class="pl-num">${idx + 1}</span>
-        <span class="pl-title">${t.name}</span>
-        <span class="pl-time">${formatTime(t.duration)}</span>
-      `;
-      div.onclick = () => loadTrack(idx);
-      playlistList.appendChild(div);
-    });
-  }
-
-  // --- Core Logic ---
-  function loadTrack(index) {
-    if (index < 0 || index >= tracks.length) return;
-    
-    stopPlayback(false); // Stop without resetting UI immediately
-    currentIndex = index;
-    const track = tracks[index];
-    
-    // Ensure URL exists
-    if (!track.url) {
-       alert("Invalid track data");
-       return;
-    }
-
-    audio.src = track.url;
-    audio.load();
-    
-    // Update metadata when loaded
-    audio.onloadedmetadata = () => {
-      tracks[currentIndex].duration = audio.duration;
-      updateUI();
-    };
-
-    updateUI();
-    
-    // Auto-play if was playing or just clicked from list
-    play();
-  }
-
-  function play() {
-    if (currentIndex === -1 && tracks.length > 0) {
-      loadTrack(shuffleMode ? Math.floor(Math.random() * tracks.length) : 0);
-      return;
-    }
-    if (currentIndex === -1) return;
-
-    // Resume context if suspended
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-
-    audio.play().then(() => {
-      isPlaying = true;
-      updateUI();
-    }).catch(e => {
-      console.error("Play error", e);
-      // Retry initialization if blocked
-      if (!isUnlocked) initAudioContext();
-    });
-  }
-
-  function pause() {
-    audio.pause();
-    isPlaying = false;
-    updateUI();
-  }
-
-  function stopPlayback(resetUI = true) {
-    audio.pause();
-    audio.currentTime = 0;
-    isPlaying = false;
-    if (resetUI) {
-      posSlider.value = 0;
-      posVal.textContent = "0%";
-      currentTimeEl.textContent = "00:00";
-    }
-    updateUI();
-  }
-
-  function next() {
-    if (tracks.length === 0) return;
-    let nextIdx;
-    if (shuffleMode) {
-      nextIdx = Math.floor(Math.random() * tracks.length);
-      if (nextIdx === currentIndex && tracks.length > 1) {
-        nextIdx = (nextIdx + 1) % tracks.length;
-      }
-    } else {
-      nextIdx = currentIndex + 1;
-      if (nextIdx >= tracks.length) {
-        if (repeatMode === 2) nextIdx = 0;
-        else {
-          stopPlayback();
-          return;
-        }
-      }
-    }
-    loadTrack(nextIdx);
-  }
-
-  function prev() {
-    if (tracks.length === 0) return;
-    if (audio.currentTime > 3) {
-      audio.currentTime = 0;
-      return;
-    }
-    let prevIdx = currentIndex - 1;
-    if (prevIdx < 0) {
-      if (repeatMode === 2) prevIdx = tracks.length - 1;
-      else prevIdx = 0;
-    }
-    loadTrack(prevIdx);
-  }
-
-  // --- Event Listeners ---
-  btnPlay.onclick = play;
-  btnPause.onclick = pause;
-  btnStop.onclick = () => stopPlayback(true);
-  btnNext.onclick = next;
-  btnPrev.onclick = prev;
-
-  btnShuffle.onclick = () => { shuffleMode = !shuffleMode; updateUI(); };
-  btnRepeatOne.onclick = () => { repeatMode = repeatMode === 1 ? 0 : 1; updateUI(); };
-  btnRepeatList.onclick = () => { repeatMode = repeatMode === 2 ? 0 : 2; updateUI(); };
-
-  btnClear.onclick = () => {
-    if(confirm("Clear playlist?")) {
-      tracks.forEach(t => { if(t.url) URL.revokeObjectURL(t.url); });
-      tracks = [];
-      currentIndex = -1;
-      stopPlayback(true);
-      updateUI();
-    }
-  };
-
-  // Volume
-  volSlider.oninput = (e) => {
-    const val = e.target.value;
-    audio.volume = val / 100;
-    volVal.textContent = val + '%';
-  };
-
-  // Position Seek
-  posSlider.onchange = (e) => {
-    if (!audio.duration) return;
-    const pct = e.target.value / 100;
-    audio.currentTime = pct * audio.duration;
-    posVal.textContent = Math.round(pct * 100) + '%';
-  };
-
-  // Audio Events
-  audio.ontimeupdate = () => {
-    if (audio.duration) {
-      const pct = (audio.currentTime / audio.duration) * 100;
-      posSlider.value = pct;
-      posVal.textContent = Math.round(pct) + '%';
-      currentTimeEl.textContent = formatTime(audio.currentTime);
-    }
-  };
-
-  audio.onended = () => {
-    if (repeatMode === 1) {
-      audio.currentTime = 0;
-      play();
-    } else {
-      next();
-    }
-  };
-
-  // Load Files
-  btnLoad.onclick = () => fileInput.click();
-  
-  fileInput.onchange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
-    files.forEach(file => {
-      const url = URL.createObjectURL(file);
-      tracks.push({
-        id: Date.now() + Math.random(),
-        name: file.name.replace(/\.[^/.]+$/, ""),
-        url: url,
-        duration: 0
-      });
-    });
-
-    updateUI();
-    if (tracks.length > 0 && currentIndex === -1) {
-      loadTrack(0);
-    }
-    
-    fileInput.value = ''; 
-  };
-
-  // Send to Bot
-  btnSendBot.onclick = () => {
-    if (!tg || !tg.sendData) {
-      alert("Only works inside Telegram");
-      return;
-    }
-    const data = {
-      game: 'winamp',
-      action: 'status',
-      currentTrack: currentIndex >= 0 ? tracks[currentIndex].name : "None",
-      isPlaying: isPlaying,
-      volume: volSlider.value,
-      playlistLength: tracks.length
-    };
-    tg.sendData(JSON.stringify(data));
-    alert("Status sent!");
-  };
-
-  btnClose.onclick = () => {
-    if (tg && tg.close) {
-      try { tg.close(); } catch (e) {}
-    }
-  };
-
-  // Initial Render
-  updateUI();
-
-}catch(e){showFatal(e);}
+ }else if(mode==='tunnel'){
+  for(i=0;i<5;i++){var band=(freq[i*10]+freq[i*10+4]+freq[i*10+8])/3/255;
+   var rad=Math.min(vw,vh)*(0.10+i*0.09)+band*30;
+   ctx.strokeStyle='hsl('+(performance.now()/30+i*40)%360+',85%,60%)';ctx.lineWidth=2+band*4;
+   ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.stroke();}
+ }else if(mode==='stars'){
+  for(i=0;i<stars.length;i++){var s=stars[i];s.z-=0.006+bass*0.05;if(s.z<=0.06){s.x=Math.random()*2-1;s.y=Math.random()*2-1;s.z=1;}
+   var sx=cx+(s.x/s.z)*vw*0.35,sy=cy+(s.y/s.z)*vh*0.35,sz=(1-s.z)*3.2+0.6;
+   if(sx<0||sx>vw||sy<0||sy>vh)continue;
+   ctx.fillStyle='rgba('+(180+Math.floor(75*(1-s.z)))+','+(220)+',255,'+(0.35+0.65*(1-s.z))+')';
+   ctx.fillRect(sx,sy,sz,sz);}
+ }else if(mode==='matrix'){
+  var cols=40,rows=14,cw2=vw/cols,ch2=vh/rows;
+  for(i=0;i<cols;i++){v=freq[Math.floor(i*bins/cols)]/255;var lit=Math.round(v*rows);
+   for(var r2=0;r2<rows;r2++){
+    var on=r2<lit;
+    ctx.fillStyle=on?(r2>rows-4?'#ff4d4d':(r2>rows-8?'#ffe45e':'#19ff8c')):'rgba(35,48,80,.5)';
+    ctx.beginPath();ctx.arc(i*cw2+cw2/2,vh-(r2*ch2+ch2/2),on?ch2*0.32:ch2*0.16,0,Math.PI*2);ctx.fill();}}
+ }
+}
+/* ---------- INIT ---------- */
+renderPL();updateMeta();updButtons();showVizLabel();
+idbAll(function(rows){
+ var n=0;
+ rows.forEach(function(r){if(r&&r.blob){tracks.push({id:r.id,name:r.name,url:URL.createObjectURL(r.blob),blob:r.blob,dur:0});n++;}});
+ if(n){renderPL();toast('Из памяти загружено: '+n+' трек(ов)');}
+});
+drawViz();
+document.addEventListener('pointerdown',function(){ensureAC();resumeAC();},{once:true});
+} /* end main */
 })();
 </script>
 </body>
