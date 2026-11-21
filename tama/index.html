@@ -43,12 +43,27 @@
   /* Main Stage */
   .stage { flex:1; position:relative; overflow:hidden; background:#000; }
   
-  /* Dynamic Backgrounds per Room */
-  .room-kitchen { background: linear-gradient(to bottom, #fefce8, #d9f99d); }
-  .room-living { background: radial-gradient(circle at center, #1e293b, #0f172a); }
-  .room-bedroom { background: linear-gradient(to bottom, #312e81, #1e1b4b); }
-  .room-bath { background: linear-gradient(to bottom, #cffafe, #a5f3fc); }
-  .room-yard { background: linear-gradient(to bottom, #86efac, #4ade80); }
+  /* Dynamic Backgrounds per Room - Now with Images/Patterns */
+  .room-kitchen { 
+    background: linear-gradient(to bottom, #fefce8, #d9f99d);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23fefce8"/><path d="M0 0 L100 100 M100 0 L0 100" stroke="%23eab308" stroke-width="1" opacity="0.1"/></svg>');
+  }
+  .room-living { 
+    background: radial-gradient(circle at center, #1e293b, #0f172a);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><circle cx="100" cy="100" r="80" fill="none" stroke="%23334155" stroke-width="2" opacity="0.3"/></svg>');
+  }
+  .room-bedroom { 
+    background: linear-gradient(to bottom, #312e81, #1e1b4b);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23312e81"/><circle cx="20" cy="20" r="2" fill="%23fff" opacity="0.5"/><circle cx="80" cy="80" r="1.5" fill="%23fff" opacity="0.3"/></svg>');
+  }
+  .room-bath { 
+    background: linear-gradient(to bottom, #cffafe, #a5f3fc);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%23cffafe"/><line x1="0" y1="25" x2="50" y2="25" stroke="%230ea5e9" stroke-width="1" opacity="0.2"/></svg>');
+  }
+  .room-yard { 
+    background: linear-gradient(to bottom, #86efac, #4ade80);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M0 100 Q50 50 100 100 Z" fill="%2322c55e" opacity="0.3"/></svg>');
+  }
   
   /* Furniture Layer */
   #furniture-layer { position:absolute; inset:0; pointer-events:none; z-index:1; }
@@ -106,6 +121,7 @@
   }
   .act-btn:active { transform:scale(.95); background:var(--accent); color:#fff; }
   .act-btn.craft { border-color:var(--gold); color:var(--gold); }
+  .act-btn.game { border-color:var(--success); color:var(--success); }
 
   /* Modals */
   .modal { position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:100; display:none; align-items:center; justify-content:center; }
@@ -134,6 +150,18 @@
   .cloth-item.equipped { border-color:var(--gold); background:rgba(251,191,36,.1); }
   .cloth-preview { font-size:24px; }
   .cloth-name { font-size:10px; margin-top:5px; }
+
+  /* Mini-game Overlay */
+  #minigame-overlay {
+    position:absolute; inset:0; background:rgba(0,0,0,.9); z-index:50;
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+  }
+  #minigame-overlay.active { display:flex; }
+  .mg-title { font-size:20px; font-weight:bold; color:var(--accent); margin-bottom:10px; }
+  .mg-area { width:300px; height:300px; background:#1e293b; border:2px solid var(--accent); border-radius:10px; position:relative; overflow:hidden; }
+  .mg-target { position:absolute; width:40px; height:40px; background:var(--danger); border-radius:50%; cursor:pointer; transition:all .1s; }
+  .mg-score { font-size:16px; margin-top:10px; }
+  .mg-close { margin-top:15px; padding:10px 20px; background:var(--panel-bg); border:1px solid var(--text-muted); color:white; border-radius:5px; cursor:pointer; }
 
 </style>
 </head>
@@ -222,6 +250,16 @@
       <g id="acc-group"></g>
     </svg>
   </div>
+
+  <!-- Mini-game Overlay -->
+  <div id="minigame-overlay">
+    <div class="mg-title">🎮 Лови Мышь!</div>
+    <div class="mg-area" id="mg-area">
+      <!-- Targets injected here -->
+    </div>
+    <div class="mg-score">Счёт: <span id="mg-score">0</span></div>
+    <button class="mg-close" onclick="closeMinigame()">Закрыть</button>
+  </div>
 </div>
 
 <div class="bottom-panel">
@@ -254,7 +292,7 @@
 
   <div class="actions-row">
     <button class="act-btn" onclick="feed()">🍖 Кормить</button>
-    <button class="act-btn" onclick="play()">🎮 Играть</button>
+    <button class="act-btn game" onclick="startMinigame()">🎮 Игра</button>
     <button class="act-btn craft" onclick="openCraft()">🔨 Крафт</button>
     <button class="act-btn" onclick="openWardrobe()">👗 Гардероб</button>
   </div>
@@ -289,7 +327,7 @@ var tg = window.Telegram && window.Telegram.WebApp ? Telegram.WebApp : null;
 if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 
 // --- DATA & STATE ---
-const KEY = 'barsik_pu_v2';
+const KEY = 'barsik_pu_v3';
 
 let state = {
   coins: 100, level: 1, xp: 0,
@@ -391,7 +429,7 @@ function renderStage() {
 }
 
 function interactWithFurniture(item) {
-  if(item.id === 'toy_ball') { play(); return; }
+  if(item.id === 'toy_ball') { startMinigame(); return; }
   if(item.id === 'bed_soft') { sleep(); return; }
   say("Это " + item.name);
 }
@@ -427,8 +465,6 @@ function updateCatVisuals() {
   } else {
     mouth.setAttribute('d', 'M100 85 Q90 95 80 90 M100 85 Q110 95 120 90'); // Happy smile
   }
-  
-  // Blinking effect simulation via CSS opacity toggle could be added here
   
   renderAccessories();
 }
@@ -531,6 +567,73 @@ function checkLevelUp() {
     state.coins += 50;
     say("LEVEL UP! ⭐" + state.level);
   }
+}
+
+// --- MINIGAME LOGIC ---
+let mgInterval = null;
+let mgScore = 0;
+
+function startMinigame() {
+  if(state.energy < 10) { say("Нет сил играть!"); return; }
+  
+  document.getElementById('minigame-overlay').classList.add('active');
+  mgScore = 0;
+  document.getElementById('mg-score').textContent = mgScore;
+  
+  const area = document.getElementById('mg-area');
+  area.innerHTML = '';
+  
+  // Spawn targets
+  mgInterval = setInterval(() => {
+    spawnTarget(area);
+  }, 800);
+  
+  // End after 15 seconds
+  setTimeout(() => {
+    endMinigame();
+  }, 15000);
+}
+
+function spawnTarget(area) {
+  const target = document.createElement('div');
+  target.className = 'mg-target';
+  target.style.left = Math.random() * 260 + 'px';
+  target.style.top = Math.random() * 260 + 'px';
+  
+  target.onclick = () => {
+    mgScore++;
+    document.getElementById('mg-score').textContent = mgScore;
+    target.remove();
+    // Give reward
+    state.energy -= 2;
+    state.mood += 5;
+    if(mgScore % 5 === 0) {
+      state.coins += 10;
+      say("Бонус +10 🪙");
+    }
+    save();
+  };
+  
+  area.appendChild(target);
+  
+  // Remove after 1 second if not clicked
+  setTimeout(() => {
+    if(target.parentNode) target.remove();
+  }, 1000);
+}
+
+function endMinigame() {
+  clearInterval(mgInterval);
+  document.getElementById('minigame-overlay').classList.remove('active');
+  say("Игра окончена! Счёт: " + mgScore);
+  state.xp += mgScore * 2;
+  checkLevelUp();
+  save();
+}
+
+function closeMinigame() {
+  clearInterval(mgInterval);
+  document.getElementById('minigame-overlay').classList.remove('active');
 }
 
 // --- MODALS LOGIC ---
