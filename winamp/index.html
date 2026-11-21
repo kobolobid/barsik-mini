@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Barsik Amp</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
@@ -107,6 +109,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;user-select:n
 (function(){'use strict';
 function showFatal(e){var el=document.getElementById('fatal');el.style.display='block';el.textContent='⚠ Barsik Amp error:\n\n'+(e&&e.stack?e.stack:String(e));}
 window.onerror=function(m,s,l,c,e){showFatal(e||(m+' @ '+l+':'+c));return true;};
+window.addEventListener('unhandledrejection',function(ev){showFatal(ev.reason);});
 try{main();}catch(e){showFatal(e);}
 function main(){
 var TG=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null;
@@ -120,8 +123,9 @@ function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');c
 var audio=$('audio');
 var tracks=[],cur=-1,shuffle=false,repeat=0;
 var playing=false;
-/* ---------- AUDIO CONTEXT / ANALYSER ---------- */
-var AC=null,analyser=null,freq=null,tdata=null;
+/* ---------- AUDIO CONTEXT / ANALYSER ----------
+   ИСПРАВЛЕНО v3: массивы существуют сразу, визуализатор не падает до старта аудио */
+var AC=null,analyser=null,freq=new Uint8Array(128),tdata=new Uint8Array(256);
 function ensureAC(){
  if(AC)return true;
  try{
@@ -135,7 +139,9 @@ function ensureAC(){
   analyser.connect(AC.destination);
   freq=new Uint8Array(analyser.frequencyBinCount);
   tdata=new Uint8Array(analyser.fftSize);
- }catch(e){freq=new Uint8Array(128);tdata=new Uint8Array(256);}
+ }catch(e){
+  freq=new Uint8Array(128);tdata=new Uint8Array(256);
+ }
  return true;
 }
 function resumeAC(){if(AC&&AC.state==='suspended')AC.resume();}
@@ -176,7 +182,8 @@ function renderPL(){
 function updateMeta(){
  var nm=$('trackName');
  nm.textContent=(cur>=0&&tracks[cur])?tracks[cur].name:'Плейлист пуст — нажми 📁 или 🎵';
- nm.parentNode.style.animation='none';void nm.parentNode.offsetWidth;nm.parentNode.style.animation='';
+ var mq=nm.parentNode;
+ mq.style.animation='none';void mq.offsetWidth;mq.style.animation='';
 }
 function playTrack(i){
  if(i<0||i>=tracks.length)return;
@@ -290,17 +297,24 @@ var peaks=[],fireH=[],stars=[];
 for(var pi=0;pi<128;pi++)peaks.push(0);
 for(var fi=0;fi<48;fi++)fireH.push(0);
 for(var si=0;si<110;si++)stars.push({x:Math.random()*2-1,y:Math.random()*2-1,z:Math.random()*0.9+0.1});
-function showVizLabel(){$('vizLabel').textContent=VIZ[vizIdx].n;var l=$('vizLabel');l.classList.add('show');clearTimeout(l._t);l._t=setTimeout(function(){l.classList.remove('show');},1300);}
+function showVizLabel(){var l=$('vizLabel');l.textContent=VIZ[vizIdx].n;l.classList.add('show');clearTimeout(l._t);l._t=setTimeout(function(){l.classList.remove('show');},1300);}
 function cycleViz(){vizIdx=(vizIdx+1)%VIZ.length;showVizLabel();}
 cv.addEventListener('pointerdown',function(e){e.preventDefault();cycleViz();});
+/* ИСПРАВЛЕНО v3: защита от null + idle-анимация без аудио */
 function getData(){
- if(analyser&&playing){analyser.getByteFrequencyData(freq);analyser.getByteTimeDomainData(tdata);return;}
+ if(!freq||!tdata)return;
+ if(analyser&&playing&&freq.length===analyser.frequencyBinCount){
+  analyser.getByteFrequencyData(freq);
+  analyser.getByteTimeDomainData(tdata);
+  return;
+ }
  var t=performance.now()/1000;
  for(var i=0;i<freq.length;i++){freq[i]=clamp(Math.sin(t*1.8+i*0.32)*26+Math.sin(t*0.6+i*0.11)*18+30,0,90);}
  for(var j=0;j<tdata.length;j++){tdata[j]=128+Math.sin(t*2.4+j*0.06)*16;}
 }
 function drawViz(){
  requestAnimationFrame(drawViz);
+ if(!freq||!tdata)return;
  ctx.setTransform(dpr,0,0,dpr,0,0);
  ctx.fillStyle='rgba(4,6,12,0.34)';
  ctx.fillRect(0,0,vw,vh);
@@ -333,7 +347,7 @@ function drawViz(){
  }else if(mode==='radial'||mode==='ring'){
   var R0=Math.min(vw,vh)*0.16;
   if(mode==='radial'){
-   for(i=0;i<64;i++){var a=i/64*Math.PI*2;v=freq[i*2]/255;var L=v*Math.min(vw,vh)*0.34;
+   for(i=0;i<64;i++){var a=i/64*Math.PI*2;v=freq[Math.min(bins-1,i*2)]/255;var L=v*Math.min(vw,vh)*0.34;
     ctx.strokeStyle='hsl('+(i*5)+',90%,'+(50+v*25)+'%)';ctx.lineWidth=3;
     ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*R0,cy+Math.sin(a)*R0);ctx.lineTo(cx+Math.cos(a)*(R0+L),cy+Math.sin(a)*(R0+L));ctx.stroke();}
   }else{
@@ -351,7 +365,7 @@ function drawViz(){
   for(i=0;i<stars.length;i++){var s=stars[i];s.z-=0.006+bass*0.05;if(s.z<=0.06){s.x=Math.random()*2-1;s.y=Math.random()*2-1;s.z=1;}
    var sx=cx+(s.x/s.z)*vw*0.35,sy=cy+(s.y/s.z)*vh*0.35,sz=(1-s.z)*3.2+0.6;
    if(sx<0||sx>vw||sy<0||sy>vh)continue;
-   ctx.fillStyle='rgba('+(180+Math.floor(75*(1-s.z)))+','+(220)+',255,'+(0.35+0.65*(1-s.z))+')';
+   ctx.fillStyle='rgba('+(180+Math.floor(75*(1-s.z)))+',220,255,'+(0.35+0.65*(1-s.z))+')';
    ctx.fillRect(sx,sy,sz,sz);}
  }else if(mode==='matrix'){
   var cols=40,rows=14,cw2=vw/cols,ch2=vh/rows;
