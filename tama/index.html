@@ -146,7 +146,8 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;touch-action:
     <div class="pill lvl">⭐ <b id="lvlVal">1</b></div>
     <div class="sp"></div>
     <button class="ibtn" id="btnDaily" title="Ежедневный бонус">🎁<span class="dot"></span></button>
-    <button class="ibtn" id="btnSound" title="Звук">🔊</button>
+    <button class="ibtn" id="btnMusic" title="Музыка">🎵</button>
+    <button class="ibtn" id="btnSound" title="Звуки">🔊</button>
     <button class="ibtn" id="btnSettings" title="Настройки">⚙️</button>
   </div>
   <div class="xpwrap"><i id="xpFill"></i></div>
@@ -190,6 +191,11 @@ boot('main()');
 /* ============ TELEGRAM ============ */
 var TG=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null;
 if(TG){try{TG.ready();TG.expand();if(TG.setHeaderColor)TG.setHeaderColor('#141a2e');if(TG.setBackgroundColor)TG.setBackgroundColor('#0e1322');if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();}catch(e){}}
+/* ============ AI CONFIG (ключ нигде не отображается) ============ */
+var AI_MODEL='am/nemotron-3-ultra-550b-a55b'; /* основная модель, как в боте — поменяй при желании */
+var AI_EMBED_KEY='sk-dc9d4b7df36ba555-wof1d4-80376593'; /* СЮДА можно вшить отдельный ключ OpenRouter с лимитом трат.
+   ВНИМАНИЕ: всё, что вшито здесь, видно в исходниках публичной страницы.
+   Основной ключ бота не вшивай — держи его только в systemd. */
 /* ============ UTILS ============ */
 function $(id){return document.getElementById(id);}
 function clamp(v,a,b){return v<a?a:(v>b?b:v);}
@@ -204,9 +210,9 @@ function qp(x0,y0,cx,cy,x1,y1,t){var u=1-t;return[u*u*x0+2*u*t*cx+t*t*x1,u*u*y0+
 function wrapText(c,text,maxW){var words=String(text).split(' '),lines=[],cur='';for(var i=0;i<words.length;i++){var test=cur?cur+' '+words[i]:words[i];if(c.measureText(test).width>maxW&&cur){lines.push(cur);cur=words[i];}else cur=test;}if(cur)lines.push(cur);return lines;}
 var toastT=null;
 function toast(msg){var t=$('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2200);}
-/* ============ AUDIO ============ */
+/* ============ AUDIO + MUSIC ============ */
 var A={ctx:null,on:true,master:null};
-function audioInit(){if(A.ctx)return;try{var AC=window.AudioContext||window.webkitAudioContext;A.ctx=new AC();A.master=A.ctx.createGain();A.master.gain.value=A.on?0.5:0;A.master.connect(A.ctx.destination);}catch(e){}}
+function audioInit(){if(A.ctx)return;try{var AC=window.AudioContext||window.webkitAudioContext;A.ctx=new AC();A.master=A.ctx.createGain();A.master.gain.value=A.on?0.5:0;A.master.connect(A.ctx.destination);MU.next=A.ctx.currentTime+0.1;}catch(e){}}
 function tone(f,dur,type,vol,slide){if(!A.ctx||!A.on)return;try{var o=A.ctx.createOscillator(),g=A.ctx.createGain(),t=A.ctx.currentTime;o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),t+dur);g.gain.setValueAtTime(vol||0.2,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(A.master);o.start(t);o.stop(t+dur+0.02);}catch(e){}}
 function noise(dur,vol,freq){if(!A.ctx||!A.on)return;try{var n=Math.floor(A.ctx.sampleRate*dur),buf=A.ctx.createBuffer(1,n,A.ctx.sampleRate),d=buf.getChannelData(0);for(var i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);var s=A.ctx.createBufferSource();s.buffer=buf;var f=A.ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=freq||1200;var g=A.ctx.createGain();g.gain.value=vol||0.15;s.connect(f);f.connect(g);g.connect(A.master);s.start();}catch(e){}}
 var SFX={
@@ -225,7 +231,29 @@ var SFX={
  squeak:function(){tone(1900,0.08,'square',0.09,600);},
  zzz:function(){tone(300,0.4,'sine',0.05,-80);}
 };
-document.addEventListener('pointerdown',function(){audioInit();if(A.ctx&&A.ctx.state==='suspended')A.ctx.resume();},{passive:true});
+/* фоновая чиптюн-музыка (процедурная, без файлов) */
+var MU={step:0,next:0,timer:null};
+var MU_LEAD=[7,-1,9,10,12,-1,10,9,7,-1,5,7,9,-1,-1,-1,
+             5,-1,7,9,10,-1,9,7,5,-1,4,5,7,-1,-1,-1,
+             12,-1,10,9,7,-1,5,4,5,-1,7,9,10,-1,12,-1,
+             14,-1,12,10,9,-1,7,5,4,-1,5,7,9,-1,-1,-1];
+var MU_ROOTS=[0,0,9,9,5,5,7,7];
+function muFreq(base,semi){return base*Math.pow(2,semi/12);}
+function muSchedule(step,t){
+ var bar=Math.floor(step/4)%8,root=MU_ROOTS[bar];
+ if(step%4===0)tone(muFreq(130.81,root),0.42,'sine',0.10);
+ if(step%4===2)tone(muFreq(130.81,root+7),0.3,'sine',0.06);
+ if(step%2===0)noise(0.03,0.025,6500);
+ var s=MU_LEAD[step%64];
+ if(s>=0){var oct=(Math.floor(step/64)%2)?12:0;tone(muFreq(523.25,s+oct),0.19,'triangle',0.055);}
+}
+function muTick(){
+ if(!A.ctx||!A.on||!S.music)return;
+ if(MU.next<A.ctx.currentTime)MU.next=A.ctx.currentTime+0.05;
+ while(MU.next<A.ctx.currentTime+0.25){muSchedule(MU.step,MU.next);MU.step++;MU.next+=0.21;}
+}
+setInterval(muTick,120);
+document.addEventListener('pointerdown',function(){audioInit();if(A.ctx&&A.ctx.state==='suspended')A.ctx.resume();if(A.ctx)MU.next=A.ctx.currentTime+0.1;},{passive:true});
 /* ============ PALETTES / RARITY ============ */
 var PAL=[
  {n:'Океан',c1:'#2e8fd8',c2:'#1b5e96',c3:'#bfe6ff'},
@@ -447,8 +475,8 @@ var DEF={
  lastDaily:0,lastHelp:0,
  best:{mice:0,fish:0,memory:0,bubbles:0},
  gamesPlayed:0,poops:0,washes:0,pets:0,
- aiKey:'',aiModel:'openai/gpt-4o-mini',
- sound:true,
+ aiKey:'',aiModel:'',
+ sound:true,music:true,
  chat:[],
  born:now(),lastSeen:now()
 };
@@ -555,7 +583,7 @@ function renderWish(){
  var left=Math.max(0,S.wish.until-now());var need=def.need||1;
  $('wishTime').textContent=(need>1?('Прогресс '+S.wish.prog+'/'+need+' · '):'')+Math.ceil(left/1000)+'с · награда 🪙';
 }
-/* ============ SPEECH ============ */
+/* ============ SPEECH / AI ============ */
 var LINES={
  greet:['Мурр~ Привет, {name}! 🐾','Я соскучился! Давай играть?','О, ты пришёл! Мой хвост уже виляет!'],
  hungry:['Живот урчит… Покорми меня? 🐟','Рыбку бы… или хотя бы корм!','Я голодный барс, это серьёзно!'],
@@ -609,19 +637,23 @@ function localReply(q){
  if(/магазин|одежд|наряд|шапк/.test(q))return 'В магазине больше 500 вещей! Легендарные дают +5% к монетам, кстати.';
  if(/мебел|крафт|ресурс/.test(q))return 'Играй в мини-игры — получишь 🪵🧵⚙️💎. Из них крафти мебель в разделе «Мебель»!';
  if(/уровень|опыт/.test(q))return 'У меня '+S.level+' уровень! Заботься обо мне и играй — буду расти.';
+ if(/музык|пев|пой/.test(q))return 'Музыка играет, если нажать 🎵 в шапке! Я мурлычу в такт 🎵';
  if(/спасибо/.test(q))return 'Мур! Всегда пожалуйста 🐾';
  return pick(['Мур? Расскажи ещё! Я слушаю, честно-честно.','Интересно! А теперь погладь меня 😌','Хм… над этим надо подумать. За рыбку.','Мяу! Я барс простой: еда, игры, обнимашки.']);
 }
+function resolveAIKey(){return String(S.aiKey||AI_EMBED_KEY||'').trim();}
 var aiBusy=false;
 function askAI(q,cb){
- if(!S.aiKey||aiBusy){cb(localReply(q));return;}
+ var key=resolveAIKey();
+ if(!key||aiBusy){cb(localReply(q));return;}
  aiBusy=true;
  var ctrl=('AbortController'in window)?new AbortController():null;
  var to=setTimeout(function(){if(ctrl)ctrl.abort();},9000);
+ var model=String(S.aiModel||AI_MODEL);
  var sys='Ты — Барсик, живой снежный барс-питомец в игре-тамагочи. Отвечай по-русски, 1-2 коротких предложения, игриво, с мурчанием, 1 эмодзи. Параметры: сытость '+Math.round(S.hunger)+'%, настроение '+Math.round(S.mood)+'%, энергия '+Math.round(S.energy)+'%, чистота '+Math.round(hygiene())+'%, живот '+Math.round(belly())+'%, уровень '+S.level+', комната: '+ROOMS[S.room].n+'. Кучек: '+S.piles.length+'. Хозяина зовут '+userName()+'.';
  fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',signal:ctrl?ctrl.signal:undefined,
-  headers:{'Content-Type':'application/json','Authorization':'Bearer '+S.aiKey},
-  body:JSON.stringify({model:S.aiModel||'openai/gpt-4o-mini',max_tokens:80,temperature:0.9,messages:[{role:'system',content:sys},{role:'user',content:q}]})
+  headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+  body:JSON.stringify({model:model,max_tokens:80,temperature:0.9,messages:[{role:'system',content:sys},{role:'user',content:q}]})
  }).then(function(r){return r.json();}).then(function(j){
   clearTimeout(to);aiBusy=false;
   var t=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
@@ -1135,12 +1167,12 @@ var GAME_DEFS={
  memory:{n:'Мемори',i:'🧠',d:'Найди все пары карточек. Меньше ходов — больше монет.',res:['metal','wood']},
  bubbles:{n:'Пузыри',i:'🫧',d:'Лопай пузыри! Золотые ×5, тёмные отнимают. 30 секунд.',res:['crystal','metal']}
 };
-function startGame(id){
+function startGame(id,force){
  if(R.state==='sleep')wake();
- if(S.energy<10){toast('Барсик слишком устал 😴');return;}
+ if(!force&&S.energy<10){toast('Барсик слишком устал 😴');return;}
  closeModal();
  var lvl=S.level;
- var g={id:id,t:0,score:0,done:false,data:{}};
+ var g={id:id,t:0,score:0,done:false,rewarded:false,data:{}};
  if(id==='mice'){g.t=30;g.data.mice=[];g.data.spawn=0;g.data.speed=1+lvl*0.06;}
  if(id==='fish'){g.data.round=0;g.data.pos=0;g.data.dir=1;g.data.speed=1.1+lvl*0.08;g.data.zone=rand(0.25,0.75);g.data.zw=Math.max(0.1,0.22-lvl*0.008);g.data.hits=0;g.data.perfect=0;g.data.flash=0;g.data.msg='';}
  if(id==='memory'){var pairs=lvl>=5?8:6;var icons=['fish','yarn','milk','mouse','bell','paw','bone','star'].slice(0,pairs);var deck=icons.concat(icons);
@@ -1150,57 +1182,64 @@ function startGame(id){
  R.mg=g;S.gamesPlayed++;save();
 }
 function mgExitRect(){return{x:CW-46,y:10,w:36,h:36};}
+function mgResultZone(){var bh=Math.max(52,CH*0.11);return{y:CH*0.62,h:bh+34};}
+function collectGame(g){
+ if(!g)return;
+ if(!g.rewarded){g.rewarded=true;applyGameRewards();}
+}
 function mgTap(x,y){
- var g=R.mg;if(!g)return;
- var ex=mgExitRect();
- if(x>=ex.x&&x<=ex.x+ex.w&&y>=ex.y&&y<=ex.y+ex.h){finishGame(true);return;}
- if(g.done){
-  var bw=150,bh=44,gap=12,total=bw*2+gap,bx=CW/2-total/2,by=CH*0.68;
-  if(y>=by&&y<=by+bh){
-   if(x>=bx&&x<=bx+bw){applyGameRewards();R.mg=null;}
-   else if(x>=bx+bw+gap&&x<=bx+bw+gap+bw){var id=g.id;applyGameRewards();startGame(id);}
+ try{
+  var g=R.mg;if(!g)return;
+  var ex=mgExitRect();
+  if(!g.done&&x>=ex.x&&x<=ex.x+ex.w&&y>=ex.y&&y<=ex.y+ex.h){finishGame(true);return;}
+  if(g.done){
+   var z=mgResultZone();
+   if(y>=z.y&&y<=z.y+z.h){
+    if(x<CW/2){collectGame(g);R.mg=null;toast('Награда получена! 🪙');}
+    else{collectGame(g);var id=g.id;R.mg=null;startGame(id,true);}
+   }
+   return;
   }
-  return;
- }
- if(g.id==='mice'){
-  var ms=g.data.mice;
-  for(var i=ms.length-1;i>=0;i--){var m=ms[i];
-   if(Math.hypot(x-m.x,y-m.y)<26){ms.splice(i,1);g.score++;SFX.squeak();for(var p=0;p<4;p++)part(m.x,m.y,'spark');floatText('+1',m.x,m.y-16,'#5fe3b3');return;}}
-  ms.forEach(function(m2){var d=Math.hypot(x-m2.x,y-m2.y);if(d<120){var a=Math.atan2(m2.y-y,m2.x-x);m2.vx+=Math.cos(a)*260;m2.vy+=Math.sin(a)*260;}});
- }
- else if(g.id==='fish'){
-  var d2=g.data;d2.round++;
-  var dist=Math.abs(d2.pos-d2.zone);
-  if(dist<d2.zw/2){var perfect=dist<d2.zw/6;d2.hits++;if(perfect){d2.perfect++;g.score+=3;d2.msg='ИДЕАЛЬНО! +3';}else{g.score+=1;d2.msg='Поймал! +1';}SFX.coin();for(var pp=0;pp<5;pp++)part(CW*d2.pos,CH*0.42,'drop');}
-  else{d2.msg='Мимо… 🐟';SFX.lose();}
-  d2.flash=0.5;d2.zone=rand(0.15,0.85);d2.speed*=1.05;
-  if(d2.round>=10)g.done=true;
- }
- else if(g.id==='memory'){
-  var d3=g.data;if(d3.lock)return;
-  var geo=memGeo(d3);
-  var col=Math.floor((x-geo.x)/geo.cw),row=Math.floor((y-geo.y)/geo.ch);
-  if(col<0||col>=d3.cols||row<0||row>=d3.rows)return;
-  var idx=row*d3.cols+col;if(idx>=d3.cards.length)return;
-  var card=d3.cards[idx];if(card.open||card.done)return;
-  card.open=true;SFX.click();
-  if(d3.first==null){d3.first=idx;}
-  else{d3.moves++;var firstIdx=d3.first;var a=d3.cards[firstIdx];
-   if(a.ic===card.ic){a.done=true;card.done=true;d3.found++;SFX.pop();g.score+=2;
-    if(d3.found>=d3.pairs){g.done=true;g.score+=Math.max(0,24-d3.moves);}
-   }else{d3.lock=true;setTimeout(function(){if(R.mg&&R.mg.data&&R.mg.data.cards){a.open=false;card.open=false;d3.lock=false;}},650);}
-   d3.first=null;}
- }
- else if(g.id==='bubbles'){
-  var bs=g.data.b;
-  for(var bi=bs.length-1;bi>=0;bi--){var b=bs[bi];
-   if(Math.hypot(x-b.x,y-b.y)<b.r+8){
-    bs.splice(bi,1);
-    if(b.kind==='dark'){g.score=Math.max(0,g.score-2);g.data.combo=0;SFX.lose();floatText('-2',b.x,b.y,'#ff5d5d');}
-    else{g.data.combo++;var val=b.kind==='gold'?5:1;g.score+=val;SFX.pop();for(var bp=0;bp<4;bp++)part(b.x,b.y,'foam');floatText('+'+val+(g.data.combo>4?' 🔥':''),b.x,b.y,b.kind==='gold'?'#ffd166':'#7fd8ff');}
-    return;}}
-  g.data.combo=0;
- }
+  if(g.id==='mice'){
+   var ms=g.data.mice;
+   for(var i=ms.length-1;i>=0;i--){var m=ms[i];
+    if(Math.hypot(x-m.x,y-m.y)<26){ms.splice(i,1);g.score++;SFX.squeak();for(var p=0;p<4;p++)part(m.x,m.y,'spark');floatText('+1',m.x,m.y-16,'#5fe3b3');return;}}
+   ms.forEach(function(m2){var d=Math.hypot(x-m2.x,y-m2.y);if(d<120){var a=Math.atan2(m2.y-y,m2.x-x);m2.vx+=Math.cos(a)*260;m2.vy+=Math.sin(a)*260;}});
+  }
+  else if(g.id==='fish'){
+   var d2=g.data;d2.round++;
+   var dist=Math.abs(d2.pos-d2.zone);
+   if(dist<d2.zw/2){var perfect=dist<d2.zw/6;d2.hits++;if(perfect){d2.perfect++;g.score+=3;d2.msg='ИДЕАЛЬНО! +3';}else{g.score+=1;d2.msg='Поймал! +1';}SFX.coin();for(var pp=0;pp<5;pp++)part(CW*d2.pos,CH*0.42,'drop');}
+   else{d2.msg='Мимо… 🐟';SFX.lose();}
+   d2.flash=0.5;d2.zone=rand(0.15,0.85);d2.speed*=1.05;
+   if(d2.round>=10)g.done=true;
+  }
+  else if(g.id==='memory'){
+   var d3=g.data;if(d3.lock)return;
+   var geo=memGeo(d3);
+   var col=Math.floor((x-geo.x)/geo.cw),row=Math.floor((y-geo.y)/geo.ch);
+   if(col<0||col>=d3.cols||row<0||row>=d3.rows)return;
+   var idx=row*d3.cols+col;if(idx>=d3.cards.length)return;
+   var card=d3.cards[idx];if(card.open||card.done)return;
+   card.open=true;SFX.click();
+   if(d3.first==null){d3.first=idx;}
+   else{d3.moves++;var firstIdx=d3.first;var a2=d3.cards[firstIdx];
+    if(a2.ic===card.ic){a2.done=true;card.done=true;d3.found++;SFX.pop();g.score+=2;
+     if(d3.found>=d3.pairs){g.done=true;g.score+=Math.max(0,24-d3.moves);}
+    }else{d3.lock=true;setTimeout(function(){if(R.mg&&R.mg.data&&R.mg.data.cards){a2.open=false;card.open=false;d3.lock=false;}},650);}
+    d3.first=null;}
+  }
+  else if(g.id==='bubbles'){
+   var bs=g.data.b;
+   for(var bi=bs.length-1;bi>=0;bi--){var b=bs[bi];
+    if(Math.hypot(x-b.x,y-b.y)<b.r+8){
+     bs.splice(bi,1);
+     if(b.kind==='dark'){g.score=Math.max(0,g.score-2);g.data.combo=0;SFX.lose();floatText('-2',b.x,b.y,'#ff5d5d');}
+     else{g.data.combo++;var val=b.kind==='gold'?5:1;g.score+=val;SFX.pop();for(var bp=0;bp<4;bp++)part(b.x,b.y,'foam');floatText('+'+val+(g.data.combo>4?' 🔥':''),b.x,b.y,b.kind==='gold'?'#ffd166':'#7fd8ff');}
+     return;}}
+   g.data.combo=0;
+  }
+ }catch(err){ toast('Ошибка игры: '+err.message); }
 }
 function memGeo(d){
  var pad=14,availW=CW-pad*2,availH=CH*0.72;
@@ -1311,16 +1350,20 @@ function drawGame(){
   CX.fillStyle='rgba(8,10,24,.82)';CX.fillRect(0,0,CW,CH);
   var rew=calcRewards(g);
   CX.textAlign='center';
-  CX.font='bold 26px system-ui';CX.fillStyle='#ffd166';CX.fillText(g.score>0?'Отличная игра!':'Попробуй ещё!',CW/2,CH*0.3);
-  CX.font='bold 40px system-ui';CX.fillStyle='#eef2ff';CX.fillText('⭐ '+g.score,CW/2,CH*0.4);
-  CX.font='bold 15px system-ui';CX.fillStyle='#5fe3b3';CX.fillText('+'+rew.coins+' 🪙   +'+rew.xp+' XP',CW/2,CH*0.48);
-  if(rew.res){CX.font='14px system-ui';CX.fillStyle='#b48bff';CX.fillText('Ресурс: '+RES_META[rew.res.k].i+' '+RES_META[rew.res.k].n+' ×'+rew.res.n,CW/2,CH*0.54);}
-  var best=S.best[g.id]||0;if(g.score>best){CX.font='bold 13px system-ui';CX.fillStyle='#ffc94d';CX.fillText('🏆 НОВЫЙ РЕКОРД!',CW/2,CH*0.6);}
-  var bw=150,bh=44,gap=12,total=bw*2+gap,bx=CW/2-total/2,by=CH*0.68;
-  CX.fillStyle='#43d97b';rr(CX,bx,by,bw,bh,12);CX.fill();
-  CX.fillStyle='#8b5cf6';rr(CX,bx+bw+gap,by,bw,bh,12);CX.fill();
-  CX.fillStyle='#062018';CX.font='bold 14px system-ui';CX.fillText('Забрать 🪙',bx+bw/2,by+28);
-  CX.fillStyle='#fff';CX.fillText('Ещё раз 🔄',bx+bw+gap+bw/2,by+28);
+  CX.font='bold 24px system-ui';CX.fillStyle='#ffd166';CX.fillText(g.score>0?'Отличная игра!':'Попробуй ещё!',CW/2,CH*0.26);
+  CX.font='bold 40px system-ui';CX.fillStyle='#eef2ff';CX.fillText('⭐ '+g.score,CW/2,CH*0.37);
+  CX.font='bold 15px system-ui';CX.fillStyle='#5fe3b3';CX.fillText('+'+rew.coins+' 🪙   +'+rew.xp+' XP',CW/2,CH*0.45);
+  if(rew.res){CX.font='14px system-ui';CX.fillStyle='#b48bff';CX.fillText('Ресурс: '+RES_META[rew.res.k].i+' '+RES_META[rew.res.k].n+' ×'+rew.res.n,CW/2,CH*0.51);}
+  var best=S.best[g.id]||0;if(g.score>best){CX.font='bold 13px system-ui';CX.fillStyle='#ffc94d';CX.fillText('🏆 НОВЫЙ РЕКОРД!',CW/2,CH*0.56);}
+  var z=mgResultZone(),hw=CW/2-15;
+  CX.fillStyle='#43d97b';rr(CX,10,z.y,hw,z.h-34+34,12);CX.fill();
+  CX.fillStyle='#8b5cf6';rr(CX,CW/2+5,z.y,hw,z.h-34+34,12);CX.fill();
+  CX.fillStyle='#062018';CX.font='bold 15px system-ui';
+  CX.fillText('🪙 ЗАБРАТЬ',10+hw/2,z.y+(z.h-34)/2+6);
+  CX.fillStyle='#fff';
+  CX.fillText('🔄 ЕЩЁ РАЗ',CW/2+5+hw/2,z.y+(z.h-34)/2+6);
+  CX.font='11px system-ui';CX.fillStyle='rgba(255,255,255,.6)';
+  CX.fillText('левая половина — забрать, правая — сыграть ещё',CW/2,z.y+z.h+14);
   CX.textAlign='left';
  }
 }
@@ -1365,6 +1408,8 @@ function renderHUD(){
  $('lvlVal').textContent=S.level;
  $('xpFill').style.width=clamp(S.xp/(S.level*100)*100,0,100)+'%';
  $('btnSound').textContent=S.sound?'🔊':'🔇';
+ $('btnMusic').textContent=S.music?'🎵':'🎶';
+ $('btnMusic').style.opacity=S.music?1:0.45;
  $('btnDaily').classList.toggle('alert',(now()-S.lastDaily)>20*3600*1000);
 }
 var STATDEF=[['hunger','🍖','Сытость','#f0703c'],['mood','😊','Радость','#ffc94d'],['energy','⚡','Силы','#7fd8ff'],['hyg','🧼','Чистота','#5fe3b3'],['health','❤️','Здоровье','#ff6d9d'],['belly','🫃','Живот','#b48bff']];
@@ -1579,7 +1624,7 @@ function openGames(){
 }
 function openChat(){
  var b=openModal('💬 Поговорить с Барсиком');
- var note=document.createElement('div');note.className='note';note.textContent=S.aiKey?'Нейросеть подключена — Барсик отвечает через ИИ ✨':'Барсик отвечает сам. Подключи нейросеть в ⚙️ Настройках для живого ИИ-общения.';b.appendChild(note);
+ var note=document.createElement('div');note.className='note';note.textContent=resolveAIKey()?'Нейросеть подключена — Барсик отвечает через ИИ ✨':'Барсик отвечает сам. Ключ ИИ можно добавить в ⚙️ Настройках (хранится только у тебя) или вшить в код.';b.appendChild(note);
  var list=document.createElement('div');list.className='chat';list.id='chatList';b.appendChild(list);
  S.chat.slice(-30).forEach(function(m){appendChatMsg(m.r,m.t,false);});
  if(!S.chat.length)appendChatMsg('b','Мурр~ Привет, '+userName()+'! Спроси меня о чём-нибудь: как дела, еда, игры… 🐾',false);
@@ -1609,17 +1654,19 @@ function appendChatMsg(role,text,persist){
 }
 function openSettings(){
  var b=openModal('⚙️ Настройки');
- var t1=document.createElement('div');t1.className='tog';t1.innerHTML='<span>🔊 Звуки и мурчание</span>';
+ var t1=document.createElement('div');t1.className='tog';t1.innerHTML='<span>🔊 Звуки и эффекты</span>';
  var sw=document.createElement('div');sw.className='sw'+(S.sound?' on':'');sw.innerHTML='<i></i>';
- sw.onclick=function(){S.sound=!S.sound;A.on=S.sound;if(A.master)A.master.gain.value=S.sound?0.5:0;sw.classList.toggle('on',S.sound);save();};
+ sw.onclick=function(){S.sound=!S.sound;A.on=S.sound;if(A.master)A.master.gain.value=S.sound?0.5:0;sw.classList.toggle('on',S.sound);save();renderHUD();};
  t1.appendChild(sw);b.appendChild(t1);
- var ai=document.createElement('div');ai.className='note';ai.innerHTML='🧠 <b>Нейросеть для Барсика.</b> Вставь свой ключ OpenRouter — и он будет говорить и отвечать в чате через настоящий ИИ. Ключ хранится только на твоём устройстве. Без ключа работает встроенный характер.';b.appendChild(ai);
- var f1=document.createElement('div');f1.className='fld';f1.innerHTML='<label>OpenRouter API Key</label><input id="aiKeyIn" type="password" placeholder="sk-or-…">';b.appendChild(f1);
+ var t2=document.createElement('div');t2.className='tog';t2.innerHTML='<span>🎵 Фоновая музыка</span>';
+ var sw2=document.createElement('div');sw2.className='sw'+(S.music?' on':'');sw2.innerHTML='<i></i>';
+ sw2.onclick=function(){S.music=!S.music;sw2.classList.toggle('on',S.music);if(S.music&&A.ctx)MU.next=A.ctx.currentTime+0.1;save();renderHUD();toast(S.music?'Музыка включена 🎵':'Музыка выключена');};
+ t2.appendChild(sw2);b.appendChild(t2);
+ var ai=document.createElement('div');ai.className='note';ai.innerHTML='🧠 <b>Нейросеть Барсика.</b> Модель: '+AI_MODEL+'. Ключ берётся из поля ниже или из кода (AI_EMBED_KEY) и нигде не показывается. Совет: для игры создай в OpenRouter отдельный ключ с лимитом трат — вшитый в страницу ключ виден в исходниках.';b.appendChild(ai);
+ var f1=document.createElement('div');f1.className='fld';f1.innerHTML='<label>Свой OpenRouter API Key (необязательно)</label><input id="aiKeyIn" type="password" placeholder="sk-or-… (хранится только на устройстве)">';b.appendChild(f1);
  setTimeout(function(){var k=$('aiKeyIn');if(k)k.value=S.aiKey||'';},0);
- var f2=document.createElement('div');f2.className='fld';f2.innerHTML='<label>Модель</label><select id="aiModelIn"><option value="openai/gpt-4o-mini">gpt-4o-mini (быстрая)</option><option value="meta-llama/llama-3.3-70b-instruct:free">llama-3.3-70b (free)</option><option value="google/gemini-2.0-flash-001">gemini-2.0-flash</option></select>';b.appendChild(f2);
- setTimeout(function(){var sel=$('aiModelIn');if(sel)sel.value=S.aiModel||'openai/gpt-4o-mini';},0);
- var saveAi=document.createElement('button');saveAi.className='big b';saveAi.textContent='Сохранить ИИ-настройки';
- saveAi.onclick=function(){S.aiKey=$('aiKeyIn').value.trim();S.aiModel=$('aiModelIn').value;save();toast(S.aiKey?'Нейросеть подключена! 🧠':'Ключ убран — встроенный характер');};
+ var saveAi=document.createElement('button');saveAi.className='big b';saveAi.textContent='Сохранить ключ';
+ saveAi.onclick=function(){S.aiKey=$('aiKeyIn').value.trim();save();toast(S.aiKey?'Ключ сохранён локально 🧠':'Ключ удалён — используется встроенный/character');};
  b.appendChild(saveAi);
  var stats=document.createElement('div');stats.className='note';
  stats.innerHTML='📊 Игр сыграно: '+S.gamesPlayed+' · Кучек: '+S.poops+' · Мытий: '+S.washes+' · Поглаживаний: '+S.pets+'<br>Барсик с нами с '+new Date(S.born).toLocaleDateString('ru');
@@ -1685,6 +1732,7 @@ $('navGames').onclick=function(){SFX.click();openGames();};
 $('navFurn').onclick=function(){SFX.click();openFurn();};
 $('navChat').onclick=function(){SFX.click();openChat();};
 $('btnDaily').onclick=function(){SFX.click();claimDaily();};
+$('btnMusic').onclick=function(){S.music=!S.music;if(S.music&&A.ctx)MU.next=A.ctx.currentTime+0.1;SFX.click();save();toast(S.music?'🎵 Музыка играет':'Музыка выключена');};
 $('btnSound').onclick=function(){S.sound=!S.sound;A.on=S.sound;if(A.master)A.master.gain.value=S.sound?0.5:0;SFX.click();save();};
 $('btnSettings').onclick=function(){SFX.click();openSettings();};
 /* ============ LOOP ============ */
