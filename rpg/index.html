@@ -216,7 +216,6 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:99;opa
 </div>
 <script>
 "use strict";
-/* ===== helpers ===== */
 function $(i){return document.getElementById(i)}
 function clamp(v,a,b){return v<a?a:v>b?b:v}
 function lerp(a,b,t){return a+(b-a)*t}
@@ -232,13 +231,11 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 var TG=window.Telegram&&window.Telegram.WebApp;
 try{if(TG){TG.ready();TG.expand();if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();if(TG.setHeaderColor)TG.setHeaderColor("#070b22");if(TG.setBackgroundColor)TG.setBackgroundColor("#070b22")}}catch(e){}
 function haptic(k){try{if(TG&&TG.HapticFeedback){if(k==="ok"||k==="err")TG.HapticFeedback.notificationOccurred(k==="ok"?"success":"error");else TG.HapticFeedback.impactOccurred(k||"light")}}catch(e){}}
-/* ===== neuro ===== */
 var NEURO={key:"sk-dc9d4b7df36ba555-wof1d4-80376593",model:"am/nemotron-3-ultra-550b-a55b",base:"https://anymodel.org/v1/chat/completions"};
 function neuro(sys,usr,mx){
 var c=new AbortController();var t=setTimeout(function(){c.abort()},13000);
 return fetch(NEURO.base,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+NEURO.key},body:JSON.stringify({model:NEURO.model,messages:[{role:"system",content:sys},{role:"user",content:usr}],max_tokens:mx||150,temperature:.9}),signal:c.signal}).then(function(r){clearTimeout(t);if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(function(j){var x=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;if(!x)throw new Error("empty");return String(x).trim()}).catch(function(e){clearTimeout(t);throw e})}
 function jparse(t){return JSON.parse(String(t).replace(/```json/g,"").replace(/```/g,"").trim())}
-/* ===== data ===== */
 var SETS={
 mur:{n:"Мурландия",e:"🌙",zones:["Город Девяти Жизней","Лес Шёпота","Кристальные Глубины"],boss:"Крысиный Король",
 pal:{g1:"#2e6b46",g2:"#357950",tree:"#1f4d33",can:"#3f8f5a",water:"#2b5f8a",path:"#8a6f4d",deep:"#3a2f52",rock:"#5a4a7d",wall:"#5a4a82",roof:"#7a3f5f",fl:"#241d4a",dw:"#3a2f6e"},
@@ -326,7 +323,6 @@ var BLESS=[
 {ic:"◈",n:"Стальная кожа",d:"+25% защиты",f:function(h){h.mods.def*=1.25}},
 {ic:"✖",n:"Крит-резонанс",d:"+12% крит",f:function(h){h.mods.crit+=.12}},
 {ic:"🐆",n:"Барс-резонанс",d:"+3 атаки, +2 скорости всем",f:function(h){h.base.atk+=3;h.base.spd+=2;recalc(h)}}];
-/* ===== sprites ===== */
 var HERO_MAP=["....hhhhhh......","...hhhhhhhh.....","..hhhhhhhhhh....","..hsssssssh.....","..hsessessh.....","..hsssssssh.....","...ssSSss.......","....ssss........","...cccccc.......","..cCccccCc......","..cccccccc......","..cCccccCc......","...cccccc.......","...tttttt.......","...cc..cc.......","...cc..cc.......","...CC..CC.......","...bb..bb.......","...bb..bb.......","..bbb..bbb......"];
 var WPIX={
 katana:[[13,12,"m"],[14,10,"m"],[15,8,"m"],[16,6,"m"],[17,4,"m"],[12,13,"g"],[11,14,"g"]],
@@ -360,7 +356,6 @@ function buildSprites(){for(var k in SPCS)SPR[k]=mkSprite(SPCS[k].m,SPCS[k].p,nu
 function heroPal(){return{h:G.look.hair,s:G.look.skin,S:shade(G.look.skin,-28),e:"#101430",c:G.look.outfit,C:shade(G.look.outfit,-34),t:G.look.hair,b:"#3a2a1a",m:"#cfd6ff",g:"#ffc84a",p:G.look.hair}}
 function shade(hex,amt){var n=parseInt(hex.slice(1),16);var r=clamp((n>>16)+amt,0,255),g=clamp(((n>>8)&255)+amt,0,255),b=clamp((n&255)+amt,0,255);return"#"+((r<<16)|(g<<8)|b).toString(16).padStart(6,"0")}
 function buildHero(){SPR.hero=mkSprite(HERO_MAP,heroPal(),WPIX[G.look.weapon]||WPIX.katana)}
-/* ===== state ===== */
 var G={mode:"title",ov:null,setting:"mur",name:"JFD_Барсик",cls:"warrior",brole:"master",
 look:{hair:HAIRS[0],skin:SKINS[0],outfit:OUTFITS[0],weapon:"katana"},
 gold:90,day:1,seed:1,chapter:0,ng:0,roster:["barsik"],party:["hero","barsik"],chars:{},
@@ -370,19 +365,18 @@ cq:{kobolid:0,serafim:0,valkyrie:0,jam:0},
 stats:{wins:0,dmg:0,crits:0,deaths:0,heals:0,checks:0,ckok:0,qdone:0,gold:0,floors:0},
 diff:"normal",speed:1,bmode:"wait",muted:false,parts:true,
 time:0,log:[],msg:"Добро пожаловать к Хроно-Вратам.",menu:{open:false},outcome:null,oct:0,paused:false,
-plot:null,dir:{scale:1,note:"Режиссёр наблюдает за твоим стилем."},enemies:[],bless:0,shop:null,best:null};
+plot:null,dir:{scale:1,note:"Режиссёр наблюдает за твоим стилем."},enemies:[],bless:0,shop:null,best:null,jamDuel:false};
 var R={map:null,area:"world",floor:0,npcs:[],foes:[],chests:[],beacons:[],wps:[],boss:null,ent:null,up:null,down:null,
 pl:{x:96,y:240,face:1,walk:0},cam:{x:0,y:0},keys:{},joy:{x:0,y:0},inter:null,inv:0,evAt:0,
 dlg:null,dch:null,dback:null,dextra:null,dq:null,dboard:null,dchest:null,
 shopTab:"buy",chat:[],bkRole:"narrator",bkq:null,evch:null,picks:null,mapFoe:null,bossB:false,mm:null,ht:0,fname:"",fdesc:""};
-R.chat=[];
 var DIFF={easy:{dmg:.75,hp:.8,spd:.85},normal:{dmg:1,hp:1,spd:1},hard:{dmg:1.3,hp:1.25,spd:1.12}};
+var BITEMS=["potion","hipot","ether","antidote","phoenix","bomb","smoke"];
 function S(){return SETS[G.setting]}
 function iname(id){if(id==="m1")return S().m1;if(id==="m2")return S().m2;return ITEMS[id].n}
-/* ===== characters ===== */
 function mkChar(id){
 var base,name,col,role,sp;
-if(id==="hero"){var c=CLS[G.cls];base={hp:c.hp,mp:c.mp,atk:c.atk,def:c.def,spd:c.spd};name=G.name;col=c.e===""?"#fff":HAIRS.indexOf(G.look.hair)>=0?G.look.hair:"#2ee6d6";role=c.role;sp="hero"}
+if(id==="hero"){var c=CLS[G.cls];base={hp:c.hp,mp:c.mp,atk:c.atk,def:c.def,spd:c.spd};name=G.name;col=HAIRS.indexOf(G.look.hair)>=0?G.look.hair:"#2ee6d6";role=c.role;sp="hero"}
 else if(id==="barsik"){var b=BROLES[G.brole];base={hp:b.hp,mp:b.mp,atk:b.atk,def:b.def,spd:b.spd};name="Барсик";col="#e8eef7";role="снежный барс · "+b.n;sp="barsik"}
 else{var k=COMP[id];base={hp:k.hp,mp:k.mp,atk:k.atk,def:k.def,spd:k.spd};name=k.n;col=k.col;role=k.el+" · "+(id==="kobolid"?"катана":id==="serafim"?"хаос":id==="valkyrie"?"свет":"разбой");sp=k.sp}
 return{id:id,side:"hero",name:name,color:col,role:role,spr:sp,lvl:1,xp:0,base:base,
@@ -417,7 +411,6 @@ function spdE(u){var s=u.spd*(u.side==="hero"?u.mods.spd:1);if(u.slow>0)s*=.7;if
 function nxp(l){return 40+(l-1)*30}
 function gainXp(x){var up=0;partyChars().forEach(function(h){h.xp+=x;while(h.xp>=nxp(h.lvl)){h.xp-=nxp(h.lvl);h.lvl++;up++;recalc(h);h.hp=h.maxHp;h.mp=h.maxMp}});
 if(up){AUD.lvl();toast("⬆ Уровень "+G.chars.hero.lvl+"! Отряд усилен","tech")}save()}
-/* ===== audio ===== */
 var AUD={ctx:null,mst:null,mus:null,sfx:null,nb:null,trk:null,st:0,nt:0,tm:null,
 init:function(){if(this.ctx)return;try{var A=window.AudioContext||window.webkitAudioContext;if(!A)return;this.ctx=new A();
 var cp=this.ctx.createDynamicsCompressor();cp.threshold.value=-18;cp.ratio.value=6;cp.connect(this.ctx.destination);
@@ -467,7 +460,6 @@ chg:function(){this.tone("sawtooth",110,440,.5,.08)},
 fan:function(){var s=this;[60,64,67,72,76,79,84].forEach(function(m,i){s.tone("square",s.midi(m),0,.16,.1,i*.09);s.tone("triangle",s.midi(m-12),0,.2,.09,i*.09)})},
 lvl:function(){var s=this;[67,72,76,79].forEach(function(m,i){s.tone("square",s.midi(m),0,.12,.09,i*.07)})},
 dirge:function(){var s=this;[64,60,57,52].forEach(function(m,i){s.tone("sawtooth",s.midi(m),0,.4,.09,i*.3)})}};
-/* ===== FX ===== */
 var FX={p:[],bolts:[],sl:[],rg:[],fl:[],em:[],shake:0,flash:0,fc:"#fff",hs:0,
 reset:function(){this.p.length=0;this.bolts.length=0;this.sl.length=0;this.rg.length=0;this.fl.length=0;this.em.length=0;this.shake=0;this.flash=0;this.hs=0},
 add:function(o){if(this.p.length>460)this.p.splice(0,30);var d={t:0,g:0,dr:0,sz:2,sh:"px",life:.6};for(var k in o)d[k]=o[k];this.p.push(d)},
@@ -506,7 +498,6 @@ var TW={l:[],to:function(u,k,to,d,e){var ex=null;for(var i=0;i<this.l.length;i++
 if(ex){ex.f=u[k];ex.to=to;ex.t=0;ex.d=d;ex.e=e||easeOut}else this.l.push({u:u,k:k,f:u[k],to:to,t:0,d:d,e:e||easeOut})},
 upd:function(dt){for(var i=this.l.length-1;i>=0;i--){var t=this.l[i];t.t+=dt;var k=clamp(t.t/t.d,0,1);t.u[t.k]=lerp(t.f,t.to,t.e(k));if(k>=1)this.l.splice(i,1)}},
 clr:function(u){this.l=this.l.filter(function(t){return t.u!==u});if(u){u.ox=0;u.oy=0}}};
-/* ===== world ===== */
 var MW=40,MH=30,TT=16;
 function genWorld(){
 var r=mulberry(G.seed),s=S(),tiles=new Uint8Array(MW*MH),x,y;
@@ -580,7 +571,6 @@ else for(var y2=0;y2<R.map.h;y2++)for(var x2=0;x2<R.map.w;x2++){x.fillStyle=R.ma
 R.mm=c}
 function zoneIdx(){var t=R.pl.x/TT;return t<13?0:t<28?1:2}
 function zoneName(){return R.area==="dungeon"?R.fname:S().zones[zoneIdx()]}
-/* ===== plot / director ===== */
 function localPlot(){var s=S();return{title:"Хроно-Эхо: "+s.n,src:"local",ch:[
 {n:"Глава 1 · Трещина",d:"Врата времени треснули. "+s.boss+" шепчет из глубин. Собери отряд, 2 реликвии и 5 побед.",done:false},
 {n:"Глава 2 · Разлом",d:"Разлом растёт, подземелья меняются каждый спуск. Найди сердце разлома и срази стража.",done:false},
@@ -595,7 +585,6 @@ var ps=partyChars(),av=ps.reduce(function(a,h){return a+h.hp/h.maxHp},0)/Math.ma
 if(av<.4)sc-=.1;else if(av>.85)sc+=.05;
 G.dir.scale=clamp(sc,.8,1.35);
 G.dir.note=G.dir.scale<1?"Режиссёр смягчает мир: ты часто падаешь. Враги слабее, добыча щедрее.":G.dir.scale>1.1?"Режиссёр впечатлён: ты непобедим. Враги крепче, награды выше.":"Режиссёр держит баланс под твой стиль.";save()}
-/* ===== area update ===== */
 function paused(){return !!(G.ov||G.paused)}
 function updArea(dt){
 var p=R.pl;
@@ -636,7 +625,6 @@ if(R.up){var d3=Math.hypot(R.up.x-p.x,R.up.y-p.y);if(d3<20)best={k:"up",o:R.up,l
 if(R.down){var d4=Math.hypot(R.down.x-p.x,R.down.y-p.y);if(d4<20)best={k:"down",o:R.down,l:"⬇ Глубже"}}
 if(R.boss){var d5=Math.hypot(R.boss.x-p.x,R.boss.y-p.y);if(d5<28)best={k:"boss",o:R.boss,l:"👑 "+S().boss}}
 R.inter=best;if(!G.ov&&(G.mode==="world"||G.mode==="dungeon"))areaCmd()}
-/* ===== area render ===== */
 function drawArea(t){
 var c=CTX,p=S().pal,cam=R.cam,x,y,x0,x1,y0,y1;
 if(!R.map.dg){
@@ -685,7 +673,6 @@ FX.draw(c);
 if(R.inter&&!paused()){c.font='7px "Press Start 2P"';c.textAlign="center";c.fillStyle="#0a0e24";c.fillText("E "+R.inter.l,241,251);c.fillStyle="#ffc84a";c.fillText("E "+R.inter.l,240,250);c.textAlign="left"}}
 function drawStairs(x,y,col,lbl){var c=CTX;c.fillStyle=col;c.fillRect(x-6,y-6,12,12);c.fillStyle="#0a0e24";for(var i=0;i<3;i++)c.fillRect(x-4+i*2,y-4+i*3,8-i*2,2);
 c.font='6px "Press Start 2P"';c.textAlign="center";c.fillStyle=col;c.fillText(lbl,x,y-10);c.textAlign="left"}
-/* ===== cards / cmd ===== */
 var CARDS={};
 function buildCards(){var pr=$("partyRow");pr.innerHTML="";CARDS={};
 partyChars().forEach(function(h){var el=document.createElement("div");el.className="card panel";
@@ -722,10 +709,8 @@ Array.prototype.forEach.call(el.querySelectorAll("[data-dir]"),function(b){var d
 var on=function(e){e.preventDefault();R.joy={x:d==="left"?-1:d==="right"?1:0,y:d==="up"?-1:d==="down"?1:0};haptic("light")};
 var off=function(){R.joy={x:0,y:0}};
 b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);b.addEventListener("pointerleave",off);b.addEventListener("pointercancel",off)})}
-/* ===== overlays ===== */
 function openOv(k,h,lock){G.ov=k;var o=$("ovG");o.classList.remove("hidden");o.setAttribute("data-lock",lock?"1":"");$("ovB").innerHTML=h}
 function closeOv(){G.ov=null;$("ovG").classList.add("hidden");if(G.mode==="world"||G.mode==="dungeon")areaCmd();else if(G.mode==="battle")renderCmd()}
-/* ===== dialogue ===== */
 function say(title,text,choices,face){
 R.dch=choices;
 var h=(face?'<canvas class="face" id="dFace" width="24" height="24"></canvas>':"")+'<div class="ovt">'+esc(title)+'</div><div class="dtext">'+text+'</div><div class="dch">'+choices.map(function(c,i){return '<button class="btn'+(c[3]?" "+c[3]:"")+'" onclick="act(\'dlg\','+i+')">'+esc(c[0])+(c[1]?'<span class="h">'+esc(c[1])+"</span>":"")+"</button>"}).join("")+"</div>";
@@ -751,7 +736,6 @@ function rumor(){var s=S(),k=choice(Object.keys(s.foes));return choice(["Гов�
 function neuroNpc(n){say(n.name,"*Барсик подключает Nemotron Ultra…* 🧠",[["← Назад","",function(){npcTalk(n)}]],n.sp);
 neuro("Ты NPC в JRPG-мире "+S().n+". Имя "+n.name+", роль "+n.role+". Отвечай от его лица, 1-2 предложения, по-русски, с характером.","Дай слух или совет герою "+G.name+".",130)
 .then(function(t){say(n.name,"🧠 "+esc(t),[["← Назад","",function(){npcTalk(n)}]],n.sp)}).catch(function(){say(n.name,"*связь прервалась* "+rumor(),[["← Назад","",function(){npcTalk(n)}]],n.sp)})}
-/* ===== companions ===== */
 function compTalk(n){
 var id=n.id,C=COMP[id];
 if(G.roster.indexOf(id)>=0){
@@ -836,7 +820,6 @@ var where={kobolid:"роща на севере",serafim:"рядом с Кобо�
 h+='<div class="lrow"><img src="'+SPR[COMP[id].sp].c.toDataURL()+'" alt=""><span class="lt">'+COMP[id].n+' <span class="tag">'+COMP[id].el+'</span><small>'+esc(COMP[id].desc)+"<br>Где найти: "+where+"</small></span></div>"});
 h+='<div class="ovb"><button class="btn gold" onclick="act(\'close-ov\')">Закрыть</button></div>';
 openOv("party",h)}
-/* ===== quests ===== */
 function addQ(q){q.state="active";q.prog=0;if(!q.reward)q.reward={g:60,x:40};G.quests.push(q);if(q.type==="reach")addBeacon(q);trackQ();save()}
 function genQ(giver){
 var s=S(),type=choice(["kill","collect","reach"]),id="q"+Math.random().toString(36).slice(2,7);
@@ -897,7 +880,6 @@ say("🔒 Запертый сундук","Крепкий замок. Взлом�
 [["🔧 Взломать","Механика 13",function(){var c=R.dchest;check("mech",13,function(ok){if(ok){c.locked=false;loot()}else{var d=randi(4,9);G.chars.hero.hp=Math.max(1,G.chars.hero.hp-d);toast("💥 Ловушка! −"+d+" HP","bad");closeOv()}})},"violet"],
 ["💪 Выбить","Атлетика 14",function(){var c=R.dchest;check("ath",14,function(ok){if(ok){c.locked=false;loot()}else{toast("🔒 Замок выдержал","bad");closeOv()}})},"ember"],
 ["🚶 Уйти","",closeOv,"ghost"]])}
-/* ===== shop / inv / map / quests / barsik / settings / plot ===== */
 function stock(){if(G.shop&&G.shop.day===G.day)return G.shop.stock;
 var tier=Math.min(3,1+Math.floor(G.chars.hero.lvl/2));
 var list=["potion","potion","hipot","ether","antidote","phoenix","bomb","smoke","w"+tier,"a"+tier,choice(["c1","c2","c3","c4"])];
@@ -988,7 +970,6 @@ h+='<div class="ovs">🎬 '+esc(G.dir.note)+" (x"+G.dir.scale.toFixed(2)+")</div
 h+='<div class="ovb"><button class="btn" onclick="act(\'export\')">📤 Экспорт</button><button class="btn" onclick="act(\'import\')">📥 Импорт</button><button class="btn ghost" onclick="act(\'newgame\')">🗑 Новая игра</button><button class="btn gold" onclick="act(\'close-ov\')">Закрыть</button></div>';
 h+='<div class="ovs">семя #'+G.seed+" · NG+"+G.ng+" · день "+G.day+" · этажей "+G.stats.floors+"</div>";
 openOv("settings",h)}
-/* ===== events ===== */
 function genEvent(){
 if(G.ov||G.mode!=="world")return;
 var type=choice(["find","stranger","ambush","anomaly","peddler","riddle"]),title,desc,ch=[];
@@ -1014,7 +995,6 @@ else{var rd=choice([{q:"Девять раз умираю, девять раз в
 title="Говорящий камень";desc="Каменная голова: «"+rd.q+"»";
 ch=rd.a.map(function(a,i){return["💬 "+a,"",function(){if(i===rd.ok){var g=randi(12,26);G.gold+=g;gainXp(10);AUD.ok();fin("ВЕРНО! +"+g+"🪙 +10 XP")}else{AUD.no();fin("«Мяу-нет…» Ответ: «"+rd.a[rd.ok]+"».")}}]})}
 R.evch=ch;say("✦ "+title,'<span style="color:var(--cyan)">событие · '+zoneName()+"</span><br>"+esc(desc),ch)}
-/* ===== battle ===== */
 var PORTAL={x:140,y:98},SLOT_E=[[118,168],[76,198],[190,184],[150,220]],BOSS_POS=[150,196];
 function mkEnemy(k,slot,mul){
 var d=FOEB[k],D=DIFF[G.diff],s=S(),pos=d.boss?BOSS_POS:SLOT_E[slot%4];
@@ -1088,7 +1068,7 @@ if(aoe)tg=foes;else{if(a.target&&a.target.alive)tg=[a.target];else if(foes.lengt
 if(!tg.length){this.cancel(a,"Врагов не осталось.");return}}
 else if(a.kind==="tech"&&a.tech.heal){if(a.tech.aoe)tg=als;else if(a.target&&a.target.alive)tg=[a.target];else tg=[als.reduce(function(x,y){return x.hp/x.maxHp<y.hp/y.maxHp?x:y})]}
 else if(a.kind==="item"){var it=a.item;
-if(it==="phoenix"){if(a.target&&!a.target.alive)tg=[a.target];else{var dd=G.heroesDead?G.heroesDead():partyChars().filter(function(x){return !x.alive});if(dd.length)tg=[dd[0]];else{this.cancel(a,"Некого воскрешать.");return}}}
+if(it==="phoenix"){var dd=partyChars().filter(function(x){return !x.alive});if(dd.length)tg=[dd[0]];else{this.cancel(a,"Некого воскрешать.");return}}
 else if(it==="bomb"||it==="smoke")tg=[a.target&&a.target.alive?a.target:foes[0]];
 else{if(a.target&&a.target.alive)tg=[a.target];else tg=[als.reduce(function(x,y){return x.hp/x.maxHp<y.hp/y.maxHp?x:y})]}
 if((G.inv[it]||0)<=0){this.cancel(a,"Предмет закончился.");return}G.inv[it]--}
@@ -1149,7 +1129,6 @@ a.targets.forEach(function(tg,i){P.push({at:.62+i*.1,f:function(){if(tg.alive)hi
 else if(a.kind==="summon"){d=1;P.push({at:.3,f:function(){var used=G.enemies.filter(function(e){return e.alive}).map(function(e){return e.slot}),sl=0;while(used.indexOf(sl)>=0&&sl<3)sl++;
 G.enemies.push(mkEnemy("imp",sl,.6));FX.burst(PORTAL.x,PORTAL.y,["#38e8ff","#b07cff"],24,120);AUD.sum();setMsg("Босс призывает подмогу из Врат!","bad")}})}
 return{d:d,ph:P}}};
-G.heroesDead=function(){return partyChars().filter(function(x){return !x.alive})};
 function aiEnemy(e){
 function push(a){e.pending=true;var o={actor:e,side:"enemy"};for(var k in a)o[k]=a[k];EXE.q.push(o)}
 if(e.charged){push({kind:e.ck==="rift"?"rift":"smash"});return}
@@ -1181,7 +1160,7 @@ out=head+'<div class="grid2"><button class="btn" onclick="act(\'cmd\',\'attack\'
 else if(M.page==="tech"){out=head+techs(h2).map(function(t,i){var dis=h2.mp<t.mp;
 return '<button class="btn trow'+(dis?" dis":"")+'" onclick="act(\'tech\','+i+')"'+(dis?" disabled":"")+'><span class="tn">'+esc(t.name)+"<small>"+esc(t.desc)+'</small></span><span class="chipmp">'+t.mp+" MP</span></button>"}).join("")+'<div class="row"><button class="btn ghost small" onclick="act(\'back\')">← Назад</button></div>'}
 else if(M.page==="item"){var dead=partyChars().some(function(x){return !x.alive});
-out=head+["potion","hipot","ether","antidote","phoenix","bomb","smoke"].map(function(id,i){var it=ITEMS[id],ct=G.inv[id]||0,dis=ct<=0||(id==="phoenix"&&!dead);
+out=head+BITEMS.map(function(id,i){var it=ITEMS[id],ct=G.inv[id]||0,dis=ct<=0||(id==="phoenix"&&!dead);
 return '<button class="btn trow'+(dis?" dis":"")+'" onclick="act(\'item\','+i+')"'+(dis?" disabled":"")+'><span class="tn" style="color:'+it.col+'">'+it.e+" "+it.n+"<small>"+it.desc+'</small></span><span class="chipct">x'+ct+"</span></button>"}).join("")+'<div class="row"><button class="btn ghost small" onclick="act(\'back\')">← Назад</button></div>'}
 else if(M.page==="target"){var L=M.targets.filter(function(u){return M.tt==="dead"?!u.alive:u.alive});M.targets=L;
 if(!L.length){M.page=M.from||"main";renderCmd();return}
@@ -1189,7 +1168,6 @@ if(L.indexOf(M.target)<0)M.target=L[0];M.ti=L.indexOf(M.target);
 out=head+'<div class="hint" style="margin:0 0 8px">'+esc(M.hint)+'</div><div class="tchips">'+L.map(function(u,i){var pc=Math.round(u.hp/u.maxHp*100);
 return '<button class="btn tchip'+(u===M.target?" sel":"")+'" onclick="act(\'pick\','+i+')">'+(u===M.target?"▶ ":"")+esc(u.name)+'<span class="thp"><i style="width:'+pc+'%"></i></span></button>'}).join("")+'</div><div class="row"><button class="btn gold" onclick="act(\'confirm\')">✓ Подтвердить</button><button class="btn ghost" onclick="act(\'back\')">← Назад</button></div><div class="hint">стрелки — смена цели · тап по врагу на поле — сразу</div>'}
 el.innerHTML=out}
-var BITEMS=["potion","hipot","ether","antidote","phoenix","bomb","smoke"];
 function openTarget(a,hint,tt,from){var M=G.menu,L;
 if(tt==="enemy")L=ealive();else if(tt==="ally")L=alive();else L=partyChars().filter(function(x){return !x.alive});
 if(!L.length){setMsg("Нет подходящих целей.","bad");return}
@@ -1243,7 +1221,6 @@ openOv("end",'<div class="ovt" style="color:var(--gold)">✦ ПОБЕДА ✦</d
 '<div class="ovs">Отряд: '+G.roster.map(function(id){return COMP[id]?COMP[id].n:G.name}).join(", ")+"</div>"+
 '<div class="ovb"><button class="btn gold" onclick="act(\'ngplus\')">😼 Новая игра+</button><button class="btn" onclick="act(\'retreat\')">🐾 Остаться в мире</button><button class="btn ghost" onclick="act(\'title\')">В меню</button></div>',true);
 AUD.fan();FX.conf();G.best={rank:rank,wins:G.stats.wins};try{localStorage.setItem("barsik.best",JSON.stringify(G.best))}catch(e){}}
-/* ===== save ===== */
 function save(){try{localStorage.setItem("barsik.save",JSON.stringify({v:3,G:{setting:G.setting,name:G.name,cls:G.cls,brole:G.brole,look:G.look,gold:G.gold,day:G.day,seed:G.seed,chapter:G.chapter,ng:G.ng,roster:G.roster,party:G.party,inv:G.inv,equip:G.equip,upgrade:G.upgrade,quests:G.quests,opened:G.opened,disc:G.disc,cq:G.cq,stats:G.stats,diff:G.diff,speed:G.speed,bmode:G.bmode,muted:G.muted,parts:G.parts,plot:G.plot,dir:G.dir,shop:G.shop,
 chars:Object.keys(G.chars).map(function(k){var c=G.chars[k];return{id:k,lvl:c.lvl,xp:c.xp,hp:c.hp,mp:c.mp,base:c.base,mods:c.mods}})},area:R.area,floor:R.floor,pos:{x:R.pl.x,y:R.pl.y}}))}catch(e){}}
 function load(){try{var s=JSON.parse(localStorage.getItem("barsik.save"));if(!s||!s.G||s.v!==3)return false;
@@ -1255,7 +1232,6 @@ buildHero();genWorld();
 if(s.area==="dungeon"&&s.floor)genDungeon(s.floor);
 if(s.pos){R.pl.x=s.pos.x;R.pl.y=s.pos.y}
 return true}catch(e){return false}}
-/* ===== create ===== */
 function openCreate(){
 var h='<div class="ovt">⌛ СОЗДАНИЕ ГЕРОЯ</div>';
 h+='<canvas id="prevCv" width="95" height="60"></canvas>';
@@ -1280,9 +1256,7 @@ var hs=SPR.hero,bs=SPR.barsik;
 x.drawImage(hs.c,0,0,hs.w,hs.h,14,52-hs.h,hs.w,hs.h);
 x.drawImage(bs.c,0,0,bs.w,bs.h,58,52-bs.h,bs.w,bs.h);
 x.font='5px "Press Start 2P"';x.fillStyle="#ffc84a";x.textAlign="center";x.fillText(G.name.slice(0,12),32,58);x.fillStyle="#e8eef7";x.fillText("БАРСИК",72,58);x.textAlign="left"}
-/* ===== neuro sys ===== */
 function neuroSys(x){return "Ты — Барсик, снежный барс, кот-мастер JRPG в мире «"+S().n+"». Герой "+G.name+" ("+CLS[G.cls].n+", ур."+G.chars.hero.lvl+"), HP "+G.chars.hero.hp+", золото "+G.gold+", зона "+zoneName()+". Отряд: "+G.party.map(function(id){return G.chars[id]?G.chars[id].name:id}).join(", ")+". Отвечай по-русски, в образе кота, 1-3 предложения, с шармом (мурр~, 🐆). "+(x||"")}
-/* ===== dispatcher ===== */
 window.act=function(cmd,a,b){
 try{
 haptic("light");AUD.init();AUD.res();
@@ -1419,7 +1393,6 @@ case "back":{var M6=G.menu;AUD.no();M6.page=M6.from&&M6.page==="target"?M6.from:
 default:break}
 }catch(e){try{toast("⚠ "+e.message,"bad")}catch(_){}if(window.console)console.error(e)}
 };
-/* ===== input ===== */
 document.addEventListener("keydown",function(e){
 var k=e.key.toLowerCase();
 if(e.target.tagName==="INPUT")return;
@@ -1456,7 +1429,6 @@ R.npcs.forEach(function(nn){if(Math.hypot(nn.x-wx,nn.y-wy)<16)n=nn});
 if(n){npcTalk(n);return}
 var dx=wx-R.pl.x,dy=wy-R.pl.y,L2=Math.hypot(dx,dy);
 if(L2>4){R.joy={x:dx/L2,y:dy/L2};setTimeout(function(){R.joy={x:0,y:0}},240)}}});
-/* ===== battle bg + units ===== */
 var BG={t:0,stars:[],flies:[],
 init:function(){for(var i=0;i<50;i++)this.stars.push({x:rand(0,480),y:rand(4,120),tw:rand(0,9)});for(var j=0;j<12;j++)this.flies.push({x:rand(20,460),y:rand(160,250),s:rand(0,9)})},
 draw:function(c,dt){this.t+=dt;var s=S(),i;
@@ -1494,7 +1466,6 @@ if(u.side==="hero"&&u.ready&&!u.pending&&Math.random()<.12)FX.add({x:x+rand(-10,
 if(G.menu.open&&G.menu.page==="target"&&G.menu.target===u){var ay=top-14+Math.sin(t*7)*3;
 c.fillStyle="#ffc84a";c.beginPath();c.moveTo(x-5,ay-8);c.lineTo(x+5,ay-8);c.lineTo(x,ay-1);c.closePath();c.fill();
 c.strokeStyle="rgba(255,200,74,.7)";c.lineWidth=1.5;c.beginPath();c.ellipse(x,u.y+2,sp.w*.5,5,0,0,7);c.stroke()}}
-/* ===== loop ===== */
 var lastT=performance.now(),chipAcc=0;
 function frame(now){
 requestAnimationFrame(frame);
@@ -1542,7 +1513,6 @@ function refreshBest(){try{var b=JSON.parse(localStorage.getItem("barsik.best"))
 $("bestLine").textContent=b?("Рекорд: ранг "+b.rank+" · побед "+b.wins):"Первое путешествие ждёт…";
 $("btnCont").classList.toggle("hidden",!localStorage.getItem("barsik.save"))}catch(e){}}
 window.addEventListener("error",function(e){try{toast("⚠ "+e.message,"bad")}catch(_){}});
-/* ===== boot ===== */
 buildSprites();BG.init();rebuildChars();buildCards();refreshBest();refreshCards();fit();
 $("cmdArea").innerHTML='<div class="msg"><span class="arr">▸</span> Нажми «НОВАЯ ИГРА», чтобы собрать героя и отряд.</div>';
 document.addEventListener("pointerdown",function once(){AUD.init();AUD.res();if(G.mode==="title")AUD.track("title");document.removeEventListener("pointerdown",once)});
