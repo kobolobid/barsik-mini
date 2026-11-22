@@ -202,7 +202,7 @@ function muTick(){
 setInterval(muTick,120);
 function firstTouch(){audioInit();if(A.ctx&&A.ctx.state==='suspended')A.ctx.resume();if(A.ctx)MU.next=A.ctx.currentTime+0.1;document.removeEventListener('pointerdown',firstTouch);}
 document.addEventListener('pointerdown',firstTouch,{passive:true});
-/* ---------- CANVAS (v7: авто-ресайз при любой смене раскладки) ---------- */
+/* ---------- CANVAS ---------- */
 var CV=$('cv'),CX=CV.getContext('2d'),DPR=1,CW=0,CH=0;
 function resize(){var st=CV.parentElement;DPR=Math.min(window.devicePixelRatio||1,2);CW=st.clientWidth||360;CH=st.clientHeight||300;CV.width=Math.max(1,Math.round(CW*DPR));CV.height=Math.max(1,Math.round(CH*DPR));}
 window.addEventListener('resize',resize);
@@ -546,7 +546,7 @@ function bestOf(cs){
  }
  return best;
 }
-/* ---------- ROUTER (v7: пересчёт канваса при смене игры) ---------- */
+/* ---------- ROUTER ---------- */
 var G=null,GAMES={};
 function setGame(id){
  G=GAMES[id];
@@ -795,7 +795,7 @@ GAMES.blackjack=(function(){
  };
  return g;
 })();
-/* ---------- SLOTS (v8: барабан останавливается ровно на том символе, что на линии) ---------- */
+/* ---------- SLOTS (v8) ---------- */
 GAMES.slots=(function(){
  var SYM=['🍒','🍋','🔔','💎','7️⃣','🐾','⭐'];
  var PAY={'🍒':8,'🍋':10,'🔔':16,'💎':30,'7️⃣':80,'🐾':120,'⭐':200};
@@ -1134,13 +1134,17 @@ GAMES.poker=(function(){
  };
  return g;
 })();
-/* ---------- DURAK 2–4 (v7: надёжный тап карт) ---------- */
+/* ---------- DURAK 2–4 (v9: beats исправлен) ---------- */
 GAMES.durak=(function(){
  var BOTS=[{name:'Барсик',av:'barsik'},{name:'Мурка',av:'murka'},{name:'Барон',av:'baron'}];
  var g={nSel:2,bet:30,state:'idle',deck:[],trump:null,players:[],att:0,def:1,table:[],phase:'idle',msg:'',sel:-1,over:false,rects:[],timer:0};
  function P(i){return g.players[i];}
  function hand(i){return (g.players[i]&&g.players[i].hand)?g.players[i].hand:[];}
- function beats(a,d){if(a.s===d.s)return d.r>a.r;if(g.trump&&d.s===g.trump.s)return true;return false;}
+ function beats(def,atk){
+  if(def.s===atk.s)return def.r>atk.r;
+  if(g.trump&&def.s===g.trump.s&&atk.s!==g.trump.s)return true;
+  return false;
+ }
  function toggleSel(i){g.sel=(g.sel===i?-1:i);SFX.click();updDu();}
  function updDu(){
   var a=$('duAtk'),b=$('duBeat'),t=$('duTake'),ps=$('duPass'),m=$('duMsg');
@@ -1305,14 +1309,19 @@ GAMES.durak=(function(){
   }
  };
  g.update=function(){
-  if(g.phase==='bot'&&now()>g.timer)botStep();
+  if(g.phase==='bot'&&now()>g.timer){
+   var undefNow=g.table.some(function(q){return !q.d;});
+   if(undefNow&&g.players[g.def]&&g.players[g.def].human){g.phase='you-defend';g.msg='Бей или бери!';updDu();return;}
+   if(!undefNow&&g.players[g.att]&&g.players[g.att].human){g.phase='you-attack';g.msg='Подкинуть или Бито?';updDu();return;}
+   botStep();
+  }
  };
  g.draw=function(t){
   CX.clearRect(0,0,CW,CH);
   feltBG();
   var cw=Math.min(56,CW*0.14),chh=cw*1.4;
   g.rects=[];
-   var bots=g.players.slice(1);
+  var bots=g.players.slice(1);
   bots.forEach(function(pl,i){
    var n=bots.length;
    var bx=CW*(0.5+(i-(n-1)/2)*0.3),by=CH*0.16;
@@ -1772,7 +1781,6 @@ GAMES.coin=(function(){
   var R=Math.min(CW,CH)*0.26;
   var y=CH*0.42-(g.flip?Math.sin(clamp(g.rot,0,1)*Math.PI)*60:0);
   var face;
-  if(g.flip)face=(Math.floor(g.rot*5)%2===0)?g.side:1-g.face!==undefined?g.side:g.side;
   if(g.flip)face=(Math.floor(g.rot*5)%2===0)?g.side:1-g.side;
   else face=g.res;
   var sx=g.flip?Math.max(0.08,Math.abs(Math.cos(g.rot*5*Math.PI))):1;
@@ -1955,7 +1963,7 @@ window.__BARSIK_OK=true;
 if(TG&&TG.sendData){
  var sendBtn=document.createElement('button');sendBtn.className='ibtn';sendBtn.textContent='📤';sendBtn.title='Сохранить в бота';
  sendBtn.onclick=function(){TG.sendData(JSON.stringify({game:'casino',action:'save',balance:S.bal,hands:S.hands,wins:S.wins,best:S.best,wagered:S.wagered}));toast('📤 Отправлено в бота');};
- document.querySelector('.hud').insertBefore(sendBtn,$('btnMusic'));
+ document.querySelector('.hud').appendChild(sendBtn);
 }
 } /* end main */
 })();
@@ -1964,7 +1972,7 @@ if(TG&&TG.sendData){
 setTimeout(function(){
  if(!window.__BARSIK_OK){
   var b=document.getElementById('boot');
-  if(b){b.innerHTML='<div style="max-width:92vw;line-height:1.6">⚠️ Скрипт казино не запустился.<br>Скорее всего файл вставлен НЕ ЦЕЛИКОМ.<br><br>Проверь в GitHub, что код заканчивается на <b>&lt;/html&gt;</b>.<br>Затем открой снова с ?v=7</div>';}
+  if(b){b.innerHTML='<div style="max-width:92vw;line-height:1.6">⚠️ Скрипт казино не запустился.<br>Скорее всего файл вставлен НЕ ЦЕЛИКОМ.<br><br>Проверь в GitHub, что код заканчивается на <b>&lt;/html&gt;</b>.<br>Затем открой снова с ?v=9</div>';}
  }
 },3000);
 </script>
