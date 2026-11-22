@@ -8,7 +8,7 @@
 <title>Barsik Casino Deluxe</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{--bg:#0b0f1e;--panel:#151d38;--line:#2b3a66;--text:#eef2ff;--muted:#93a0c4;--gold:#ffd166;--grn:#39ff8e;--red:#ff5d5d;--ice:#7fd8ff;--violet:#b48bff;--felt:#0e3b2e;--felt2:#0a2c22}
+:root{--bg:#0b0f1e;--panel:#151d38;--line:#2b3a66;--text:#eef2ff;--muted:#93a0c4;--gold:#ffd166;--grn:#39ff8e;--red:#ff5d5d;--ice:#7fd8ff;--violet:#b48bff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:radial-gradient(900px 500px at 20% -10%,rgba(180,139,255,.14),transparent 60%),radial-gradient(900px 500px at 90% 0%,rgba(255,209,102,.10),transparent 55%),linear-gradient(180deg,#0d1226,#0b0f1e);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
 body{display:flex;flex-direction:column;height:100vh;height:100dvh;user-select:none;touch-action:manipulation;overscroll-behavior:none}
@@ -25,9 +25,9 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;user-select:n
 .pill b{color:var(--gold)}
 .pill.pulse{animation:pl .4s ease}
 @keyframes pl{40%{transform:scale(1.12)}}
-.stage{flex:1;position:relative;min-height:200px;background:#070b16;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.stage{flex:1;position:relative;min-height:190px;background:#070b16;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
-#panel{max-height:44vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:9px}
+#panel{max-height:50vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:9px}
 .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .grow{flex:1}
 .btn{border:1px solid var(--line);background:linear-gradient(180deg,#20294c,#161d3a);color:var(--text);border-radius:11px;padding:9px 12px;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;min-height:38px}
@@ -47,16 +47,20 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;user-select:n
 .rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px}
 .rc{min-height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.14);font-weight:950;font-size:12px;cursor:pointer;position:relative;color:#fff;font-family:inherit}
 .rc.r{background:linear-gradient(180deg,#991b1b,#7f1d1d)}.rc.b{background:linear-gradient(180deg,#1f2937,#111827)}.rc.g{background:linear-gradient(180deg,#166534,#14532d);grid-column:1/-1}
-.rc .st{position:absolute;top:2px;right:4px;font-size:9px;color:var(--gold);font-weight:900}
+.rc .st,.og .st{position:absolute;top:2px;right:4px;font-size:9px;color:var(--gold);font-weight:900}
 .ogrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px}
 .og{min-height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:#182148;color:var(--text);font-size:10.5px;font-weight:900;cursor:pointer;position:relative;font-family:inherit}
-.og .st{position:absolute;top:1px;right:4px;font-size:9px;color:var(--gold);font-weight:900}
+.mgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:8px}
+.mcell{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:linear-gradient(180deg,#243055,#182148);color:var(--text);font-size:18px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;transition:transform .12s}
+.mcell:active{transform:scale(.92)}
+.mcell.o{background:linear-gradient(180deg,#0d2418,#0a1c12);border-color:var(--grn)}
+.mcell.b{background:linear-gradient(180deg,#4a1010,#2c0808);border-color:var(--red)}
 .lobby{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.lcard{background:linear-gradient(135deg,#1d2750,#141b3a);border:1px solid var(--line);border-radius:15px;padding:12px 10px;text-align:center;cursor:pointer;position:relative;overflow:hidden}
+.lcard{background:linear-gradient(135deg,#1d2750,#141b3a);border:1px solid var(--line);border-radius:15px;padding:11px 8px;text-align:center;cursor:pointer;position:relative;overflow:hidden}
 .lcard:active{transform:scale(.97)}
-.lcard .li{font-size:32px;display:block;margin-bottom:6px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4))}
-.lcard .ln{font-weight:950;font-size:13px}
-.lcard .ld{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.3}
+.lcard .li{font-size:30px;display:block;margin-bottom:5px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4))}
+.lcard .ln{font-weight:950;font-size:12.5px}
+.lcard .ld{font-size:9.5px;color:var(--muted);margin-top:3px;line-height:1.3}
 .lcard::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.08) 50%,transparent 70%);transform:translateX(-100%);animation:sh 3.4s infinite}
 @keyframes sh{60%{transform:translateX(100%)}100%{transform:translateX(100%)}}
 .volbar{position:fixed;left:50%;transform:translateX(-50%);bottom:70px;z-index:60;display:none;align-items:center;gap:10px;background:rgba(16,22,44,.96);border:1px solid var(--line);border-radius:14px;padding:10px 14px;width:min(92vw,380px);box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -87,7 +91,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;user-select:n
     <button class="ibtn" id="btnMusic" title="Музыка">🎵</button>
     <button class="ibtn" id="btnSound" title="Громкость">🔊</button>
   </div>
-  <div class="stage"><canvas id="cv"></canvas></div>
+  <div class="stage" id="stage"><canvas id="cv"></canvas></div>
   <div id="panel"></div>
   <div class="volbar" id="volbar">
     <button class="vmute" id="volMute">🔊</button>
@@ -143,10 +147,12 @@ var SFX={
  ball:function(){tone(950,0.06,'sine',0.09,-350);},
  stop:function(){tone(320,0.09,'square',0.09);},
  dice:function(){noise(0.25,0.12,900);setTimeout(function(){noise(0.2,0.1,700);},120);},
+ count:function(){tone(520,0.09,'square',0.1);},
+ go:function(){tone(880,0.25,'square',0.12);},
+ boom:function(){noise(0.5,0.2,300);tone(120,0.4,'sawtooth',0.15,-60);},
  win:function(){[523,659,784,1046].forEach(function(f,i){setTimeout(function(){tone(f,0.16,'triangle',0.12);},i*85);});},
  big:function(){[523,659,784,1046,1318,1568].forEach(function(f,i){setTimeout(function(){tone(f,0.22,'triangle',0.13);},i*80);});setTimeout(function(){noise(0.4,0.08,5000);},200);},
  lose:function(){[392,311,233].forEach(function(f,i){setTimeout(function(){tone(f,0.18,'sawtooth',0.07);},i*110);});},
- purr:function(){for(var i=0;i<5;i++)(function(k){setTimeout(function(){tone(88+k%2*14,0.09,'triangle',0.1);},k*90);})(i);},
  meow:function(){tone(620,0.26,'sawtooth',0.08,-240);}
 };
 var MU_THEMES=[
@@ -163,24 +169,24 @@ function muTick(){
  var th=MU_THEMES[S.mTheme%MU_THEMES.length];
  if(MU.next<A.ctx.currentTime)MU.next=A.ctx.currentTime+0.05;
  while(MU.next<A.ctx.currentTime+0.3){
-  var st=MU.step,th2=th,i=st%32;
-  if(th2.bass[i]!==undefined&&th2.bass[i]!==-1)tone(65.41*Math.pow(2,th2.bass[i]/12),th2.bpm*1.8,'sine',th2.bass);
-  if(th2.lead[i]!==undefined&&th2.lead[i]!==-1)tone(261.63*Math.pow(2,th2.lead[i]/12),th2.bpm*1.4,th2.type,th2.vol);
-  if(st%8===0){[0,4,7].forEach(function(q){tone(130.81*Math.pow(2,(th2.bass[i>=0?i:0]||0)/12+q/12*0+q/1),th2.bpm*3,'sine',th2.vol*0.5);});}
-  if(th2.name==='Vegas'&&st%2===1)noise(0.02,0.014,6000);
-  MU.step++;MU.next+=th2.bpm;
+  var st=MU.step,i=st%32;
+  if(th.bass[i]!==-1)tone(65.41*Math.pow(2,th.bass[i]/12),th.bpm*1.8,'sine',th.bass);
+  if(th.lead[i]!==-1)tone(261.63*Math.pow(2,th.lead[i]/12),th.bpm*1.4,th.type,th.vol);
+  if(st%8===0)tone(130.81*Math.pow(2,th.bass[i]/12),th.bpm*3,'sine',th.vol*0.5);
+  if(th.name==='Vegas'&&st%2===1)noise(0.02,0.014,6000);
+  MU.step++;MU.next+=th.bpm;
  }
 }
 setInterval(muTick,120);
 function firstTouch(){audioInit();if(A.ctx&&A.ctx.state==='suspended')A.ctx.resume();if(A.ctx)MU.next=A.ctx.currentTime+0.1;document.removeEventListener('pointerdown',firstTouch);}
 document.addEventListener('pointerdown',firstTouch,{passive:true});
-/* ---------- CANVAS ---------- */
+/* ---------- CANVAS (ИСПРАВЛЕНО: родитель канваса, а не id) ---------- */
 var CV=$('cv'),CX=CV.getContext('2d'),DPR=1,CW=0,CH=0;
-function resize(){var st=$('stage');DPR=Math.min(window.devicePixelRatio||1,2);CW=st.clientWidth||360;CH=st.clientHeight||300;CV.width=Math.max(1,Math.round(CW*DPR));CV.height=Math.max(1,Math.round(CH*DPR));}
+function resize(){var st=CV.parentElement;DPR=Math.min(window.devicePixelRatio||1,2);CW=st.clientWidth||360;CH=st.clientHeight||300;CV.width=Math.max(1,Math.round(CW*DPR));CV.height=Math.max(1,Math.round(CH*DPR));}
 window.addEventListener('resize',resize);
 /* ---------- FX ---------- */
 var PART=[],FLOAT=[];
-function part(x,y,t,o){var p={x:x,y:y,t:t,life:1,vx:rand(-40,40),vy:rand(-110,-50),r:rand(2,5),rot:rand(0,6),ch:o&&o.ch,col:o&&o.col};if(t==='conf'){p.col=pick(['#ffd166','#ff5d5d','#39ff8e','#7fd8ff','#b48bff']);p.vy=rand(-220,-90);p.vx=rand(-120,120);}if(t==='coin'){p.ch='🪙';p.vy=rand(-160,-90);}if(t==='spark'){p.ch='✨';}PART.push(p);}
+function part(x,y,t,o){var p={x:x,y:y,t:t,life:1,vx:rand(-40,40),vy:rand(-110,-50),r:rand(2,5),rot:rand(0,6),ch:o&&o.ch,col:o&&o.col};if(t==='conf'){p.col=pick(['#ffd166','#ff5d5d','#39ff8e','#7fd8ff','#b48bff']);p.vy=rand(-220,-90);p.vx=rand(-120,120);}if(t==='coin'){p.ch='🪙';p.vy=rand(-160,-90);}if(t==='spark'){p.ch='✨';}if(t==='dust'){p.vy=rand(-20,0);p.vx=rand(-60,-10);p.col='rgba(200,190,160,.6)';}PART.push(p);}
 function confetti(n){for(var i=0;i<(n||36);i++)part(rand(0,CW),rand(CH*0.1,CH*0.5),'conf');}
 function floatTxt(t,x,y,col){FLOAT.push({t:t,x:x,y:y,col:col||'#ffd166',life:1});}
 function updFx(dt){for(var i=PART.length-1;i>=0;i--){var p=PART[i];p.life-=dt*0.8;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=260*dt;p.rot+=dt*4;if(p.life<=0)PART.splice(i,1);}for(var j=FLOAT.length-1;j>=0;j--){var f=FLOAT[j];f.life-=dt*0.7;f.y-=44*dt;if(f.life<=0)FLOAT.splice(j,1);}}
@@ -250,12 +256,12 @@ function avCat(c,x,y,r,col,col2){
  c.save();c.translate(x,y);
  c.fillStyle=col;c.beginPath();c.arc(0,0,r,0,7);c.fill();
  c.fillStyle=col;c.beginPath();c.moveTo(-r*0.7,-r*0.45);c.lineTo(-r*0.9,-r*1.05);c.lineTo(-r*0.2,-r*0.78);c.closePath();c.moveTo(r*0.7,-r*0.45);c.lineTo(r*0.9,-r*1.05);c.lineTo(r*0.2,-r*0.78);c.closePath();c.fill();
- c.fillStyle=col2;c.strokeStyle=col2;c.lineWidth=r*0.12;c.lineCap='round';
+ c.strokeStyle=col2;c.lineWidth=r*0.12;c.lineCap='round';
  c.beginPath();c.moveTo(-r*0.5,-r*0.75);c.quadraticCurveTo(-r*0.3,-r*0.45,-r*0.5,-r*0.2);c.moveTo(0,-r*0.85);c.quadraticCurveTo(r*0.15,-r*0.5,0,-r*0.25);c.moveTo(r*0.5,-r*0.75);c.quadraticCurveTo(r*0.3,-r*0.45,r*0.5,-r*0.2);c.stroke();
  c.fillStyle='#ffd166';c.beginPath();c.ellipse(-r*0.32,-r*0.05,r*0.14,r*0.17,0,0,7);c.ellipse(r*0.32,-r*0.05,r*0.14,r*0.17,0,0,7);c.fill();
  c.fillStyle='#10162a';c.beginPath();c.ellipse(-r*0.32,-r*0.05,r*0.05,r*0.14,0,0,7);c.ellipse(r*0.32,-r*0.05,r*0.05,r*0.14,0,0,7);c.fill();
  c.fillStyle='#f08aa4';c.beginPath();c.arc(0,r*0.2,r*0.09,0,7);c.fill();
- c.strokeStyle='#3a4560';c.lineWidth=r*0.05;c.beginPath();c.moveTo(0,r*0.3);c.quadraticCurveTo(-r*0.14,r*0.42,-r*0.26,r*0.36);c.moveTo(0,r*0.3);c.quadraticCurveTo(r*0.14,r*0.42,r*0.26,r*0.36);c.stroke();
+ c.strokeStyle='#3a4560';c.lineWidth=r*0.05;c.beginPath();c.moveTo(0,r*0.3);c.quadraticCurveTo(-r*0.14,r*0.44,-r*0.26,r*0.38);c.moveTo(0,r*0.3);c.quadraticCurveTo(r*0.14,r*0.44,r*0.26,r*0.38);c.stroke();
  c.restore();
 }
 function avDog(c,x,y,r,col){
@@ -264,7 +270,6 @@ function avDog(c,x,y,r,col){
  c.fillStyle=col;c.beginPath();c.ellipse(-r*0.75,-r*0.15,r*0.3,r*0.62,0.35,0,7);c.ellipse(r*0.75,-r*0.15,r*0.3,r*0.62,-0.35,0,7);c.fill();
  c.fillStyle='#f7e3c8';c.beginPath();c.ellipse(0,r*0.35,r*0.42,r*0.34,0,0,7);c.fill();
  c.fillStyle='#20293c';c.beginPath();c.arc(-r*0.3,-r*0.15,r*0.11,0,7);c.arc(r*0.3,-r*0.15,r*0.11,0,7);c.fill();
- c.fillStyle='#fff';c.beginPath();c.arc(-r*0.27,-r*0.19,r*0.035,0,7);c.arc(r*0.33,-r*0.19,r*0.035,0,7);c.fill();
  c.fillStyle='#20293c';c.beginPath();c.ellipse(0,r*0.22,r*0.12,r*0.09,0,0,7);c.fill();
  c.strokeStyle='#20293c';c.lineWidth=r*0.05;c.beginPath();c.moveTo(0,r*0.3);c.quadraticCurveTo(-r*0.12,r*0.44,-r*0.24,r*0.4);c.moveTo(0,r*0.3);c.quadraticCurveTo(r*0.12,r*0.44,r*0.24,r*0.4);c.stroke();
  c.restore();
@@ -290,7 +295,7 @@ function bubble(c,x,y,text){
  c.beginPath();c.moveTo(x-6,by+h);c.lineTo(x,by+h+7);c.lineTo(x+6,by+h);c.closePath();c.fillStyle='rgba(252,253,255,.96)';c.fill();
  c.fillStyle='#1c2430';lines.forEach(function(l,i){c.fillText(l,bx+9,by+17+i*14);});
 }
-/* ---------- EVAL (покер) ---------- */
+/* ---------- POKER EVAL ---------- */
 var HNAME=['Старшая карта','Пара','Две пары','Тройка','Стрит','Флеш','Фулл-хаус','Каре','Стрит-флеш','Роял-флеш'];
 function uniq5(a){var s={};for(var i=0;i<a.length;i++){if(s[a[i]])return false;s[a[i]]=1;}return true;}
 function eval5(cs){
@@ -319,11 +324,9 @@ function eval5(cs){
 function bestOf(cs){
  if(cs.length<5)return{v:-1,cat:-1,name:''};
  var best=null;
- var idx=[0,1,2,3,4,5,6];
  for(var a=0;a<3;a++)for(var b=a+1;b<4;b++){
-  var rest=idx.filter(function(i){return i!==a&&i!==b;});
-  var five=rest.map(function(i){return cs[i];});
-  var e=eval5(five);
+  var rest=[0,1,2,3,4,5,6].filter(function(i){return i!==a&&i!==b;});
+  var e=eval5(rest.map(function(i){return cs[i];}));
   if(!best||e.v>best.v)best=e;
  }
  return best;
@@ -341,7 +344,7 @@ $('btnBack').onclick=function(){setGame('lobby');};
 /* ---------- LOBBY ---------- */
 GAMES.lobby={
  enter:function(p){
-  var items=[['roulette','🎡','Рулетка','Колесо, шарик и все ставки стола'],['blackjack','🃏','Блэкджек 21','Дилер-Барсик берёт до 17, блэкджек 3:2'],['slots','🎰','Слоты','Три барабана, джекпоты и линии'],['dice','🎲','Кости','Дуэль с Барсиком на кубиках'],['poker','♠️','Покер ×5','Техас холдем: ты, Барсик и ещё трое'],['durak','🂡','Дурак','36 карт, козырь, Барсик против тебя']];
+  var items=[['roulette','🎡','Рулетка','Колесо, шарик, все ставки стола'],['blackjack','🃏','Блэкджек 21','Дилер-Барсик, блэкджек 3:2'],['slots','🎰','Слоты','Барабаны, джекпоты, линии'],['dice','🎲','Кости','Дуэль с Барсиком на кубиках'],['poker','♠️','Покер ×5','Холдем: ты, Барсик и ещё трое'],['durak','🂡','Дурак','36 карт, козырь, Барсик против'],['races','🏁','Бега','Ставки на забег пятёрки друзей'],['crash','🚀','Ракета','Успей забрать до взрыва'],['mines','💎','Мины','Открывай клетки, лови множитель'],['wheel','☸️','Колесо фортуны','12 секторов-множителей'],['coin','🪙','Орёл/Решка','3D-монета, x2']];
   var g=document.createElement('div');g.className='lobby';
   items.forEach(function(it){
    var d=document.createElement('div');d.className='lcard';
@@ -360,8 +363,8 @@ GAMES.lobby={
   g.addColorStop(0,'#182148');g.addColorStop(1,'#070b16');
   CX.fillStyle=g;CX.fillRect(0,0,CW,CH);
   for(var i=0;i<14;i++){
-   var x=(i*97+ t*12*(1+i%3))%(CW+60)-30;
-   var y=(i*61+ Math.sin(t*0.6+i)*22 + t*6*(1+i%2))%(CH+60)-30;
+   var x=(i*97+t*12*(1+i%3))%(CW+60)-30;
+   var y=(i*61+Math.sin(t*0.6+i)*22+t*6*(1+i%2))%(CH+60)-30;
    CX.save();CX.globalAlpha=0.10+0.05*Math.sin(t+i);CX.translate(x,y);CX.rotate(Math.sin(t*0.5+i)*0.4);
    CX.font='26px serif';CX.textAlign='center';CX.fillStyle=i%3===0?'#ffd166':(i%3===1?'#ff5d5d':'#7fd8ff');
    CX.fillText(['♠','♥','♦','♣','🪙'][i%5],0,0);CX.restore();
@@ -369,7 +372,7 @@ GAMES.lobby={
   CX.textAlign='left';
   CX.font='bold 20px system-ui';CX.textAlign='center';
   CX.fillStyle='rgba(255,209,102,.9)';CX.fillText('🎰 BARSIK CASINO',CW/2,CH*0.42);
-  CX.font='12px system-ui';CX.fillStyle='rgba(147,160,196,.9)';CX.fillText('Выбери игру ниже — Барсик уже за столом 🐾',CW/2,CH*0.42+22);
+  CX.font='12px system-ui';CX.fillStyle='rgba(147,160,196,.9)';CX.fillText('11 игр · Барсик уже за столом 🐾',CW/2,CH*0.42+22);
   CX.textAlign='left';
  }
 };
@@ -398,25 +401,25 @@ GAMES.roulette=(function(){
   }
   return w;
  }
- function refreshBadges(){
+ function refresh(){
   var cells=document.querySelectorAll('[data-bet]');
   for(var i=0;i<cells.length;i++){
    var k=cells[i].getAttribute('data-bet');
    var st=cells[i].querySelector('.st');
    if(st)st.textContent=g.bets[k]?g.bets[k]:'';
   }
-  var tt=document.getElementById('rlTotal');if(tt)tt.textContent=fmt(total());
-  var sb=document.getElementById('rlSpin');if(sb)sb.disabled=g.spinning||total()<=0;
+  var tt=$('rlTotal');if(tt)tt.textContent=fmt(total());
+  var sb=$('rlSpin');if(sb)sb.disabled=g.spinning||total()<=0;
  }
  g.enter=function(p){
   var h='<div class="row"><span style="font-size:11px;color:var(--muted);font-weight:800">Фишка:</span>';
   [10,50,100,500,1000].forEach(function(v){h+='<button class="chip c'+v+'" data-chip="'+v+'">'+v+'</button>';});
   h+='<button class="btn" id="rlUndo">↩</button><button class="btn red" id="rlClear">🗑</button></div>';
-  h+='<div class="msg">Ставок на столе: <b id="rlTotal">0</b> 🪙</div>';
+  h+='<div class="msg">На столе: <b id="rlTotal">0</b> 🪙</div>';
   h+='<div class="rgrid"><button class="rc g" data-bet="n0">0</button>';
-  for(var n=1;n<=36;n++){h+='<button class="rc '+(RED[n]?'r':'b')+'" data-bet="n'+n+'">'+n+'<span class="st"></span></button>';}
+  for(var n=1;n<=36;n++)h+='<button class="rc '+(RED[n]?'r':'b')+'" data-bet="n'+n+'">'+n+'<span class="st"></span></button>';
   h+='</div><div class="ogrid">';
-  [['red','🟥 Красное'],['black','⬛ Чёрное'],['even','Чёт'],['odd','Нечет'],['low','1–18'],['high','19–36'],['d1','1 дюжина'],['d2','2 дюжина'],['d3','3 дюжина'],['c1','1 столбец'],['c2','2 столбец'],['c3','3 столбец']].forEach(function(o){h+='<button class="og" data-bet="'+o[0]+'">'+o[1]+'<span class="st"></span></button>';});
+  [['red','🟥 Красное'],['black','⬛ Чёрное'],['even','Чёт'],['odd','Нечет'],['low','1–18'],['high','19–36'],['d1','1 дюж.'],['d2','2 дюж.'],['d3','3 дюж.'],['c1','Столб.1'],['c2','Столб.2'],['c3','Столб.3']].forEach(function(o){h+='<button class="og" data-bet="'+o[0]+'">'+o[1]+'<span class="st"></span></button>';});
   h+='</div><button class="btn gold" id="rlSpin" style="width:100%;margin-top:8px">🎡 КРУТИТЬ</button>';
   h+='<div class="row" style="margin-top:8px"><span style="font-size:10px;color:var(--muted);font-weight:800">История:</span><div class="hist" id="rlHist"></div></div>';
   h+='<div class="msg" id="rlMsg"></div>';
@@ -427,25 +430,23 @@ GAMES.roulette=(function(){
    if(g.spinning)return;
    var k=b.getAttribute('data-bet');
    if(g.chip>S.bal){toast('Не хватает монет');return;}
-   g.bets[k]=(g.bets[k]||0)+g.chip;SFX.chip();refreshBadges();
+   g.bets[k]=(g.bets[k]||0)+g.chip;SFX.chip();refresh();
   };});
-  $('rlUndo').onclick=function(){var ks=Object.keys(g.bets);if(ks.length){delete g.bets[ks[ks.length-1]];SFX.click();refreshBadges();}};
-  $('rlClear').onclick=function(){g.bets={};SFX.click();refreshBadges();};
+  $('rlUndo').onclick=function(){var ks=Object.keys(g.bets);if(ks.length){delete g.bets[ks[ks.length-1]];SFX.click();refresh();}};
+  $('rlClear').onclick=function(){g.bets={};SFX.click();refresh();};
   $('rlSpin').onclick=function(){
    var t=total();if(t<=0||g.spinning)return;
    if(!bet(t))return;
-   g.spinning=true;g.t0=now();
-   g.res=randi(0,36);
+   g.spinning=true;g.t0=now();g.res=randi(0,36);
    var pocket=function(n){return n*(Math.PI*2/37)-Math.PI/2;};
-   var base=Math.PI*2*4;
-   g.Wf=base+(-Math.PI/2-pocket(g.res))%(Math.PI*2)+Math.PI*2*2;
-   SFX.ball();refreshBadges();
+   g.Wf=Math.PI*2*6+((-Math.PI/2-pocket(g.res))%(Math.PI*2))+Math.PI*2*2;
+   SFX.ball();refresh();
   };
-  refreshBadges();
+  refresh();
   var hh='';g.hist.slice(0,10).forEach(function(n){hh+='<div class="hn '+(n===0?'g':(RED[n]?'r':'b'))+'">'+n+'</div>';});
   $('rlHist').innerHTML=hh||'<span style="font-size:10px;color:var(--muted)">пока пусто</span>';
  };
- g.update=function(dt){
+ g.update=function(){
   if(!g.spinning)return;
   var t=(now()-g.t0)/g.dur;
   g.wheelA=eoc(t)*g.Wf;
@@ -457,9 +458,9 @@ GAMES.roulette=(function(){
    g.hist.unshift(g.res);if(g.hist.length>14)g.hist.pop();
    var hh='';g.hist.slice(0,10).forEach(function(n){hh+='<div class="hn '+(n===0?'g':(RED[n]?'r':'b'))+'">'+n+'</div>';});
    var he=$('rlHist');if(he)he.innerHTML=hh;
-   g.bets={};refreshBadges();
+   g.bets={};refresh();
    var m=$('rlMsg');
-   if(w>0){pay(w);if(m)m.textContent='Выпало '+g.res+'! Выигрыш +'+fmt(w)+' 🪙';confetti(w>total?50:24);if(w>=500)SFX.big();else SFX.win();floatTxt('+'+fmt(w),CW/2,CH*0.4,'#ffd166');}
+   if(w>0){pay(w);if(m)m.textContent='Выпало '+g.res+'! +'+fmt(w)+' 🪙';confetti(w>=500?50:24);if(w>=500)SFX.big();else SFX.win();floatTxt('+'+fmt(w),CW/2,CH*0.4,'#ffd166');}
    else{if(m)m.textContent='Выпало '+g.res+'. Мимо…';SFX.lose();}
    save();
   }
@@ -494,7 +495,6 @@ GAMES.roulette=(function(){
    var ba=-Math.PI/2-(1-eio(tt))*Math.PI*2*5.5;
    var br=tt<0.55?R*0.92:lerp(R*0.92,R*0.8,eoc((tt-0.55)/0.45))+Math.sin(tt*40)*2*(1-tt);
    CX.fillStyle='#f4f7fb';CX.beginPath();CX.arc(Math.cos(ba)*br,Math.sin(ba)*br,R*0.055,0,7);CX.fill();
-   CX.fillStyle='rgba(255,255,255,.5)';CX.beginPath();CX.arc(Math.cos(ba)*br-2,Math.sin(ba)*br-2,R*0.02,0,7);CX.fill();
   }
   CX.restore();
   CX.font='bold 12px system-ui';CX.textAlign='center';CX.fillStyle='rgba(233,237,245,.75)';
@@ -505,15 +505,41 @@ GAMES.roulette=(function(){
 })();
 /* ---------- BLACKJACK ---------- */
 GAMES.blackjack=(function(){
- var g={phase:'bet',bet:0,deck:[],ph:[],dh:[],msg:'',hide:true};
+ var g={phase:'bet',bet:50,deck:[],ph:[],dh:[],msg:'',hide:true};
  function val(h){var t=0,a=0;h.forEach(function(c){if(c.r===14){t+=11;a++;}else t+=Math.min(10,c.r);});while(t>21&&a>0){t-=10;a--;}return t;}
  function dealTo(hand,n){hand.push(Object.assign({},g.deck.pop(),{at:now()+n*140}));SFX.deal();}
+ function upd(){
+  var d=$('bjDeal'),h=$('bjHit'),s=$('bjStand'),b=$('bjDbl');
+  if(d)d.disabled=!(g.phase==='bet'||g.phase==='done');
+  if(h)h.disabled=g.phase!=='player';
+  if(s)s.disabled=g.phase!=='player';
+  if(b)b.disabled=!(g.phase==='player'&&g.ph.length===2&&S.bal>=g.bet);
+  var m=$('bjMsg');if(m&&g.msg)m.textContent=g.msg;
+ }
+ function dealerPlay(){
+  g.phase='dealer';g.hide=false;upd();
+  var step=function(){if(val(g.dh)<17){dealTo(g.dh,0);setTimeout(step,420);}else settle();};
+  setTimeout(step,420);
+ }
+ function settle(){
+  g.hide=false;
+  var pv=val(g.ph),dv=val(g.dh),w=0,msg='';
+  if(pv>21)msg='Перебор '+pv+'. Барсик забирает ставку.';
+  else if(g.ph.length===2&&pv===21){w=Math.floor(g.bet*2.5);msg='🃏 БЛЭКДЖЕК! +'+fmt(w);}
+  else if(dv>21){w=g.bet*2;msg='Барсик перебрал ('+dv+')! +'+fmt(w);}
+  else if(pv>dv){w=g.bet*2;msg=pv+' против '+dv+' — победа! +'+fmt(w);}
+  else if(pv===dv){w=g.bet;msg='Ничья '+pv+':'+dv+'.';}
+  else msg=pv+' против '+dv+' — Барсик сильнее.';
+  if(w>0){pay(w);if(w>g.bet){confetti(w>=g.bet*2?30:16);SFX.win();floatTxt('+'+fmt(w),CW/2,CH*0.3,'#39ff8e');}else SFX.click();}
+  else SFX.lose();
+  g.msg=msg;g.phase='done';g.bet=Math.max(10,Math.floor(g.bet/2))||10;upd();save();
+ }
  g.enter=function(p){
   p.innerHTML='<div class="row"><span style="font-size:11px;color:var(--muted);font-weight:800">Ставка:</span>'+
    [10,50,100,500].map(function(v){return '<button class="chip c'+v+'" data-bj="'+v+'">'+v+'</button>';}).join('')+
-   '</div><div class="row" style="margin-top:8px"><button class="btn gold" id="bjDeal">🎴 Раздать</button><button class="btn grn" id="bjHit">➕ Ещё</button><button class="btn red" id="bjStand">✋ Хватит</button><button class="btn blu" id="bjDbl">⏫ Удвоить</button></div><div class="msg" id="bjMsg">Выбери ставку и раздавай</div>';
-  p.querySelectorAll('[data-bj]').forEach(function(b){b.onclick=function(){g.bet=+b.getAttribute('data-bj');p.querySelectorAll('[data-bj]').forEach(function(x){x.classList.remove('on');});b.classList.add('on');SFX.chip();upd();};});
-  p.querySelector('[data-bj="50"]').classList.add('on');g.bet=50;
+   '</div><div class="row" style="margin-top:8px"><button class="btn gold" id="bjDeal">🎴 Раздать</button><button class="btn grn" id="bjHit">➕ Ещё</button><button class="btn red" id="bjStand">✋ Хватит</button><button class="btn blu" id="bjDbl">⏫ ×2</button></div><div class="msg" id="bjMsg">Выбери ставку и раздавай</div>';
+  p.querySelectorAll('[data-bj]').forEach(function(b){b.onclick=function(){g.bet=+b.getAttribute('data-bj');p.querySelectorAll('[data-bj]').forEach(function(x){x.classList.remove('on');});b.classList.add('on');SFX.chip();};});
+  p.querySelector('[data-bj="50"]').classList.add('on');
   $('bjDeal').onclick=function(){
    if(g.phase!=='bet'&&g.phase!=='done')return;
    if(!bet(g.bet))return;
@@ -527,35 +553,6 @@ GAMES.blackjack=(function(){
   $('bjDbl').onclick=function(){if(g.phase!=='player'||g.ph.length!==2)return;if(!bet(g.bet))return;g.bet*=2;dealTo(g.ph,0);if(val(g.ph)>21)settle();else dealerPlay();};
   upd();
  };
- function upd(){
-  var d=$('bjDeal'),h=$('bjHit'),s=$('bjStand'),b=$('bjDbl');
-  if(d)d.disabled=!(g.phase==='bet'||g.phase==='done');
-  if(h)h.disabled=g.phase!=='player';
-  if(s)s.disabled=g.phase!=='player';
-  if(b)b.disabled=!(g.phase==='player'&&g.ph.length===2&&S.bal>=g.bet);
-  var m=$('bjMsg');if(m&&g.msg)m.textContent=g.msg;
- }
- function dealerPlay(){
-  g.phase='dealer';g.hide=false;upd();
-  var step=function(){
-   if(val(g.dh)<17){dealTo(g.dh,0);setTimeout(step,420);}
-   else settle();
-  };
-  setTimeout(step,420);
- }
- function settle(){
-  g.hide=false;
-  var pv=val(g.ph),dv=val(g.dh),w=0,msg='';
-  if(pv>21){msg='Перебор '+pv+'. Барсик забирает ставку.';}
-  else if(g.ph.length===2&&pv===21){w=Math.floor(g.bet*2.5);msg='🃏 БЛЭКДЖЕК! +'+fmt(w);}
-  else if(dv>21){w=g.bet*2;msg='Барсик перебрал ('+dv+')! +'+fmt(w);}
-  else if(pv>dv){w=g.bet*2;msg=pv+' против '+dv+' — победа! +'+fmt(w);}
-  else if(pv===dv){w=g.bet;msg='Ничья '+pv+':'+dv+'. Ставка возвращена.';}
-  else{msg=pv+' против '+dv+' — Барсик сильнее.';}
-  if(w>0){pay(w);if(w>g.bet){confetti(w>=g.bet*2?30:16);SFX.win();floatTxt('+'+fmt(w),CW/2,CH*0.3,'#39ff8e');}else SFX.click();}
-  else SFX.lose();
-  g.msg=msg;g.phase='done';g.bet=Math.max(10,Math.floor(g.bet/2))||10;upd();save();
- }
  g.update=function(){};
  g.draw=function(t){
   CX.clearRect(0,0,CW,CH);
@@ -574,16 +571,11 @@ GAMES.blackjack=(function(){
    h.forEach(function(c,i){
     var pr=eoc(clamp((now()-c.at)/300,0,1));
     if(pr<=0)return;
-    var x=lerp(CW-cw-16,x0+i*w0,pr),y2=lerp(16,y,pr);
-    drawCard(CX,x,y2,cw,chh,c,!(hideSecond&&i===1),hideSecond&&i===1?0:pr);
+    drawCard(CX,lerp(CW-cw-16,x0+i*w0,pr),lerp(16,y,pr),cw,chh,c,!(hideSecond&&i===1),hideSecond&&i===1?0:pr);
    });
   }
   hand(g.dh,CH*0.16,g.hide&&g.phase!=='done'&&g.phase!=='dealer');
   hand(g.ph,CH*0.6);
-  if(g.phase==='bet'||g.phase==='done'){
-   CX.font='bold 14px system-ui';CX.textAlign='center';CX.fillStyle='rgba(255,209,102,.85)';
-   CX.fillText('Ставка: '+g.bet+' 🪙',CW/2,CH*0.5);CX.textAlign='left';
-  }
   drawFx();
  };
  return g;
@@ -604,15 +596,15 @@ GAMES.slots=(function(){
    if(g.spinning)return;
    if(!bet(g.bet))return;
    g.spinning=true;g.t0=now();g.win=0;g.lever=1;
-   for(var i=0;i<3;i++){g.vel[i]=rand(14,18);g.stopAt[i]=now()+900+i*420;g.target[i]=randi(0,SYM.length-1);}
-   SFX.spin?SFX.spin():noise(0.3,0.08,1500);
+   for(var i=0;i<3;i++){g.vel[i]=1;g.stopAt[i]=now()+900+i*420;g.target[i]=randi(0,SYM.length-1);}
+   noise(0.3,0.08,1500);
    $('slSpin').disabled=true;
   };
  };
  g.update=function(dt){
   if(!g.spinning)return;
   for(var i=0;i<3;i++){
-   if(now()<g.stopAt[i]){g.off[i]+=g.vel[i]*dt*10;}
+   if(now()<g.stopAt[i])g.off[i]+=dt*14;
    else if(g.vel[i]>0){
     g.vel[i]=0;g.reels[i]=g.target[i];
     var frac=g.off[i]%1;g.off[i]=g.off[i]-frac+(frac>0.5?1:0);
@@ -625,7 +617,7 @@ GAMES.slots=(function(){
    var a=SYM[g.reels[0]],b=SYM[g.reels[1]],c2=SYM[g.reels[2]];
    var m=$('slMsg');
    if(a===b&&b===c2){g.win=g.bet*(PAY[a]||10);g.winT=now();pay(g.win);confetti(40);SFX.big();if(m)m.textContent='🎉 ДЖЕКПОТ '+a+a+a+'! +'+fmt(g.win)+' 🪙';for(var k=0;k<12;k++)part(CW/2+rand(-60,60),CH*0.4,'coin');}
-   else if(a===b||b===c2||a===c2){var pr=a===b?a:(b===c2?b:a);g.win=g.bet*2;g.winT=now();pay(g.win);SFX.win();if(m)m.textContent='✨ Пара '+pr+'! +'+fmt(g.win)+' 🪙';}
+   else if(a===b||b===c2||a===c2){g.win=g.bet*2;g.winT=now();pay(g.win);SFX.win();if(m)m.textContent='✨ Пара! +'+fmt(g.win)+' 🪙';}
    else{SFX.lose();if(m)m.textContent='Мимо… крути ещё!';}
    save();
   }
@@ -644,15 +636,13 @@ GAMES.slots=(function(){
    var rx=mx+i*rw;
    CX.fillStyle='#0b0f1e';rr(CX,rx+4,my,rw-8,rh,10);CX.fill();
    CX.save();rr(CX,rx+4,my,rw-8,rh,10);CX.clip();
-   var step=rh/3;
-   var base=g.off[i];
+   var step=rh/3,base=g.off[i];
    for(var k=-1;k<4;k++){
     var idx=((Math.floor(base)+k)%SYM.length+SYM.length)%SYM.length;
     var yy=my+rh/2+(k-(base%1))*step-step/2;
-    var blur=g.vel[i]>0?0.35:0;
     CX.globalAlpha=1-Math.abs(yy-(my+rh/2))/(rh*0.75)*0.7;
     CX.font=(rw*0.42)+'px serif';CX.textAlign='center';
-    if(blur){CX.save();CX.translate(rx+rw/2,yy+step/2);CX.scale(1,1.25);CX.fillText(SYM[idx],0,0);CX.restore();}
+    if(g.vel[i]>0){CX.save();CX.translate(rx+rw/2,yy+step/2);CX.scale(1,1.25);CX.fillText(SYM[idx],0,0);CX.restore();}
     else CX.fillText(SYM[idx],rx+rw/2,yy+step/2);
     CX.globalAlpha=1;
    }
@@ -673,7 +663,7 @@ GAMES.slots=(function(){
 /* ---------- DICE ---------- */
 var PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 GAMES.dice=(function(){
- var g={bet:50,rolling:false,t0:0,you:1,cat:1,rot:0,msg:''};
+ var g={bet:50,rolling:false,t0:0,you:1,cat:1,rot:0};
  function die(c,x,y,s,v,rot){
   c.save();c.translate(x,y);c.rotate(rot);
   c.fillStyle='rgba(0,0,0,.4)';rr(c,-s/2+3,-s/2+4,s,s,s*0.18);c.fill();
@@ -687,7 +677,7 @@ GAMES.dice=(function(){
  g.enter=function(p){
   p.innerHTML='<div class="row"><span style="font-size:11px;color:var(--muted);font-weight:800">Ставка:</span>'+
    [10,50,100,500].map(function(v){return '<button class="chip c'+v+'" data-dc="'+v+'">'+v+'</button>';}).join('')+
-   '<button class="btn gold grow" id="dcRoll">🎲 БРОСИТЬ</button></div><div class="msg" id="dcMsg">Больше очков — победа ×2, ничья — возврат</div>';
+   '<button class="btn gold grow" id="dcRoll">🎲 БРОСИТЬ</button></div><div class="msg" id="dcMsg">Больше очков — ×2, ничья — возврат</div>';
   p.querySelectorAll('[data-dc]').forEach(function(b){b.onclick=function(){g.bet=+b.getAttribute('data-dc');p.querySelectorAll('[data-dc]').forEach(function(x){x.classList.remove('on');});b.classList.add('on');SFX.chip();};});
   p.querySelector('[data-dc="50"]').classList.add('on');
   $('dcRoll').onclick=function(){
@@ -700,14 +690,13 @@ GAMES.dice=(function(){
  g.update=function(dt){
   if(!g.rolling)return;
   g.rot+=dt*9;
-  var t=now()-g.t0;
-  if(t>1150){
+  if(now()-g.t0>1150){
    g.rolling=false;g.rot=0;
    var s=$('dcRoll');if(s)s.disabled=false;
    var m=$('dcMsg');
-   if(g.you>g.cat){pay(g.bet*2);if(m)m.textContent='🎉 '+g.you+' : '+g.cat+' — победа! +'+fmt(g.bet*2)+' 🪙';SFX.win();confetti(20);floatTxt('+'+fmt(g.bet*2),CW/2,CH*0.35,'#39ff8e');}
-   else if(g.you<g.cat){if(m)m.textContent='😼 '+g.you+' : '+g.cat+' — Барсик забрал ставку.';SFX.lose();}
-   else{pay(g.bet);if(m)m.textContent='🤝 '+g.you+' : '+g.cat+' — ничья, возврат.';SFX.click();}
+   if(g.you>g.cat){pay(g.bet*2);if(m)m.textContent='🎉 '+g.you+' : '+g.cat+' — победа! +'+fmt(g.bet*2);SFX.win();confetti(20);floatTxt('+'+fmt(g.bet*2),CW/2,CH*0.35,'#39ff8e');}
+   else if(g.you<g.cat){if(m)m.textContent='😼 '+g.you+' : '+g.cat+' — Барсик забрал.';SFX.lose();}
+   else{pay(g.bet);if(m)m.textContent='🤝 '+g.you+' : '+g.cat+' — ничья.';SFX.click();}
    save();
   }
  };
@@ -721,7 +710,7 @@ GAMES.dice=(function(){
   var yv=g.rolling?-Math.abs(Math.sin((now()-g.t0)*0.012))*30:0;
   die(CX,CW*0.32,CH*0.5+yv,s,g.rolling?randi(1,6):g.you,g.rot+tumble);
   die(CX,CW*0.68,CH*0.5+yv*0.8,s,g.rolling?randi(1,6):g.cat,-g.rot*0.9+tumble);
-  avBarsik(CX,CW*0.84,CH*0.2,Math.min(CW,CH)*0.11,g.rolling?'sleep':(g.you>g.cat?'sad':'happy'));
+  avBarsik(CX,CW*0.84,CH*0.2,Math.min(CW,CH)*0.11,g.you>g.cat?'sad':'happy');
   avYou(CX,CW*0.16,CH*0.2,Math.min(CW,CH)*0.1);
   CX.font='bold 11px system-ui';CX.textAlign='center';CX.fillStyle='rgba(233,237,245,.8)';
   CX.fillText('ТЫ',CW*0.16,CH*0.2+Math.min(CW,CH)*0.14);
@@ -730,35 +719,26 @@ GAMES.dice=(function(){
  };
  return g;
 })();
-/* ---------- POKER (холдем на 5) ---------- */
+/* ---------- POKER ---------- */
 GAMES.poker=(function(){
  var SEATS=[{x:0.5,y:0.86,av:'you',name:'Ты'},{x:0.13,y:0.6,av:'murka',name:'Мурка'},{x:0.28,y:0.16,av:'barsik',name:'Барсик'},{x:0.72,y:0.16,av:'baron',name:'Барон'},{x:0.87,y:0.6,av:'luna',name:'Луна'}];
- var g={state:'idle',players:[],deck:[],comm:[],pot:0,cur:0,dealer:4,round:0,curBet:0,raiseAmt:20,timer:0,msg:'Нажми «Раздать» — Барсик уже за столом 🐾',winSeat:-1,winT:0,bet:20,speech:null,speechT:0};
+ var g={state:'idle',players:[],deck:[],comm:[],pot:0,cur:0,dealer:4,round:0,curBet:0,raiseAmt:20,timer:0,msg:'Нажми «Раздать» — Барсик уже за столом 🐾',winSeat:-1,winT:0,speech:null,speechT:0};
  function seatXY(i){return{x:SEATS[i].x*CW,y:SEATS[i].y*CH};}
  function say(txt){g.speech=txt;g.speechT=now();if(Math.random()<0.5)SFX.meow();}
  function active(){return g.players.filter(function(p){return !p.folded;});}
  function nextAct(from){for(var i=1;i<=5;i++){var idx=(from+i)%5;if(!g.players[idx].folded)return idx;}return -1;}
- function commit(pl,amt){
-  pl.bet+=amt;pl.stack-=amt;
-  if(pl.human){S.bal=Math.max(0,S.bal-amt);save();}
-  g.pot+=amt;
- }
+ function commit(pl,amt){pl.bet+=amt;pl.stack-=amt;if(pl.human){S.bal=Math.max(0,S.bal-amt);save();}g.pot+=amt;}
  function strength(pl){
   if(g.comm.length===0){
-   var r1=pl.hole[0].r,r2=pl.hole[1].r,su=pl.hole[0].s===pl.hole[1].s;
-   var mx=Math.max(r1,r2);
+   var r1=pl.hole[0].r,r2=pl.hole[1].r,su=pl.hole[0].s===pl.hole[1].s,mx=Math.max(r1,r2);
    return (r1===r2?4+mx/14:mx/14*1.6+(su?0.35:0))/6;
   }
-  var e=bestOf(pl.hole.concat(g.comm));
-  return clamp(e.cat/6+ (e.cat===0?e.v%100/1400:0),0,1.4);
+  return clamp(bestOf(pl.hole.concat(g.comm)).cat/6,0,1.4);
  }
  function aiAct(pl){
   var s=strength(pl)+(pl.agg||0)*rand(-0.18,0.22);
   var toCall=g.curBet-pl.bet;
-  if(toCall<=0){
-   if(s>0.55|| (s>0.35&&Math.random()<0.35))return{a:'raise'};
-   return{a:'check'};
-  }
+  if(toCall<=0)return (s>0.55||(s>0.35&&Math.random()<0.35))?{a:'raise'}:{a:'check'};
   if(s<0.22&&toCall>=g.raiseAmt)return{a:'fold'};
   if(s>0.75)return{a:'raise'};
   if(s>0.34||toCall<=20)return{a:'call'};
@@ -767,27 +747,27 @@ GAMES.poker=(function(){
  function applyAct(pl,act){
   var toCall=g.curBet-pl.bet;
   if(act.a==='fold'){pl.folded=true;pl.msg='фолд';}
-  else if(act.a==='check'){pl.msg='чек';}
-  else if(act.a==='call'){commit(pl,Math.min(toCall,pl.stack));pl.msg='колл '+Math.min(toCall,pl.stack);}
-  else if(act.a==='raise'){var add=g.curBet+g.raiseAmt-pl.bet;commit(pl,Math.min(add,pl.stack));g.curBet=pl.bet;g.players.forEach(function(q){if(q!==pl)q.acted=false;});pl.msg='рейз до '+pl.bet;}
+  else if(act.a==='check')pl.msg='чек';
+  else if(act.a==='call'){var c=Math.min(toCall,pl.stack);commit(pl,c);pl.msg='колл '+c;}
+  else if(act.a==='raise'){var add=g.curBet+g.raiseAmt-pl.bet;commit(pl,Math.min(add,pl.stack));g.curBet=pl.bet;g.players.forEach(function(q){if(q!==pl)q.acted=false;});pl.msg='рейз '+pl.bet;}
   if(pl.seat===2&&Math.random()<0.55){
-   say(act.a==='raise'?pick(['Мур! Повышаю! 🐾','Барсик идёт ва-банк… почти! 😼','Ставлю выше — я же хищник!']):
-       act.a==='fold'?pick(['Пас, хвост нервничает…','Сброшу, подожду рыбку получше 🐟']):
-       act.a==='call'?pick(['Колл. Мяу-кау! 😼','Смотрю твою ставку…']):
-       pick(['Чек. Мур…','Пропущу, мурлыкну пока…']));
+   say(act.a==='raise'?pick(['Мур! Повышаю! 🐾','Барсик идёт в атаку! 😼','Ставлю выше — я хищник!']):
+    act.a==='fold'?pick(['Пас, хвост нервничает…','Сброшу, подожду рыбку 🐟']):
+    act.a==='call'?pick(['Колл. Мяу-кау! 😼','Смотрю твою ставку…']):
+    pick(['Чек. Мур…','Пропущу, мурлыкну…']));
   }
   SFX.card();
  }
+ function allActed(){return active().every(function(p){return p.acted&&p.bet===g.curBet;});}
  function advance(){
-  var idx=nextAct(g.cur);
-  if(idx===-1||active().length===1){endHand();return;}
-  g.cur=idx;
-  var pl=g.players[idx];
+  if(active().length===1){endHand();return;}
   if(allActed()){nextStreet();return;}
-  if(pl.human){g.state='human';updBtns();}
+  var idx=nextAct(g.cur);
+  if(idx===-1){endHand();return;}
+  g.cur=idx;
+  if(g.players[idx].human){g.state='human';updBtns();}
   else{g.state='ai';g.timer=now()+randi(750,1400);}
  }
- function allActed(){return active().every(function(p){return p.acted&&p.bet===g.curBet;});}
  function nextStreet(){
   g.players.forEach(function(p){p.bet=0;p.acted=false;p.msg='';});
   g.curBet=0;g.round++;
@@ -803,18 +783,16 @@ GAMES.poker=(function(){
   w.stack+=g.pot;
   if(w.human){pay(g.pot);floatTxt('+'+fmt(g.pot),seatXY(0).x,seatXY(0).y-40,'#39ff8e');confetti(26);SFX.win();}
   else if(w.seat===2)say('Рыбка моя! 😼🐟');
-  g.msg=w.name+' забирает банк '+g.pot+' (все сбросили)';
-  g.winSeat=w.seat;g.winT=now();
-  g.state='done';updBtns();save();
+  g.msg=w.name+' забирает банк '+g.pot;
+  g.winSeat=w.seat;g.winT=now();g.state='done';updBtns();save();
  }
  function showdown(){
-  g.state='show';
   var best=null,winners=[];
   active().forEach(function(p){p.ev=bestOf(p.hole.concat(g.comm));if(!best||p.ev.v>best.v){best=p.ev;winners=[p];}else if(p.ev.v===best.v)winners.push(p);});
   var share=Math.floor(g.pot/winners.length);
   winners.forEach(function(w){w.stack+=share;if(w.human){pay(share);floatTxt('+'+fmt(share),seatXY(0).x,seatXY(0).y-40,'#39ff8e');}});
   g.winSeat=winners[0].seat;g.winT=now();
-  g.msg=winners.map(function(w){return w.name;}).join(' и ')+' выигрывает: '+best.name+' (+'+fmt(share)+')';
+  g.msg=winners.map(function(w){return w.name;}).join(' и ')+' выигрывает: '+best.name;
   if(winners[0].human){confetti(40);SFX.big();}
   else if(winners[0].seat===2)say(pick(['Муррр, банк мой! 😼','Вот так рыбка! 🐾']));
   else SFX.lose();
@@ -822,12 +800,11 @@ GAMES.poker=(function(){
  }
  function updBtns(){
   var f=$('pkFold'),c=$('pkCall'),r=$('pkRaise'),s=$('pkStart');
-  var human=g.players[0];
-  var my=g.state==='human';
+  var human=g.players[0],my=g.state==='human';
   if(f)f.disabled=!my;
   if(c){c.disabled=!my;if(my){var tc=g.curBet-human.bet;c.textContent=tc<=0?'Чек':'Колл '+tc;}}
   if(r){r.disabled=!my||human.stack<=g.raiseAmt;if(my)r.textContent='Рейз +'+g.raiseAmt;}
-  if(s)s.disabled=g.state!=='idle'&&g.state!=='done';
+  if(s)s.disabled=!(g.state==='idle'||g.state==='done');
  }
  g.enter=function(p){
   p.innerHTML='<div class="row"><button class="btn gold grow" id="pkStart">🎴 Раздать (блайнды 10/20)</button></div>'+
@@ -843,21 +820,19 @@ GAMES.poker=(function(){
      stack:i===0?S.bal:(old&&old.stack>0?old.stack:500),agg:i===2?0.22:(i===3?0.1:0)};
    });
    g.dealer=(g.dealer+1)%5;
-   var b1=g.players[(g.dealer+1)%5],b2=g.players[(g.dealer+2)%5];
-   commit(b1,10);commit(b2,20);g.curBet=20;
-   for(var i=0;i<5;i++){g.players[i].hole=[Object.assign({},g.deck.pop(),{at:now()+i*120}),Object.assign({},g.deck.pop(),{at:now()+i*120+60})];}
+   commit(g.players[(g.dealer+1)%5],10);commit(g.players[(g.dealer+2)%5],20);g.curBet=20;
+   for(var i=0;i<5;i++)g.players[i].hole=[Object.assign({},g.deck.pop(),{at:now()+i*120}),Object.assign({},g.deck.pop(),{at:now()+i*120+60})];
    SFX.deal();
    g.msg='Новая раздача!';
    g.cur=nextAct(g.dealer);
-   g.state='x';advance();
-   updBtns();
+   g.state='x';advance();updBtns();
   };
   $('pkFold').onclick=function(){if(g.state!=='human')return;var pl=g.players[0];pl.acted=true;applyAct(pl,{a:'fold'});advance();};
   $('pkCall').onclick=function(){if(g.state!=='human')return;var pl=g.players[0];pl.acted=true;applyAct(pl,{a:(g.curBet-pl.bet<=0)?'check':'call'});advance();};
   $('pkRaise').onclick=function(){if(g.state!=='human')return;var pl=g.players[0];pl.acted=true;applyAct(pl,{a:'raise'});advance();};
   updBtns();
  };
- g.update=function(dt){
+ g.update=function(){
   if(g.state==='ai'&&now()>g.timer){
    var pl=g.players[g.cur];
    pl.acted=true;
@@ -872,7 +847,6 @@ GAMES.poker=(function(){
   bg.addColorStop(0,'#155240');bg.addColorStop(1,'#082018');
   CX.fillStyle=bg;CX.fillRect(0,0,CW,CH);
   CX.strokeStyle='rgba(255,209,102,.35)';CX.lineWidth=3;CX.beginPath();CX.ellipse(CW/2,CH*0.5,CW*0.42,CH*0.34,0,0,7);CX.stroke();
-  CX.strokeStyle='rgba(255,209,102,.15)';CX.lineWidth=1.5;CX.beginPath();CX.ellipse(CW/2,CH*0.5,CW*0.36,CH*0.28,0,0,7);CX.stroke();
   CX.font='bold 13px system-ui';CX.textAlign='center';CX.fillStyle='#ffd166';
   CX.fillText('БАНК '+fmt(g.pot)+' 🪙',CW/2,CH*0.5-CH*0.16);CX.textAlign='left';
   var cw=Math.min(40,CW*0.1),chh=cw*1.4;
@@ -889,31 +863,25 @@ GAMES.poker=(function(){
    CX.fillStyle=i===g.cur&&g.state!=='done'?'#2a3560':'#182148';
    CX.beginPath();CX.arc(x,y,r*1.25,0,7);CX.fill();
    CX.strokeStyle=i===g.cur&&g.state!=='done'?'#39ff8e':'#3d4c85';CX.lineWidth=2;CX.beginPath();CX.arc(x,y,r*1.25,0,7);CX.stroke();
-   AV[s.av](CX,x,y,r,s.av==='barsik'&&(g.winSeat===2&&now()-g.winT<2500)?'happy':undefined);
+   AV[s.av](CX,x,y,r);
    CX.font='bold 10px system-ui';CX.textAlign='center';CX.fillStyle='#eef2ff';
    CX.fillText(s.name+(pl&&pl.folded?' ✕':''),x,y+r*1.25+12);
    if(pl){
     CX.fillStyle='rgba(255,209,102,.85)';CX.font='9px system-ui';
-    CX.fillText('🪙'+fmt(Math.max(0,pl.human?S.bal:pl.stack))+(pl.bet?' · ставка '+pl.bet:''),x,y+r*1.25+23);
-    if(i===(g.dealer+1)%5&&g.state!=='idle'){CX.fillStyle='#fff';CX.font='bold 9px system-ui';CX.fillText('D',x+r*1.15,y-r*1.05);}
+    CX.fillText('🪙'+fmt(Math.max(0,pl.human?S.bal:pl.stack))+(pl.bet?' · '+pl.bet:''),x,y+r*1.25+23);
     if(pl.hole.length){
      var face=pl.human||g.state==='done';
      for(var k2=0;k2<2;k2++){
       var cd=pl.hole[k2];
       var pr2=eoc(clamp((now()-cd.at)/280,0,1));if(pr2<=0)continue;
-      var dx=x-cw*0.8+k2*cw*0.62,dy=y-r*1.5-chh*0.5;
-      drawCard(CX,lerp(CW/2,dx,pr2),lerp(CH*0.5,dy,pr2),cw*0.9,chh*0.9,cd,face,face?pr2:0);
+      drawCard(CX,lerp(CW/2,x-cw*0.8+k2*cw*0.62,pr2),lerp(CH*0.5,y-r*1.5-chh*0.5,pr2),cw*0.9,chh*0.9,cd,face,face?pr2:0);
      }
     }
-    if(pl.bet>0){drawChip(CX,x+(i<2?-r*1.6:(i>2?r*1.6:0)),y+(i===0?-r*1.9:r*0.2),9,'#f59e0b','');}
-    if(pl.msg&&g.state!=='done'){CX.font='9px system-ui';CX.fillStyle='rgba(233,237,245,.7)';CX.fillText(pl.msg,x,y-r*1.7-chh-4);}
     if(g.state==='done'&&pl.ev&&!pl.folded){CX.font='bold 9px system-ui';CX.fillStyle='#39ff8e';CX.fillText(pl.ev.name,x,y-r*1.7-chh-4);}
    }
    CX.textAlign='left';
   }
-  if(g.speech&&now()-g.speechT<3200){
-   var bs=SEATS[2];bubble(CX,bs.x*CW,bs.y*CH-Math.min(CW,CH)*0.075*1.5-8,g.speech);
-  }
+  if(g.speech&&now()-g.speechT<3200)bubble(CX,SEATS[2].x*CW,SEATS[2].y*CH-Math.min(CW,CH)*0.12,g.speech);
   drawFx();
  };
  return g;
@@ -921,71 +889,15 @@ GAMES.poker=(function(){
 /* ---------- DURAK ---------- */
 GAMES.durak=(function(){
  var g={state:'idle',bet:30,deck:[],trump:null,ph:[],bh:[],table:[],phase:'attack',msg:'Нажми «Новая партия»',sel:-1,over:false};
- function beats(a,d){if(a.s===d.s)return d.r>a.r;if(d.s===(g.trump&&g.trump.s))return true;return false;}
- function redraw(){}
- g.enter=function(p){
-  p.innerHTML='<div class="row"><span style="font-size:11px;color:var(--muted);font-weight:800">Ставка:</span>'+
-   [10,30,50,100].map(function(v){return '<button class="chip c'+v+'" data-du="'+v+'">'+v+'</button>';}).join('')+
-   '<button class="btn gold grow" id="duNew">🂡 Новая партия</button></div>'+
-   '<div class="row" style="margin-top:6px"><button class="btn grn grow" id="duAtk">Атаковать/Добавить</button><button class="btn blu grow" id="duBeat">Бить</button><button class="btn red" id="duTake">Взять</button><button class="btn" id="duPass">Бито</button></div>'+
-   '<div class="msg" id="duMsg">'+g.msg+'</div>';
-  p.querySelectorAll('[data-du]').forEach(function(b){b.onclick=function(){g.bet=+b.getAttribute('data-du');p.querySelectorAll('[data-du]').forEach(function(x){x.classList.remove('on');});b.classList.add('on');SFX.chip();};});
-  p.querySelector('[data-du="30"]').classList.add('on');
-  $('duNew').onclick=function(){
-   if(!bet(g.bet))return;
-   g.deck=shuf(mkDeck().filter(function(c){return c.r>=6;}));
-   g.trump=g.deck[0];
-   g.ph=[];g.bh=[];g.table=[];g.over=false;g.sel=-1;g.phase='attack';
-   for(var i=0;i<6;i++){g.ph.push(Object.assign({},g.deck.pop(),{at:now()+i*90}));g.bh.push(Object.assign({},g.deck.pop(),{at:now()+i*90}));}
-   g.msg='Ты атакуешь. Выбери карту и жми «Атаковать».';
-   SFX.deal();updDu();
-  };
-  $('duAtk').onclick=function(){
-   if(g.over||g.phase!=='attack'||g.sel<0)return;
-   var c=g.ph[g.sel];
-   var undef=g.table.filter(function(q){return !q.d;}).length;
-   if(g.table.length){
-    var ranks={};g.table.forEach(function(q){ranks[q.a.r]=1;if(q.d)ranks[q.d.r]=1;});
-    if(!ranks[c.r]){toast('Можно подкинуть только по номиналу');return;}
-    if(undef>0){toast('Сначала отбейте/возьмите текущие');return;}
-   }
-   if(g.table.length>=6||g.table.length>=g.bh.length){toast('Больше не подкинуть');return;}
-   g.ph.splice(g.sel,1);g.sel=-1;
-   g.table.push({a:Object.assign({},c,{at:now()}),d:null});
-   SFX.card();g.phase='defend-bot';g.msg='Барсик думает…';
-   setTimeout(botDefend,700);
-   updDu();
-  };
-  $('duBeat').onclick=function(){
-   if(g.over||g.phase!=='defend'||g.sel<0)return;
-   var undef=g.table.filter(function(q){return !q.d;});
-   if(!undef.length)return;
-   var c=g.ph[g.sel];
-   if(!beats(c,undef[0].a)){toast('Эта карта не бьёт '+rankTxt(undef[0].a.r)+SUITS[undef[0].a.s]);return;}
-   g.ph.splice(g.sel,1);g.sel=-1;
-   undef[0].d=Object.assign({},c,{at:now()});
-   SFX.card();
-   afterDefend();
-   updDu();
-  };
-  $('duTake').onclick=function(){
-   if(g.over||g.phase!=='defend')return;
-   g.table.forEach(function(q){g.ph.push(q.a);if(q.d)g.ph.push(q.d);});
-   g.table=[];refill();
-   g.phase='attack-bot';g.msg='Ты взял. Барсик атакует…';
-   SFX.lose();setTimeout(botAttack,800);
-   updDu();
-  };
-  $('duPass').onclick=function(){
-   if(g.over||g.phase!=='attack'||g.table.length===0)return;
-   if(g.table.filter(function(q){return !q.d;}).length){toast('Сначала заверши текущие пары');return;}
-   g.table=[];refill();
-   g.phase='attack-bot';g.msg='Бито! Барсик атакует…';
-   setTimeout(botAttack,800);
-   updDu();
-  };
-  updDu();
- };
+ function beats(a,d){if(a.s===d.s)return d.r>a.r;if(g.trump&&d.s===g.trump.s)return true;return false;}
+ function updDu(){
+  var a=$('duAtk'),b=$('duBeat'),t=$('duTake'),ps=$('duPass'),m=$('duMsg');
+  if(a)a.disabled=g.over||g.phase!=='attack'||g.sel<0;
+  if(b)b.disabled=g.over||g.phase!=='defend'||g.sel<0||!g.table.some(function(q){return !q.d;});
+  if(t)t.disabled=g.over||g.phase!=='defend';
+  if(ps)ps.disabled=g.over||g.phase!=='attack'||!g.table.length||g.table.some(function(q){return !q.d;});
+  if(m)m.textContent=g.msg;
+ }
  function refill(){
   while(g.ph.length<6&&g.deck.length)g.ph.push(Object.assign({},g.deck.pop(),{at:now()}));
   while(g.bh.length<6&&g.deck.length)g.bh.push(Object.assign({},g.deck.pop(),{at:now()}));
@@ -1001,12 +913,10 @@ GAMES.durak=(function(){
  }
  function finish(r){
   g.over=true;
-  var m=$('duMsg');
-  if(r==='win'){pay(g.bet*2);if(m)m.textContent='🏆 Барсик остался дураком! +'+fmt(g.bet*2)+' 🪙';confetti(26);SFX.win();}
-  else if(r==='lose'){if(m)m.textContent='😿 Ты дурак в этот раз…';SFX.lose();}
-  else{pay(g.bet);if(m)m.textContent='🤝 Ничья — возврат ставки.';SFX.click();}
-  g.msg=m?m.textContent:g.msg;
-  save();
+  if(r==='win'){pay(g.bet*2);g.msg='🏆 Барсик остался дураком! +'+fmt(g.bet*2)+' 🪙';confetti(26);SFX.win();}
+  else if(r==='lose'){g.msg='😿 Ты дурак в этот раз…';SFX.lose();}
+  else{pay(g.bet);g.msg='🤝 Ничья — возврат.';SFX.click();}
+  save();updDu();
  }
  function botDefend(){
   if(g.over)return;
@@ -1016,15 +926,13 @@ GAMES.durak=(function(){
   for(var i=0;i<g.bh.length;i++){
    if(beats(g.bh[i],a)){
     if(best<0)best=i;
-    else{var w=function(c){return (c.s===(g.trump&&g.trump.s)?100:0)+c.r;};if(w(g.bh[i])<w(g.bh[best]))best=i;}
+    else{var w=function(c){return (g.trump&&c.s===g.trump.s?100:0)+c.r;};if(w(g.bh[i])<w(g.bh[best]))best=i;}
    }
   }
-  var willTake=best<0||(g.table.length>2&&Math.random()<0.25);
-  if(willTake){
+  if(best<0||(g.table.length>2&&Math.random()<0.25)){
    g.table.forEach(function(q){g.bh.push(q.a);if(q.d)g.bh.push(q.d);});
    g.table=[];refill();
-   g.phase='attack';g.msg='Барсик взял! Подкинь ещё или «Бито».';
-   if(!checkEnd()){}
+   g.phase='attack';g.msg='Барсик взял! Подкинь или «Бито».';
   }else{
    undef[0].d=Object.assign({},g.bh.splice(best,1)[0],{at:now()});
    SFX.card();
@@ -1036,7 +944,7 @@ GAMES.durak=(function(){
  function botAttack(){
   if(g.over)return;
   if(!g.bh.length){checkEnd();updDu();return;}
-  var sorted=g.bh.slice().sort(function(a,b){return (a.s===(g.trump&&g.trump.s)?100:0)+a.r-((b.s===(g.trump&&g.trump.s)?100:0)+b.r);});
+  var sorted=g.bh.slice().sort(function(a,b){return (g.trump&&a.s===g.trump.s?100:0)+a.r-((g.trump&&b.s===g.trump.s?100:0)+b.r);});
   var c=sorted[0];
   g.bh.splice(g.bh.indexOf(c),1);
   g.table.push({a:Object.assign({},c,{at:now()}),d:null});
@@ -1062,14 +970,65 @@ GAMES.durak=(function(){
    checkEnd();
   }
  }
- function updDu(){
-  var a=$('duAtk'),b=$('duBeat'),t=$('duTake'),ps=$('duPass'),m=$('duMsg');
-  if(a)a.disabled=g.over||g.phase!=='attack'||g.sel<0;
-  if(b)b.disabled=g.over||g.phase!=='defend'||g.sel<0||!g.table.some(function(q){return !q.d;});
-  if(t)t.disabled=g.over||g.phase!=='defend';
-  if(ps)ps.disabled=g.over||g.phase!=='attack'||!g.table.length||g.table.some(function(q){return !q.d;});
-  if(m)m.textContent=g.msg;
- }
+ g.enter=function(p){
+  p.innerHTML='<div class="row"><span style="font-size:11px;color:var(--muted);font-weight:800">Ставка:</span>'+
+   [10,30,50,100].map(function(v){return '<button class="chip c'+v+'" data-du="'+v+'">'+v+'</button>';}).join('')+
+   '<button class="btn gold grow" id="duNew">🂡 Новая партия</button></div>'+
+   '<div class="row" style="margin-top:6px"><button class="btn grn grow" id="duAtk">Атаковать</button><button class="btn blu grow" id="duBeat">Бить</button><button class="btn red" id="duTake">Взять</button><button class="btn" id="duPass">Бито</button></div>'+
+   '<div class="msg" id="duMsg">'+g.msg+'</div>';
+  p.querySelectorAll('[data-du]').forEach(function(b){b.onclick=function(){g.bet=+b.getAttribute('data-du');p.querySelectorAll('[data-du]').forEach(function(x){x.classList.remove('on');});b.classList.add('on');SFX.chip();};});
+  p.querySelector('[data-du="30"]').classList.add('on');
+  $('duNew').onclick=function(){
+   if(!bet(g.bet))return;
+   g.deck=shuf(mkDeck().filter(function(c){return c.r>=6;}));
+   g.trump=g.deck[0];
+   g.ph=[];g.bh=[];g.table=[];g.over=false;g.sel=-1;g.phase='attack';
+   for(var i=0;i<6;i++){g.ph.push(Object.assign({},g.deck.pop(),{at:now()+i*90}));g.bh.push(Object.assign({},g.deck.pop(),{at:now()+i*90}));}
+   g.msg='Ты атакуешь. Выбери карту и жми «Атаковать».';
+   SFX.deal();updDu();
+  };
+  $('duAtk').onclick=function(){
+   if(g.over||g.phase!=='attack'||g.sel<0)return;
+   var c=g.ph[g.sel];
+   var undef=g.table.filter(function(q){return !q.d;}).length;
+   if(g.table.length){
+    var ranks={};g.table.forEach(function(q){ranks[q.a.r]=1;if(q.d)ranks[q.d.r]=1;});
+    if(!ranks[c.r]){toast('Подкинуть можно только по номиналу');return;}
+    if(undef>0){toast('Сначала заверши текущие пары');return;}
+   }
+   if(g.table.length>=6||g.table.length>=g.bh.length){toast('Больше не подкинуть');return;}
+   g.ph.splice(g.sel,1);g.sel=-1;
+   g.table.push({a:Object.assign({},c,{at:now()}),d:null});
+   SFX.card();g.phase='defend-bot';g.msg='Барсик думает…';
+   setTimeout(botDefend,700);
+   updDu();
+  };
+  $('duBeat').onclick=function(){
+   if(g.over||g.phase!=='defend'||g.sel<0)return;
+   var undef=g.table.filter(function(q){return !q.d;});
+   if(!undef.length)return;
+   var c=g.ph[g.sel];
+   if(!beats(c,undef[0].a)){toast('Не бьёт '+rankTxt(undef[0].a.r)+SUITS[undef[0].a.s]);return;}
+   g.ph.splice(g.sel,1);g.sel=-1;
+   undef[0].d=Object.assign({},c,{at:now()});
+   SFX.card();afterDefend();updDu();
+  };
+  $('duTake').onclick=function(){
+   if(g.over||g.phase!=='defend')return;
+   g.table.forEach(function(q){g.ph.push(q.a);if(q.d)g.ph.push(q.d);});
+   g.table=[];refill();
+   g.phase='attack-bot';g.msg='Ты взял. Барсик атакует…';
+   SFX.lose();setTimeout(botAttack,800);updDu();
+  };
+  $('duPass').onclick=function(){
+   if(g.over||g.phase!=='attack'||!g.table.length)return;
+   if(g.table.some(function(q){return !q.d;})){toast('Сначала заверши пары');return;}
+   g.table=[];refill();
+   g.phase='attack-bot';g.msg='Бито! Барсик атакует…';
+   setTimeout(botAttack,800);updDu();
+  };
+  updDu();
+ };
  g.tap=function(x,y){
   if(g.over||!g.ph.length)return;
   var cw=Math.min(56,CW*0.14),chh=cw*1.4;
@@ -1089,25 +1048,22 @@ GAMES.durak=(function(){
   bg.addColorStop(0,'#123024');bg.addColorStop(1,'#08130d');
   CX.fillStyle=bg;CX.fillRect(0,0,CW,CH);
   var cw=Math.min(56,CW*0.14),chh=cw*1.4;
-  avBarsik(CX,CW/2,CH*0.13,Math.min(CW,CH)*0.09,g.over?'happy':(g.phase==='defend'?'sleep':undefined));
+  avBarsik(CX,CW/2,CH*0.13,Math.min(CW,CH)*0.09,g.over?'happy':undefined);
   CX.font='bold 10px system-ui';CX.textAlign='center';CX.fillStyle='#eef2ff';CX.fillText('БАРСИК · карт: '+g.bh.length,CW/2,CH*0.13+Math.min(CW,CH)*0.12);
-  for(var i=0;i<Math.min(g.bh.length,10);i++){
-   drawCard(CX,CW/2-(Math.min(g.bh.length,10)-1)*10/2+i*10- cw*0.32,CH*0.24,cw*0.64,chh*0.64,null,false,0);
-  }
+  for(var i=0;i<Math.min(g.bh.length,10);i++)drawCard(CX,CW/2-(Math.min(g.bh.length,10)-1)*5+i*10-cw*0.32,CH*0.24,cw*0.64,chh*0.64,null,false,0);
   if(g.trump&&g.deck.length){
    CX.save();CX.translate(CW*0.12,CH*0.42);CX.rotate(Math.PI/2);
    drawCard(CX,-cw*0.4,-chh*0.4,cw*0.8,chh*0.8,g.trump,true,1);
    CX.restore();
    CX.fillStyle='#ffd166';CX.font='bold 10px system-ui';CX.textAlign='center';
-   CX.fillText('Козырь '+SUITS[g.trump.s],CW*0.12,CH*0.42+chh*0.62);
-   CX.fillText('В колоде: '+g.deck.length,CW*0.12,CH*0.42+chh*0.62+12);
+   CX.fillText('Козырь '+SUITS[g.trump.s]+' · колода '+g.deck.length,CW*0.12,CH*0.42+chh*0.62);
   }else{
    CX.fillStyle='rgba(147,160,196,.7)';CX.font='10px system-ui';CX.textAlign='center';
    CX.fillText('Колода пуста',CW*0.12,CH*0.42);
   }
   CX.textAlign='left';
   g.table.forEach(function(q,i){
-   var tx=CW*0.34+ (i%3)*(cw*0.85),ty=CH*0.36+Math.floor(i/3)*(chh*0.62);
+   var tx=CW*0.34+(i%3)*(cw*0.85),ty=CH*0.36+Math.floor(i/3)*(chh*0.62);
    var pr=eoc(clamp((now()-q.a.at)/260,0,1));
    drawCard(CX,lerp(CW*0.12,tx,pr),lerp(CH*0.42,ty,pr),cw*0.8,chh*0.8,q.a,true,pr);
    if(q.d){var pr2=eoc(clamp((now()-q.d.at)/260,0,1));drawCard(CX,lerp(CW*0.8,tx+cw*0.22,pr2),lerp(CH*0.2,ty+chh*0.2,pr2),cw*0.8,chh*0.8,q.d,true,pr2);}
@@ -1132,6 +1088,407 @@ GAMES.durak=(function(){
  };
  return g;
 })();
+/* ---------- НОВОЕ: БЕГА ---------- */
+GAMES.races=(function(){
+ var RUN=[{av:'barsik',n:'Барсик'},{av:'murka',n:'Мурка'},{av:'baron',n:'Барон'},{av:'luna',n:'Луна'},{av:'you',n:'Ты'}];
+ var g={bet:50,pick:0,odds:[],state:'idle',t0:0,ft:[],win:-1,msg:'Выбери бегуна и жми СТАРТ'};
+ function makeOdds(){g.odds=RUN.map(function(){return +rand(1.9,5.5).toFixed(1);});}
+ function updPicks(){
+  var el=$('rcPicks');if(!el)return;
+  el.innerHTML='';
+  RUN.forEach(function(r,i){
+   var b=document.createElement('button');
+   b.className='btn '+(g.pick===i?'grn':'');
+   b.textContent=r.n+' ×'+g.odds[i];
+   b.onclick=function(){g.pick=i;SFX.click();updPicks();};
+   el.appendChild(b);
+  });
+ }
+ g.enter=function(p){
+  makeOdds();
+  p.innerHTML='<div class="row"><span style="font-size:11px;color:var(--muted);font-weight:800">Ставка:</span>'+
+   [10,50,100,500].map(function(v){return '<button class="chip c'+v+'" data-rs="'+v+'">'+v+'</button>';}).join('')+
+   '<button class="btn gold grow" id="rcGo">🏁 СТАРТ</button></div>'+
+   '<div class="row" id="rcPicks" style="margin-top:6px"></div><div class="msg" id="rcMsg">'+g.msg+'</div>';
+  p.querySelectorAll('[data-rs]').forEach(function(b){b.onclick=function(){g.bet=+b.getAttribute('data-rs');p.querySelectorAll('[data-rs]').forEach(function(x){x.classList.remove('on');});b.classList.add('on');SFX.chip();};});
+  p.querySelector('[data-rs="50"]').classList.add('on');
+  updPicks();
+  $('rcGo').onclick=function(){
+   if(g.state!=='idle')return;
+   if(!bet(g.bet))return;
+   g.state='count';g.t0=now();g.win=-1;
+   g.ft=RUN.map(function(){return rand(3.6,5.6);});
+   $('rcGo').disabled=true;
+  };
+ };
+ g.update=function(dt){
+  if(g.state==='count'){
+   var n=3-Math.floor((now()-g.t0)/650);
+   if(n!==g.lastN){g.lastN=n;if(n>0)SFX.count();}
+   if(now()-g.t0>1950){g.state='run';g.t0=now();SFX.go();}
+  }else if(g.state==='run'){
+   var t=(now()-g.t0)/1000;
+   if(Math.random()<0.3)part(CW*0.1+rand(0,CW*0.7),CH*0.2+rand(0,CH*0.6),'dust');
+   if(t>=Math.max.apply(null,g.ft)+0.15){
+    g.state='idle';g.win=g.ft.indexOf(Math.min.apply(null,g.ft));
+    var s=$('rcGo');if(s)s.disabled=false;
+    var m=$('rcMsg');
+    if(g.win===g.pick){var w=Math.floor(g.bet*g.odds[g.win]);pay(w);if(m)m.textContent='🏆 Победил '+RUN[g.win].n+'! +'+fmt(w)+' 🪙';confetti(34);SFX.big();floatTxt('+'+fmt(w),CW/2,CH*0.3,'#39ff8e');}
+    else{if(m)m.textContent='Победил '+RUN[g.win].n+'. Твой ставке не повезло…';SFX.lose();}
+    makeOdds();updPicks();save();
+   }
+  }
+ };
+ g.draw=function(t){
+  CX.clearRect(0,0,CW,CH);
+  var bg=CX.createLinearGradient(0,0,0,CH);bg.addColorStop(0,'#241a10');bg.addColorStop(1,'#120c06');
+  CX.fillStyle=bg;CX.fillRect(0,0,CW,CH);
+  var laneH=CH*0.66/5,y0=CH*0.17;
+  for(var i=0;i<5;i++){
+   var y=y0+i*laneH;
+   CX.fillStyle=i%2?'rgba(255,255,255,.03)':'rgba(255,255,255,.06)';
+   CX.fillRect(0,y,CW,laneH);
+   CX.strokeStyle='rgba(255,209,102,.25)';CX.lineWidth=1;CX.beginPath();CX.moveTo(0,y);CX.lineTo(CW,y);CX.stroke();
+  }
+  CX.strokeStyle='rgba(255,255,255,.15)';CX.setLineDash([6,6]);CX.beginPath();CX.moveTo(CW*0.1,0);CX.lineTo(CW*0.1,CH);CX.stroke();CX.setLineDash([]);
+  for(var f=0;f<8;f++){CX.fillStyle=f%2?'#fff':'#111';CX.fillRect(CW-16,f*(CH/8),8,CH/8);CX.fillRect(CW-8,(f+1)*(CH/8),8,CH/8);}
+  var tt=g.state==='run'?(now()-g.t0)/1000:0;
+  for(var r2=0;r2<5;r2++){
+   var prog=g.state==='run'?eoc(clamp(tt/g.ft[r2],0,1)):0;
+   var x=CW*0.1+prog*(CW*0.82-40);
+   var y2=y0+r2*laneH+laneH/2+(g.state==='run'?Math.sin(t*14+r2)*2:0);
+   var rad=Math.min(laneH*0.36,18);
+   AV[RUN[r2].av](CX,x,y2,rad);
+   CX.font='bold 9px system-ui';CX.fillStyle=g.pick===r2?'#39ff8e':'rgba(233,237,245,.7)';CX.textAlign='left';
+   CX.fillText(RUN[r2].n+' ×'+g.odds[r2],6,y0+r2*laneH+12);
+   if(g.win===r2&&g.state==='idle'){CX.font='20px serif';CX.textAlign='center';CX.fillText('🏆',x,y2-rad-6);CX.textAlign='left';}
+  }
+  if(g.state==='count'){
+   var n=3-Math.floor((now()-g.t0)/650);
+   CX.font='bold 60px system-ui';CX.textAlign='center';CX.fillStyle='#ffd166';
+   CX.shadowColor='#ffd166';CX.shadowBlur=24;
+   CX.fillText(n>0?n:'GO!',CW/2,CH*0.55);
+   CX.shadowBlur=0;CX.textAlign='left';
+  }
+  drawFx();
+ };
+ return g;
+})();
+/* ---------- НОВОЕ: CRASH / РАКЕТА ---------- */
+GAMES.crash=(function(){
+ var g={bet:50,state:'idle',t0:0,mult:1,crashAt:2,hist:[],stars:[]};
+ for(var i=0;i<40;i++)g.stars.push({x:Math.random(),y:Math.random(),z:rand(0.3,1)});
+ function newCrash(){var r=Math.random();return Math.min(100,Math.max(1.01,Math.floor((0.97/(1-r))*100)/100));}
+ g.enter=function(p){
+  p.innerHTML='<div class="row"><span style="font-size:11px;color:var(--muted);font-weight:800">Ставка:</span>'+
+   [10,50,100,500].map(function(v){return '<button class="chip c'+v+'" data-cr="'+v+'">'+v+'</button>';}).join('')+
+   '<button class="btn gold grow" id="crGo">🚀 СТАРТ</button></div>'+
+   '<div class="msg" id="crMsg">Забери до взрыва — множитель растёт!</div>'+
+   '<div class="row" style="margin-top:6px"><div class="hist" id="crHist"></div></div>';
+  p.querySelectorAll('[data-cr]').forEach(function(b){b.onclick=function(){g.bet=+b.getAttribute('data-cr');p.querySelectorAll('[data-cr]').forEach(function(x){x.classList.remove('on');});b.classList.add('on');SFX.chip();};});
+  p.querySelector('[data-cr="50"]').classList.add('on');
+  $('crGo').onclick=function(){
+   if(g.state==='fly'){
+    var w=Math.floor(g.bet*g.mult);
+    pay(w);g.state='idle';
+    var b=$('crGo');b.textContent='🚀 СТАРТ';b.disabled=false;
+    var m=$('crMsg');if(m)m.textContent='💰 Забрал на x'+g.mult.toFixed(2)+'! +'+fmt(w)+' 🪙';
+    confetti(24);SFX.win();floatTxt('+'+fmt(w),CW/2,CH*0.35,'#39ff8e');
+    g.hist.unshift({m:g.mult,win:true});if(g.hist.length>10)g.hist.pop();renderHist();
+    save();return;
+   }
+   if(g.state!=='idle')return;
+   if(!bet(g.bet))return;
+   g.state='fly';g.t0=now();g.mult=1;g.crashAt=newCrash();
+   var b2=$('crGo');b2.textContent='💰 ЗАБРАТЬ';
+   SFX.go();
+  };
+  renderHist();
+ };
+ function renderHist(){
+  var el=$('crHist');if(!el)return;
+  el.innerHTML='';
+  g.hist.forEach(function(h){
+   var d=document.createElement('div');
+   d.className='hn '+(h.win?'g':(h.m<2?'r':'b'));
+   d.textContent='x'+h.m.toFixed(1);
+   el.appendChild(d);
+  });
+ }
+ g.update=function(dt){
+  if(g.state!=='fly')return;
+  g.mult=Math.exp((now()-g.t0)/1000*0.42);
+  g.stars.forEach(function(s){s.x-=dt*0.06*s.z*g.mult;if(s.x<0)s.x=1;});
+  if(g.mult>=g.crashAt){
+   g.state='idle';g.mult=g.crashAt;
+   var b=$('crGo');b.textContent='🚀 СТАРТ';b.disabled=false;
+   var m=$('crMsg');if(m)m.textContent='💥 ВЗРЫВ на x'+g.crashAt.toFixed(2)+'!';
+   SFX.boom();for(var i=0;i<20;i++)part(CW*0.7,CH*0.3,'conf');
+   g.hist.unshift({m:g.crashAt,win:false});if(g.hist.length>10)g.hist.pop();renderHist();
+   save();
+  }
+ };
+ g.draw=function(t){
+  CX.clearRect(0,0,CW,CH);
+  var bg=CX.createLinearGradient(0,0,0,CH);bg.addColorStop(0,'#0a0f2a');bg.addColorStop(1,'#05070f');
+  CX.fillStyle=bg;CX.fillRect(0,0,CW,CH);
+  g.stars.forEach(function(s){CX.fillStyle='rgba(255,255,255,'+(0.25+s.z*0.5)+')';CX.fillRect(s.x*CW,s.y*CH,1.6*s.z,1.6*s.z);});
+  var tt=g.state==='fly'?(now()-g.t0)/1000:Math.log(Math.max(1.001,g.mult))/0.42;
+  var tW=Math.max(3.5,tt);
+  CX.strokeStyle=g.state==='fly'?(g.mult>3?'#39ff8e':'#7fd8ff'):'#ff5d5d';
+  CX.lineWidth=3;CX.shadowColor=CX.strokeStyle;CX.shadowBlur=12;
+  CX.beginPath();
+  for(var i=0;i<=60;i++){
+   var tk=tW*i/60;
+   var mk=Math.exp(tk*0.42);
+   var x=CW*0.08+(tk/tW)*CW*0.84;
+   var y=CH*0.86-(Math.log(mk)/Math.log(Math.max(2.2,g.mult*1.15)))*CH*0.66;
+   if(i===0)CX.moveTo(x,y);else CX.lineTo(x,y);
+  }
+  CX.stroke();CX.shadowBlur=0;
+  var rx=CW*0.08+CW*0.84,ry=CH*0.86-(Math.log(g.mult)/Math.log(Math.max(2.2,g.mult*1.15)))*CH*0.66;
+  if(g.state==='fly'){
+   CX.save();CX.translate(rx,ry);CX.rotate(-0.5);
+   CX.fillStyle='#eef2ff';CX.beginPath();CX.moveTo(14,0);CX.lineTo(-8,-7);CX.lineTo(-8,7);CX.closePath();CX.fill();
+   CX.fillStyle='#ff5d5d';CX.beginPath();CX.moveTo(-8,-5);CX.lineTo(-16-Math.random()*8,0);CX.lineTo(-8,5);CX.closePath();CX.fill();
+   CX.restore();
+   if(Math.random()<0.5)part(rx-14,ry+6,'spark');
+  }
+  CX.font='bold 34px system-ui';CX.textAlign='center';
+  CX.fillStyle=g.state==='fly'?'#39ff8e':'#ff5d5d';
+  CX.shadowColor=CX.fillStyle;CX.shadowBlur=18;
+  CX.fillText('x'+g.mult.toFixed(2),CW/2,CH*0.3);
+  CX.shadowBlur=0;CX.textAlign='left';
+  drawFx();
+ };
+ return g;
+})();
+/* ---------- НОВОЕ: МИНЫ ---------- */
+GAMES.mines=(function(){
+ var g={bet:50,mines:5,grid:[],open:0,state:'idle',mult:1,boom:-1};
+ function multFor(k){var m=1;for(var i=0;i<k;i++)m*=(25-i)/(25-g.mines-i);return m*0.97;}
+ function build(p){
+  var el=$('mnGrid');if(!el)return;
+  el.innerHTML='';
+  g.grid.forEach(function(c,i){
+   var b=document.createElement('button');
+   b.className='mcell'+(c.o?(c.m?' b':' o'):'');
+   b.textContent=c.o?(c.m?'💣':'💎'):'';
+   b.onclick=function(){tapCell(i);};
+   el.appendChild(b);
+  });
+  var cb=$('mnCash');
+  if(cb){cb.disabled=g.state!=='play'||g.open===0;cb.textContent='💰 Забрать x'+g.mult.toFixed(2);}
+  var m=$('mnMsg');
+  if(m)m.textContent=g.state==='play'?('Открыто '+g.open+' · множитель x'+g.mult.toFixed(2)):g.msg;
+ }
+ function tapCell(i){
+  if(g.state!=='play')return;
+  var c=g.grid[i];
+  if(c.o)return;
+  c.o=true;
+  if(c.m){
+   g.state='done';g.boom=i;
+   g.grid.forEach(function(q){q.o=true;});
+   SFX.boom();for(var k=0;k<16;k++)part(CW/2+rand(-40,40),CH*0.5+rand(-30,30),'conf');
+   g.msg='💥 БУМ! Мина. Ставка сгорела.';
+   save();
+  }else{
+   g.open++;g.mult=multFor(g.open);
+   SFX.chip();part(CW/2,CH*0.5,'spark');
+   if(g.open===25-g.mines){cashout();}
+  }
+  build($('panel'));
+ }
+ function cashout(){
+  if(g.state!=='play'||g.open===0)return;
+  var w=Math.floor(g.bet*g.mult);
+  pay(w);g.state='done';
+  var m=$('mnMsg');if(m)m.textContent='💰 Забрал x'+g.mult.toFixed(2)+' = +'+fmt(w)+' 🪙';
+  confetti(26);SFX.win();floatTxt('+'+fmt(w),CW/2,CH*0.4,'#39ff8e');
+  save();
+ }
+ g.enter=function(p){
+  p.innerHTML='<div class="row"><span style="font-size:11px;color:var(--muted);font-weight:800">Ставка:</span>'+
+   [10,50,100,500].map(function(v){return '<button class="chip c'+v+'" data-mn="'+v+'">'+v+'</button>';}).join('')+
+   '<span style="font-size:11px;color:var(--muted);font-weight:800">Мины:</span>'+
+   [3,5,10].map(function(v){return '<button class="btn '+(g.mines===v?'blu':'')+'" data-mc="'+v+'">'+v+'</button>';}).join('')+
+   '</div><div class="row" style="margin-top:6px"><button class="btn gold grow" id="mnStart">💎 НАЧАТЬ</button><button class="btn grn grow" id="mnCash" disabled>💰 Забрать</button></div>'+
+   '<div class="mgrid" id="mnGrid"></div><div class="msg" id="mnMsg">Выбери ставку и число мин, жми НАЧАТЬ</div>';
+  p.querySelectorAll('[data-mn]').forEach(function(b){b.onclick=function(){g.bet=+b.getAttribute('data-mn');p.querySelectorAll('[data-mn]').forEach(function(x){x.classList.remove('on');});b.classList.add('on');SFX.chip();};});
+  p.querySelector('[data-mn="50"]').classList.add('on');
+  p.querySelectorAll('[data-mc]').forEach(function(b){b.onclick=function(){g.mines=+b.getAttribute('data-mc');p.querySelectorAll('[data-mc]').forEach(function(x){x.classList.remove('blu');});b.classList.add('blu');SFX.click();};});
+  $('mnStart').onclick=function(){
+   if(g.state==='play')return;
+   if(!bet(g.bet))return;
+   g.grid=[];for(var i=0;i<25;i++)g.grid.push({m:false,o:false});
+   var idx=shuf([].concat(Array.apply(null,Array(25).map(function(_,i){return i;}))));
+   for(var k=0;k<g.mines;k++)g.grid[idx[k]].m=true;
+   g.open=0;g.mult=1;g.state='play';g.boom=-1;g.msg='';
+   SFX.deal();build(p);
+  };
+  $('mnCash').onclick=function(){cashout();build(p);};
+  g.state='idle';build(p);
+ };
+ g.update=function(){};
+ g.draw=function(t){
+  CX.clearRect(0,0,CW,CH);
+  var bg=CX.createRadialGradient(CW/2,CH*0.5,20,CW/2,CH*0.5,Math.max(CW,CH)*0.7);
+  bg.addColorStop(0,'#1c2444');bg.addColorStop(1,'#0a0e1e');
+  CX.fillStyle=bg;CX.fillRect(0,0,CW,CH);
+  avBarsik(CX,CW*0.2,CH*0.42,Math.min(CW,CH)*0.14,g.state==='done'&&g.boom>=0?'sad':'happy');
+  for(var i=0;i<Math.min(g.open,8);i++){
+   CX.font='22px serif';CX.textAlign='center';
+   CX.fillText('💎',CW*0.42+(i%4)*30,CH*0.36+Math.floor(i/4)*30+Math.sin(t*3+i)*3);
+  }
+  CX.textAlign='left';
+  CX.font='bold 26px system-ui';CX.textAlign='center';
+  CX.fillStyle=g.state==='play'?'#39ff8e':'rgba(255,209,102,.9)';
+  CX.fillText(g.state==='play'?('x'+g.mult.toFixed(2)):'💎 MINES',CW*0.66,CH*0.62);
+  CX.font='11px system-ui';CX.fillStyle='rgba(147,160,196,.9)';
+  CX.fillText('мин: '+g.mines+' · открыто: '+g.open,CW*0.66,CH*0.62+18);
+  CX.textAlign='left';
+  drawFx();
+ };
+ return g;
+})();
+/* ---------- НОВОЕ: КОЛЕСО ФОРТУНЫ ---------- */
+GAMES.wheel=(function(){
+ var SEG=[0,1.5,2,0.5,3,5,0,1.2,10,0.3,2.5,1.5];
+ var COL=['#3b0a18','#14532d','#1d4ed8','#3b0a18','#7c3aed','#b45309','#3b0a18','#0e7490','#b91c1c','#3b0a18','#15803d','#a21caf'];
+ var g={bet:50,spin:false,a:0,Wf:0,t0:0,dur:4200,res:0,hist:[]};
+ g.enter=function(p){
+  p.innerHTML='<div class="row"><span style="font-size:11px;color:var(--muted);font-weight:800">Ставка:</span>'+
+   [10,50,100,500].map(function(v){return '<button class="chip c'+v+'" data-wh="'+v+'">'+v+'</button>';}).join('')+
+   '<button class="btn gold grow" id="whGo">☸️ КРУТИТЬ</button></div>'+
+   '<div class="msg" id="whMsg">Сектора: x0 … x10. Куда укажет стрелка?</div>'+
+   '<div class="row" style="margin-top:6px"><div class="hist" id="whHist"></div></div>';
+  p.querySelectorAll('[data-wh]').forEach(function(b){b.onclick=function(){g.bet=+b.getAttribute('data-wh');p.querySelectorAll('[data-wh]').forEach(function(x){x.classList.remove('on');});b.classList.add('on');SFX.chip();};});
+  p.querySelector('[data-wh="50"]').classList.add('on');
+  $('whGo').onclick=function(){
+   if(g.spin)return;
+   if(!bet(g.bet))return;
+   g.spin=true;g.t0=now();g.res=randi(0,SEG.length-1);
+   var segA=Math.PI*2/SEG.length;
+   var center=g.res*segA+segA/2;
+   g.Wf=Math.PI*2*5+((-Math.PI/2-center)%(Math.PI*2))+Math.PI*2;
+   SFX.ball();$('whGo').disabled=true;
+  };
+  renderH();
+ };
+ function renderH(){
+  var el=$('whHist');if(!el)return;
+  el.innerHTML='';
+  g.hist.slice(0,10).forEach(function(h){
+   var d=document.createElement('div');
+   d.className='hn '+(h===0?'r':(h>=3?'g':'b'));
+   d.textContent='x'+h;
+   el.appendChild(d);
+  });
+ }
+ g.update=function(dt){
+  if(!g.spin)return;
+  var t=(now()-g.t0)/g.dur;
+  g.a=eoc(t)*g.Wf;
+  if(Math.floor(g.a/(Math.PI/6))!==g.lastS){g.lastS=Math.floor(g.a/(Math.PI/6));if(t<0.85)SFX.tick();}
+  if(t>=1){
+   g.spin=false;
+   var b=$('whGo');if(b)b.disabled=false;
+   var m=SEG[g.res],w=Math.floor(g.bet*m);
+   g.hist.unshift(m);if(g.hist.length>12)g.hist.pop();renderH();
+   var msg=$('whMsg');
+   if(w>0){pay(w);if(msg)msg.textContent='☸️ x'+m+'! +'+fmt(w)+' 🪙';confetti(m>=5?44:22);if(m>=5)SFX.big();else SFX.win();floatTxt('+'+fmt(w),CW/2,CH*0.35,'#39ff8e');}
+   else{if(msg)msg.textContent='☸️ x0… колесо коварно.';SFX.lose();}
+   save();
+  }
+ };
+ g.draw=function(t){
+  CX.clearRect(0,0,CW,CH);
+  var bg=CX.createRadialGradient(CW/2,CH*0.45,10,CW/2,CH*0.45,Math.max(CW,CH)*0.7);
+  bg.addColorStop(0,'#241a3a');bg.addColorStop(1,'#0d0818');
+  CX.fillStyle=bg;CX.fillRect(0,0,CW,CH);
+  var cx=CW/2,cy=CH*0.46,R=Math.min(CW,CH)*0.36;
+  CX.save();CX.translate(cx,cy);
+  CX.fillStyle='#ffd166';
+  CX.beginPath();CX.moveTo(0,-R-16);CX.lineTo(-9,-R+2);CX.lineTo(9,-R+2);CX.closePath();CX.fill();
+  CX.save();CX.rotate(g.a);
+  var segA=Math.PI*2/SEG.length;
+  for(var i=0;i<SEG.length;i++){
+   var a0=i*segA-Math.PI/2,a1=a0+segA;
+   CX.fillStyle=COL[i];
+   CX.beginPath();CX.moveTo(0,0);CX.arc(0,0,R,a0,a1);CX.closePath();CX.fill();
+   CX.strokeStyle='rgba(255,209,102,.6)';CX.lineWidth=1.5;CX.beginPath();CX.moveTo(0,0);CX.lineTo(Math.cos(a0)*R,Math.sin(a0)*R);CX.stroke();
+   CX.save();CX.rotate(i*segA+segA/2-Math.PI/2);
+   CX.fillStyle='#fff';CX.font='bold '+(R*0.13)+'px system-ui';CX.textAlign='center';
+   CX.fillText('x'+SEG[i],0,-R*0.68);
+   CX.restore();
+  }
+  CX.restore();
+  CX.fillStyle='#141b33';CX.beginPath();CX.arc(0,0,R*0.22,0,7);CX.fill();
+  CX.strokeStyle='#ffd166';CX.lineWidth=2;CX.beginPath();CX.arc(0,0,R*0.22,0,7);CX.stroke();
+  CX.font=(R*0.2)+'px serif';CX.textAlign='center';CX.fillText('🐾',0,R*0.07);CX.textAlign='left';
+  CX.restore();
+  drawFx();
+ };
+ return g;
+})();
+/* ---------- НОВОЕ: ОРЁЛ/РЕШКА ---------- */
+GAMES.coin=(function(){
+ var g={bet:50,side:0,flip:false,t0:0,res:0,rot:0};
+ g.enter=function(p){
+  p.innerHTML='<div class="row"><span style="font-size:11px;color:var(--muted);font-weight:800">Ставка:</span>'+
+   [10,50,100,500].map(function(v){return '<button class="chip c'+v+'" data-cf="'+v+'">'+v+'</button>';}).join('')+'</div>'+
+   '<div class="row" style="margin-top:6px"><button class="btn grn grow" id="cfH">🦅 Орёл</button><button class="btn blu grow" id="cfT">🐾 Решка</button></div>'+
+   '<div class="msg" id="cfMsg">Выбери сторону — монета сделает всё сама</div>';
+  p.querySelectorAll('[data-cf]').forEach(function(b){b.onclick=function(){g.bet=+b.getAttribute('data-cf');p.querySelectorAll('[data-cf]').forEach(function(x){x.classList.remove('on');});b.classList.add('on');SFX.chip();};});
+  p.querySelector('[data-cf="50"]').classList.add('on');
+  function flipTo(side){
+   if(g.flip)return;
+   if(!bet(g.bet))return;
+   g.side=side;g.flip=true;g.t0=now();g.res=Math.random()<0.5?0:1;
+   SFX.dice();
+   $('cfH').disabled=true;$('cfT').disabled=true;
+  }
+  $('cfH').onclick=function(){flipTo(0);};
+  $('cfT').onclick=function(){flipTo(1);};
+ };
+ g.update=function(dt){
+  if(!g.flip)return;
+  var t=(now()-g.t0)/1200;
+  g.rot=t;
+  if(t>=1){
+   g.flip=false;
+   $('cfH').disabled=false;$('cfT').disabled=false;
+   var m=$('cfMsg');
+   if(g.res===g.side){pay(g.bet*2);if(m)m.textContent=(g.res?'🐾 Решка':'🦅 Орёл')+'! Победа +'+fmt(g.bet*2)+' 🪙';SFX.win();confetti(20);floatTxt('+'+fmt(g.bet*2),CW/2,CH*0.35,'#39ff8e');}
+   else{if(m)m.textContent=(g.res?'🐾 Решка':'🦅 Орёл')+'. Увы…';SFX.lose();}
+   save();
+  }
+ };
+ g.draw=function(t){
+  CX.clearRect(0,0,CW,CH);
+  var bg=CX.createRadialGradient(CW/2,CH*0.45,10,CW/2,CH*0.45,Math.max(CW,CH)*0.7);
+  bg.addColorStop(0,'#2a2410');bg.addColorStop(1,'#141006');
+  CX.fillStyle=bg;CX.fillRect(0,0,CW,CH);
+  var R=Math.min(CW,CH)*0.26;
+  var y=CH*0.45-(g.flip?Math.sin(clamp(g.rot,0,1)*Math.PI)*60:0);
+  var face;
+  if(g.flip)face=(Math.floor(g.rot*5)%2===0)?g.side:1-g.side;
+  else face=g.res;
+  var sx=g.flip?Math.max(0.08,Math.abs(Math.cos(g.rot*5*Math.PI))):1;
+  CX.save();CX.translate(CW/2,y);CX.scale(sx,1);
+  var gr=CX.createLinearGradient(-R,-R,R,R);gr.addColorStop(0,'#ffe9a0');gr.addColorStop(0.5,'#f5b301');gr.addColorStop(1,'#b97701');
+  CX.fillStyle=gr;CX.beginPath();CX.arc(0,0,R,0,7);CX.fill();
+  CX.strokeStyle='#fff0c4';CX.lineWidth=3;CX.beginPath();CX.arc(0,0,R*0.86,0,7);CX.stroke();
+  CX.font=(R*0.9)+'px serif';CX.textAlign='center';CX.fillText(face===0?'🦅':'🐾',0,R*0.32);CX.textAlign='left';
+  CX.restore();
+  CX.fillStyle='rgba(0,0,0,.35)';CX.beginPath();CX.ellipse(CW/2,CH*0.78,R*0.8*(g.flip?0.6:1),10,0,0,7);CX.fill();
+  CX.font='bold 12px system-ui';CX.textAlign='center';CX.fillStyle='rgba(233,237,245,.8)';
+  CX.fillText('Твой выбор: '+(g.side?'🐾 Решка':'🦅 Орёл'),CW/2,CH*0.9);CX.textAlign='left';
+  drawFx();
+ };
+ return g;
+})();
 /* ---------- VOLUME / HEADER ---------- */
 var volHideT=null;
 function syncVolbar(){$('volRange').value=S.vol;$('volVal').textContent=Math.round(S.vol)+'%';$('volMute').textContent=S.sound?'🔊':'🔇';}
@@ -1143,15 +1500,15 @@ document.addEventListener('pointerdown',function(e){var vb=$('volbar');if(vb.cla
 $('btnSound').onclick=function(){SFX.click();toggleVolbar();};
 $('btnMusic').onclick=function(){S.music=!S.music;if(S.music&&A.ctx)MU.next=A.ctx.currentTime+0.1;MU.step=0;SFX.click();toast(S.music?'🎵 '+MU_THEMES[S.mTheme%2].name:'Музыка выключена');$('btnMusic').style.opacity=S.music?1:0.45;save();};
 $('btnDaily').onclick=function(){
- if(now()-S.lastDaily<24*3600*1000){toast('Бонус будет через '+Math.ceil((24*3600*1000-(now()-S.lastDaily))/3600000)+' ч');return;}
- S.lastDaily=now();pay(500);SFX.big();confetti(40);floatTxt('+500 🪙',CW/2,CH*0.4,'#ffd166');toast('🎁 Ежедневный бонус +500 🪙');save();
+ if(now()-S.lastDaily<24*3600*1000){toast('Бонус через '+Math.ceil((24*3600*1000-(now()-S.lastDaily))/3600000)+' ч');return;}
+ S.lastDaily=now();pay(500);SFX.big();confetti(40);floatTxt('+500 🪙',CW/2,CH*0.4,'#ffd166');toast('🎁 Бонус дня +500 🪙');save();
 };
 $('btnHelp').onclick=function(){
- if(now()-S.lastHelp<24*3600*1000){toast('Помощь будет через '+Math.ceil((24*3600*1000-(now()-S.lastHelp))/3600000)+' ч');return;}
+ if(now()-S.lastHelp<24*3600*1000){toast('Помощь через '+Math.ceil((24*3600*1000-(now()-S.lastHelp))/3600000)+' ч');return;}
  if(S.bal>=100){toast('🆘 Доступно при балансе < 100 🪙');return;}
  S.lastHelp=now();pay(1000);SFX.win();confetti(30);floatTxt('+1000 🪙',CW/2,CH*0.4,'#39ff8e');toast('🆘 Барсик выручил: +1000 🪙');save();
 };
-/* ---------- INPUT CANVAS ---------- */
+/* ---------- INPUT ---------- */
 function ptr(e){var r=CV.getBoundingClientRect();var cx,cy;if(e.touches&&e.touches.length){cx=e.touches[0].clientX;cy=e.touches[0].clientY;}else if(e.changedTouches&&e.changedTouches.length){cx=e.changedTouches[0].clientX;cy=e.changedTouches[0].clientY;}else{cx=e.clientX;cy=e.clientY;}return{x:cx-r.left,y:cy-r.top};}
 CV.addEventListener('pointerdown',function(e){e.preventDefault();var p=ptr(e);if(G&&G.tap)G.tap(p.x,p.y);},{passive:false});
 /* ---------- LOOP ---------- */
