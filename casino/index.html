@@ -790,11 +790,11 @@ GAMES.blackjack=(function(){
  };
  return g;
 })();
-/* ---------- SLOTS ---------- */
+/* ---------- SLOTS (v8: барабан останавливается ровно на том символе, что на линии) ---------- */
 GAMES.slots=(function(){
  var SYM=['🍒','🍋','🔔','💎','7️⃣','🐾','⭐'];
  var PAY={'🍒':8,'🍋':10,'🔔':16,'💎':30,'7️⃣':80,'🐾':120,'⭐':200};
- var g={bet:50,spinning:false,reels:[0,1,3],off:[0,0,0],vel:[0,0,0],stopAt:[0,0,0],target:[0,0,0],t0:0,win:0,winT:0,lever:0};
+ var g={bet:50,spinning:false,reels:[0,1,3],off:[0,0,0],vel:[0,0,0],stopAt:[0,0,0],stopOff:[null,null,null],target:[0,0,0],t0:0,win:0,winT:0,lever:0};
  g.enter=function(p){
   p.innerHTML='<div class="row"><span style="font-size:11px;color:var(--muted);font-weight:800">Ставка:</span>'+
    [10,50,100,500].map(function(v){return '<button class="chip c'+v+'" data-sl="'+v+'">'+v+'</button>';}).join('')+
@@ -806,28 +806,54 @@ GAMES.slots=(function(){
    if(g.spinning)return;
    if(!bet(g.bet))return;
    g.spinning=true;g.t0=now();g.win=0;g.lever=1;
-   for(var i=0;i<3;i++){g.vel[i]=1;g.stopAt[i]=now()+900+i*420;g.target[i]=randi(0,SYM.length-1);}
+   for(var i=0;i<3;i++){
+    g.vel[i]=1;
+    g.stopOff[i]=null;
+    g.stopAt[i]=now()+900+i*420;
+    g.target[i]=randi(0,SYM.length-1);
+   }
    noise(0.3,0.08,1500);
    $('slSpin').disabled=true;
   };
  };
  g.update=function(dt){
   if(!g.spinning)return;
+  var locked=0;
   for(var i=0;i<3;i++){
-   if(now()<g.stopAt[i])g.off[i]+=dt*14;
-   else if(g.vel[i]>0){
-    g.vel[i]=0;g.reels[i]=g.target[i];
-    var frac=g.off[i]%1;g.off[i]=g.off[i]-frac+(frac>0.5?1:0);
-    SFX.stop();
+   if(g.vel[i]===0){locked++;continue;}
+   if(g.stopOff[i]===null){
+    if(now()<g.stopAt[i]){g.off[i]+=dt*14;}
+    else{
+     var f=Math.ceil(g.off[i]+0.0001);
+     var cur=((f%SYM.length)+SYM.length)%SYM.length;
+     var delta=((g.target[i]-cur)%SYM.length+SYM.length)%SYM.length;
+     g.stopOff[i]=f+delta;
+    }
+   }else{
+    g.off[i]+=dt*9;
+    if(g.off[i]>=g.stopOff[i]){
+     g.off[i]=g.stopOff[i];
+     g.vel[i]=0;
+     g.reels[i]=g.target[i];
+     SFX.stop();
+    }
    }
   }
-  if(g.vel[0]===0&&g.vel[1]===0&&g.vel[2]===0){
+  if(locked===3){
    g.spinning=false;
    var s=$('slSpin');if(s)s.disabled=false;
    var a=SYM[g.reels[0]],b=SYM[g.reels[1]],c2=SYM[g.reels[2]];
    var m=$('slMsg');
-   if(a===b&&b===c2){g.win=g.bet*(PAY[a]||10);g.winT=now();pay(g.win);confetti(40);SFX.big();if(m)m.textContent='🎉 ДЖЕКПОТ '+a+a+a+'! +'+fmt(g.win)+' 🪙';for(var k=0;k<12;k++)part(CW/2+rand(-60,60),CH*0.4,'coin');}
-   else if(a===b||b===c2||a===c2){g.win=g.bet*2;g.winT=now();pay(g.win);SFX.win();if(m)m.textContent='✨ Пара! +'+fmt(g.win)+' 🪙';}
+   if(a===b&&b===c2){
+    g.win=g.bet*(PAY[a]||10);g.winT=now();pay(g.win);confetti(40);SFX.big();
+    if(m)m.textContent='🎉 ДЖЕКПОТ '+a+a+a+'! +'+fmt(g.win)+' 🪙';
+    for(var k=0;k<12;k++)part(CW/2+rand(-60,60),CH*0.4,'coin');
+   }
+   else if(a===b||b===c2||a===c2){
+    var pr2=(a===b)?a:((b===c2)?b:a);
+    g.win=g.bet*2;g.winT=now();pay(g.win);SFX.win();
+    if(m)m.textContent='✨ Пара '+pr2+pr2+'! +'+fmt(g.win)+' 🪙';
+   }
    else{SFX.lose();if(m)m.textContent='Мимо… крути ещё!';}
    save();
   }
@@ -841,12 +867,12 @@ GAMES.slots=(function(){
   CX.fillStyle=fg;rr(CX,mx-10,my-14,mw+20,mh+28,18);CX.fill();
   CX.strokeStyle='#ffd166';CX.lineWidth=2.5;rr(CX,mx-10,my-14,mw+20,mh+28,18);CX.stroke();
   for(var b2=0;b2<8;b2++){CX.fillStyle=(Math.floor(t*3)+b2)%2?'#ffd166':'#ff5d5d';CX.beginPath();CX.arc(mx-10+(b2+0.5)*(mw+20)/8,my-14,3.4,0,7);CX.arc(mx-10+(b2+0.5)*(mw+20)/8,my+mh+14,3.4,0,7);CX.fill();}
-  var rw=mw/3,rh=mh;
+  var rw=mw/3,rh=mh,step=rh/3;
   for(var i=0;i<3;i++){
    var rx=mx+i*rw;
    CX.fillStyle='#0b0f1e';rr(CX,rx+4,my,rw-8,rh,10);CX.fill();
    CX.save();rr(CX,rx+4,my,rw-8,rh,10);CX.clip();
-   var step=rh/3,base=g.off[i];
+   var base=g.off[i];
    for(var k=-1;k<4;k++){
     var idx=((Math.floor(base)+k)%SYM.length+SYM.length)%SYM.length;
     var yy=my+rh/2+(k-(base%1))*step-step/2;
