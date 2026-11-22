@@ -1344,7 +1344,7 @@ GAMES.durak=(function(){
    CX.textAlign='left';
   }
   g.table.forEach(function(q,i){
-   var tx=CW*0.32+(i%3)*(cw*0.9),ty=CH*0.34+Math.floor(i/3)*(chh*0.6);
+   var tx=CW*0.34+(i%3)*(cw*0.9),ty=CH*0.42+Math.floor(i/3)*(chh*0.62);
    var pr=eoc(clamp((now()-q.a.at)/260,0,1));
    drawCard(CX,lerp(CW*0.1,tx,pr),lerp(CH*0.42,ty,pr),cw*0.82,chh*0.82,q.a,true,pr);
    if(q.d){var pr2=eoc(clamp((now()-q.d.at)/260,0,1));drawCard(CX,lerp(CW*0.8,tx+cw*0.24,pr2),lerp(CH*0.2,ty+chh*0.2,pr2),cw*0.82,chh*0.82,q.d,true,pr2);}
