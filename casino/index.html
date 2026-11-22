@@ -197,10 +197,11 @@ function muTick(){
 setInterval(muTick,120);
 function firstTouch(){audioInit();if(A.ctx&&A.ctx.state==='suspended')A.ctx.resume();if(A.ctx)MU.next=A.ctx.currentTime+0.1;document.removeEventListener('pointerdown',firstTouch);}
 document.addEventListener('pointerdown',firstTouch,{passive:true});
-/* ---------- CANVAS ---------- */
+/* ---------- CANVAS (v7: авто-ресайз при любой смене раскладки) ---------- */
 var CV=$('cv'),CX=CV.getContext('2d'),DPR=1,CW=0,CH=0;
 function resize(){var st=CV.parentElement;DPR=Math.min(window.devicePixelRatio||1,2);CW=st.clientWidth||360;CH=st.clientHeight||300;CV.width=Math.max(1,Math.round(CW*DPR));CV.height=Math.max(1,Math.round(CH*DPR));}
 window.addEventListener('resize',resize);
+if(window.ResizeObserver){try{new ResizeObserver(function(){resize();}).observe($('stage'));}catch(e){}}
 /* ---------- FX ---------- */
 var PART=[],FLOAT=[];
 function part(x,y,t,o){var p={x:x,y:y,t:t,life:1,vx:rand(-40,40),vy:rand(-110,-50),r:rand(2,5),rot:rand(0,6),ch:o&&o.ch,col:o&&o.col};if(t==='conf'){p.col=pick(['#ffd166','#ff5d5d','#39ff8e','#7fd8ff','#b48bff']);p.vy=rand(-220,-90);p.vx=rand(-120,120);}if(t==='coin'){p.ch='🪙';p.vy=rand(-160,-90);}if(t==='spark'){p.ch='✨';}if(t==='dust'){p.vy=rand(-20,0);p.vx=rand(-60,-10);p.col='rgba(200,190,160,.6)';}PART.push(p);}
@@ -540,13 +541,15 @@ function bestOf(cs){
  }
  return best;
 }
-/* ---------- ROUTER ---------- */
+/* ---------- ROUTER (v7: пересчёт канваса при смене игры) ---------- */
 var G=null,GAMES={};
 function setGame(id){
  G=GAMES[id];
  $('btnBack').style.visibility=(id==='lobby')?'hidden':'visible';
  var p=$('panel');p.innerHTML='';
  if(G.enter)G.enter(p);
+ requestAnimationFrame(resize);
+ setTimeout(resize,80);
  SFX.click();
 }
 $('btnBack').onclick=function(){setGame('lobby');};
@@ -1100,13 +1103,14 @@ GAMES.poker=(function(){
  };
  return g;
 })();
-/* ---------- DURAK 2–4 ---------- */
+/* ---------- DURAK 2–4 (v7: надёжный тап карт) ---------- */
 GAMES.durak=(function(){
  var BOTS=[{name:'Барсик',av:'barsik'},{name:'Мурка',av:'murka'},{name:'Барон',av:'baron'}];
  var g={nSel:2,bet:30,state:'idle',deck:[],trump:null,players:[],att:0,def:1,table:[],phase:'idle',msg:'',sel:-1,over:false,rects:[],timer:0};
  function P(i){return g.players[i];}
  function hand(i){return (g.players[i]&&g.players[i].hand)?g.players[i].hand:[];}
  function beats(a,d){if(a.s===d.s)return d.r>a.r;if(g.trump&&d.s===g.trump.s)return true;return false;}
+ function toggleSel(i){g.sel=(g.sel===i?-1:i);SFX.click();updDu();}
  function updDu(){
   var a=$('duAtk'),b=$('duBeat'),t=$('duTake'),ps=$('duPass'),m=$('duMsg');
   var undef=g.table.some(function(q){return !q.d;});
@@ -1261,9 +1265,12 @@ GAMES.durak=(function(){
   if(g.over||!g.players.length||!hand(0).length)return;
   for(var i=g.rects.length-1;i>=0;i--){
    var r=g.rects[i];
-   if(x>=r.x&&x<=r.x+r.w&&y>=r.y-16&&y<=r.y+r.h){
-    g.sel=(g.sel===r.i?-1:r.i);SFX.click();updDu();return;
-   }
+   if(x>=r.x-5&&x<=r.x+r.w+5&&y>=r.y-24&&y<=CH){toggleSel(r.i);return;}
+  }
+  if(g.rects.length&&y>CH-g.rects[0].h-34){
+   var bestI=0,bd=1e9;
+   g.rects.forEach(function(r2,i2){var d=Math.abs(x-(r2.x+r2.w/2));if(d<bd){bd=d;bestI=i2;}});
+   toggleSel(g.rects[bestI].i);
   }
  };
  g.update=function(){
@@ -1272,7 +1279,7 @@ GAMES.durak=(function(){
  g.draw=function(t){
   CX.clearRect(0,0,CW,CH);
   feltBG();
-  var cw=Math.min(52,CW*0.13),chh=cw*1.4;
+  var cw=Math.min(56,CW*0.14),chh=cw*1.4;
   g.rects=[];
   var bots=g.players.slice(1);
   bots.forEach(function(pl,i){
@@ -1305,15 +1312,16 @@ GAMES.durak=(function(){
   });
   var h=hand(0),n=h.length;
   if(n){
-   var sp=Math.min(cw*0.72,(CW-36-cw)/Math.max(1,n-1));
-   var x0=CW/2-((n-1)*sp+cw)/2,y0=CH-chh-12;
+   var sp=Math.min(cw*0.74,(CW-32-cw)/Math.max(1,n-1));
+   var x0=CW/2-((n-1)*sp+cw)/2,y0=CH-chh-10;
    h.forEach(function(c,i){
     var pr=eoc(clamp((now()-c.at)/260,0,1));
     var sel=i===g.sel;
-    var x=lerp(CW/2,x0+i*sp,pr),y=lerp(CH,y0-(sel?14:0),pr);
+    var x=lerp(CW/2,x0+i*sp,pr),y=lerp(CH,y0-(sel?18:0),pr);
     CX.save();
-    if(sel){CX.shadowColor='#39ff8e';CX.shadowBlur=16;}
+    if(sel){CX.shadowColor='#39ff8e';CX.shadowBlur=18;}
     drawCard(CX,x,y,cw,chh,c,true,pr);
+    if(sel){CX.strokeStyle='#39ff8e';CX.lineWidth=2;rr(CX,x-1.5,y-1.5,cw+3,chh+3,6);CX.stroke();}
     CX.restore();
     g.rects.push({x:x,y:y,w:cw,h:chh,i:i});
    });
@@ -1321,7 +1329,7 @@ GAMES.durak=(function(){
   var isYouAtt=g.phase==='you-attack',isYouDef=g.phase==='you-defend';
   CX.fillStyle=isYouAtt?'rgba(255,209,102,.9)':(isYouDef?'rgba(127,216,255,.9)':'rgba(233,237,245,.6)');
   CX.font='bold 10px system-ui';CX.textAlign='center';
-  CX.fillText(g.players.length?(isYouAtt?'ТЫ АТАКУЕШЬ':(isYouDef?'ТЫ ЗАЩИЩАЕШЬСЯ':'Тапни карту в руке')):'',CW/2,CH-chh-20);
+  CX.fillText(g.players.length?(isYouAtt?'ТЫ АТАКУЕШЬ':(isYouDef?'ТЫ ЗАЩИЩАЕШЬСЯ':'Тапни карту в руке — она поднимется')):'',CW/2,CH-chh-24);
   CX.textAlign='left';
   drawFx();
  };
@@ -1589,7 +1597,7 @@ GAMES.mines=(function(){
  };
  return g;
 })();
-/* ---------- WHEEL (v6: стрелка без мусора) ---------- */
+/* ---------- WHEEL ---------- */
 GAMES.wheel=(function(){
  var SEG=[0,1.5,2,0.5,3,5,0,1.2,10,0.3,2.5,1.5];
  var COL=['#3b0a18','#14532d','#1d4ed8','#3b0a18','#7c3aed','#b45309','#3b0a18','#0e7490','#b91c1c','#3b0a18','#15803d','#a21caf'];
@@ -1725,6 +1733,7 @@ GAMES.coin=(function(){
   var R=Math.min(CW,CH)*0.26;
   var y=CH*0.42-(g.flip?Math.sin(clamp(g.rot,0,1)*Math.PI)*60:0);
   var face;
+  if(g.flip)face=(Math.floor(g.rot*5)%2===0)?g.side:1-g.face!==undefined?g.side:g.side;
   if(g.flip)face=(Math.floor(g.rot*5)%2===0)?g.side:1-g.side;
   else face=g.res;
   var sx=g.flip?Math.max(0.08,Math.abs(Math.cos(g.rot*5*Math.PI))):1;
@@ -1913,13 +1922,10 @@ if(TG&&TG.sendData){
 })();
 </script>
 <script>
-/* Страховка: если основной скрипт не стартовал (файл вставлен не целиком) — покажем причину вместо вечного спиннера */
 setTimeout(function(){
  if(!window.__BARSIK_OK){
   var b=document.getElementById('boot');
-  if(b){
-   b.innerHTML='<div style="max-width:92vw;line-height:1.6">⚠️ Скрипт казино не запустился.<br>Скорее всего файл вставлен НЕ ЦЕЛИКОМ.<br><br>Проверь в GitHub, что код заканчивается на <b>&lt;/html&gt;</b> и что последний блок &lt;script&gt; со страховкой присутствует.<br><br>Затем открой снова с ?v=6</div>';
-  }
+  if(b){b.innerHTML='<div style="max-width:92vw;line-height:1.6">⚠️ Скрипт казино не запустился.<br>Скорее всего файл вставлен НЕ ЦЕЛИКОМ.<br><br>Проверь в GitHub, что код заканчивается на <b>&lt;/html&gt;</b>.<br>Затем открой снова с ?v=7</div>';}
  }
 },3000);
 </script>
